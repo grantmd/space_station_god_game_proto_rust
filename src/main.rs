@@ -1,3 +1,5 @@
+// https://github.com/ggez/ggez/blob/master/docs/FAQ.md#i-get-a-console-window-when-i-launch-my-executable-on-windows
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use ggez::event::{self, EventHandler};
 use ggez::{graphics, Context, ContextBuilder, GameResult};
 

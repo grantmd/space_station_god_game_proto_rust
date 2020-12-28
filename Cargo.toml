@@ -8,3 +8,7 @@ edition = "2018"
 
 [dependencies]
 ggez = "0.5"
+
+# https://github.com/ggez/ggez/blob/master/docs/FAQ.md#imagesound-loading-and-font-rendering-is-slow
+[profile.dev]
+opt-level = 1
