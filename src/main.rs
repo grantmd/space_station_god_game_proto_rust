@@ -4,24 +4,6 @@ use ggez::event::{self, EventHandler};
 use ggez::nalgebra as na;
 use ggez::{graphics, timer, Context, ContextBuilder, GameResult};
 
-fn main() {
-    // Make a Context. This is passed to the game loop
-    let (mut ctx, mut event_loop) = ContextBuilder::new("space_station_god_game", "Myles Grant")
-        .build()
-        .expect("aieee, could not create ggez context!");
-
-    // Create an instance of your event handler.
-    // Usually, you should provide it with the Context object to
-    // use when setting your game up.
-    let mut state = SpaceStationGodGame::new(&mut ctx);
-
-    // Run!
-    match event::run(&mut ctx, &mut event_loop, &mut state) {
-        Ok(_) => println!("Exited cleanly."),
-        Err(e) => println!("Error occured: {}", e),
-    }
-}
-
 // Main game state object. Holds positions, scores, etc
 struct SpaceStationGodGame {
     dt: std::time::Duration,
@@ -72,5 +54,24 @@ impl EventHandler for SpaceStationGodGame {
         graphics::present(ctx)?;
 
         Ok(())
+    }
+}
+
+// Entrypoint
+fn main() {
+    // Make a Context. This is passed to the game loop
+    let (mut ctx, mut event_loop) = ContextBuilder::new("space_station_god_game", "Myles Grant")
+        .build()
+        .expect("aieee, could not create ggez context!");
+
+    // Create an instance of your event handler.
+    // Usually, you should provide it with the Context object to
+    // use when setting your game up.
+    let mut state = SpaceStationGodGame::new(&mut ctx);
+
+    // Run!
+    match event::run(&mut ctx, &mut event_loop, &mut state) {
+        Ok(_) => println!("Exited cleanly."),
+        Err(e) => println!("Error occured: {}", e),
     }
 }
