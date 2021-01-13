@@ -3,7 +3,7 @@
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::mint;
 use ggez::nalgebra as na;
-use ggez::{graphics, timer, Context, ContextBuilder, GameResult};
+use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 use std::env;
 use std::path;
 
@@ -117,6 +117,8 @@ fn main() -> GameResult {
     // Make a Context. This is passed to the game loop
     let (mut ctx, mut event_loop) = ContextBuilder::new("space_station_god_game", "Myles Grant")
         .add_resource_path(resource_dir)
+        .window_setup(conf::WindowSetup::default().title("Space Station God Game"))
+        .window_mode(conf::WindowMode::default().dimensions(1280.0, 960.0))
         .build()
         .expect("aieee, could not create ggez context!");
 
