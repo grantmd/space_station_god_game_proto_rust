@@ -1,6 +1,6 @@
 // https://github.com/ggez/ggez/blob/master/docs/FAQ.md#i-get-a-console-window-when-i-launch-my-executable-on-windows
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-use ggez::event::{self, EventHandler};
+use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::mint;
 use ggez::nalgebra as na;
 use ggez::{graphics, timer, Context, ContextBuilder, GameResult};
@@ -86,6 +86,19 @@ impl EventHandler for SpaceStationGodGame {
         }
 
         Ok(())
+    }
+
+    // Handle keypresses
+    fn key_down_event(
+        &mut self,
+        ctx: &mut Context,
+        keycode: KeyCode,
+        _keymods: KeyMods,
+        _repeat: bool,
+    ) {
+        if keycode == KeyCode::Escape || keycode == KeyCode::Q {
+            event::quit(ctx);
+        }
     }
 }
 
