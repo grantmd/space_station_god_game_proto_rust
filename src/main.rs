@@ -56,7 +56,7 @@ impl EventHandler for SpaceStationGodGame {
             graphics::DrawMode::fill(),
             na::Point2::new(0.0, 0.0),
             100.0,
-            2.0,
+            0.1,
             graphics::WHITE,
         )?;
         // Draw the circle at the position
