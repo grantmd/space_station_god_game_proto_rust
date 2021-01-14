@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 ggez = "0.5"
+cgmath = { version = "0.18.0", features = ["mint"] }
 
 # https://github.com/ggez/ggez/blob/master/docs/FAQ.md#imagesound-loading-and-font-rendering-is-slow
 [profile.dev]
