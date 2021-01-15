@@ -156,6 +156,9 @@ impl EventHandler for SpaceStationGodGame {
             );
         }
 
+        // We yield the current thread until the next update
+        ggez::timer::yield_now();
+
         Ok(())
     }
 
