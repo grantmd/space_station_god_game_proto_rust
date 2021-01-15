@@ -194,8 +194,7 @@ fn main() -> GameResult {
         .add_resource_path(resource_dir)
         .window_setup(conf::WindowSetup::default().title("Space Station God Game"))
         .window_mode(conf::WindowMode::default().dimensions(1280.0, 960.0))
-        .build()
-        .expect("aieee, could not create ggez context!");
+        .build()?;
     println!("{}", graphics::renderer_info(&ctx)?);
 
     // Create an instance of your event handler.
