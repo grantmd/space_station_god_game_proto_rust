@@ -150,9 +150,10 @@ impl EventHandler for SpaceStationGodGame {
         if (self.frames % 100) == 0 {
             // Every 100 frames print some stats to the console
             println!(
-                "FPS: {}, dt: {}ns",
+                "FPS: {}, dt: {}ns, ticks: {}",
                 ggez::timer::fps(ctx),
-                self.dt.subsec_nanos()
+                self.dt.subsec_nanos(),
+                ggez::timer::ticks(ctx)
             );
         }
 
