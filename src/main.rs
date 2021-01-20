@@ -58,7 +58,7 @@ impl EventHandler for SpaceStationGodGame {
     // Returns GameResult so ggez can handle any errors
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
         self.dt = timer::delta(ctx);
-        self.circle_pos_x = self.circle_pos_x % 1224.0 + 1.0; // Move the circle to the right and wrap around when the end is reached
+        self.circle_pos_x = self.circle_pos_x % graphics::drawable_size(&ctx).0 + 1.0; // Move the circle to the right and wrap around when the end is reached
 
         // Rotate one of the images at 60fps
         const DESIRED_FPS: u32 = 60;
@@ -171,8 +171,15 @@ impl EventHandler for SpaceStationGodGame {
         _keymods: KeyMods,
         _repeat: bool,
     ) {
-        if keycode == KeyCode::Escape || keycode == KeyCode::Q {
-            event::quit(ctx);
+        match keycode {
+            // Quit
+            KeyCode::Escape | KeyCode::Q => {
+                event::quit(ctx);
+            }
+            KeyCode::Space => {
+                graphics::set_fullscreen(ctx, conf::FullscreenType::True).unwrap();
+            }
+            _ => (), // Do nothing
         }
     }
 }
@@ -196,6 +203,8 @@ fn main() -> GameResult {
         .window_mode(conf::WindowMode::default().dimensions(1280.0, 960.0))
         .build()?;
     println!("{}", graphics::renderer_info(&ctx)?);
+    println!("Game resource path: {:?}", ctx.filesystem);
+    println!("{:#?}", graphics::drawable_size(&ctx));
 
     // Create an instance of your event handler.
     // Usually, you should provide it with the Context object to
