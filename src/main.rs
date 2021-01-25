@@ -5,6 +5,7 @@ use ggez;
 use glam;
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
+use ggez::graphics::DrawParam;
 use ggez::graphics::Text;
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 use std::collections::HashMap;
@@ -15,6 +16,7 @@ use std::path;
 type Point2 = glam::Vec2;
 
 // A Tile object, which the Station is made of
+const TILE_WIDTH: f32 = 50.0;
 #[derive(Debug)]
 struct Tile {
     pos: Point2,    // x,y position of the tile within the station
@@ -108,6 +110,27 @@ impl EventHandler for SpaceStationGodGame {
         // Draw a black background
         graphics::clear(ctx, [0.0, 0.0, 0.0, 1.0].into());
 
+        let (width, height) = graphics::drawable_size(ctx);
+
+        // TODO: Starfield
+
+        // Draw the station
+        for (index, tile) in &mut self.station.tiles {
+            let rect = graphics::Rect::new(
+                (width / 2.0) + (TILE_WIDTH * index.0 as f32) - (TILE_WIDTH / 2.0),
+                (height / 2.0) + (TILE_WIDTH * index.1 as f32) - (TILE_WIDTH / 2.0),
+                TILE_WIDTH,
+                TILE_WIDTH,
+            );
+            let r1 = graphics::Mesh::new_rectangle(
+                ctx,
+                graphics::DrawMode::stroke(1.0),
+                rect,
+                graphics::WHITE,
+            )?;
+            graphics::draw(ctx, &r1, DrawParam::default())?;
+        }
+
         // Put our current FPS on top
         let fps = timer::fps(ctx);
         let fps_display = Text::new(format!("FPS: {}", fps));
@@ -136,12 +159,14 @@ impl EventHandler for SpaceStationGodGame {
                 event::quit(ctx);
             }
             // Toggle fullscreen
-            KeyCode::Space => {
+            KeyCode::F10 => {
                 self.is_fullscreen = !self.is_fullscreen;
 
                 let fullscreen_type = if self.is_fullscreen {
+                    println!("Switching to fullscreen");
                     conf::FullscreenType::Desktop
                 } else {
+                    println!("Switching to windowed");
                     conf::FullscreenType::Windowed
                 };
 
@@ -152,7 +177,9 @@ impl EventHandler for SpaceStationGodGame {
     }
 
     // The window was resized
-    fn resize_event(&mut self, _ctx: &mut Context, width: f32, height: f32) {
+    fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) {
+        let new_rect = graphics::Rect::new(0.0, 0.0, width, height);
+        graphics::set_screen_coordinates(ctx, new_rect).unwrap();
         println!("Resized screen to {}, {}", width, height);
     }
 }
