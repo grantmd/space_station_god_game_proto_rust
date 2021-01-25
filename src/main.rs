@@ -7,24 +7,82 @@ use glam;
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::graphics::Text;
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
+use std::collections::HashMap;
 use std::env;
 use std::path;
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;
 
+// A Tile object, which the Station is made of
+#[derive(Debug)]
+struct Tile {
+    pos: Point2,    // x,y position of the tile within the station
+    kind: TileType, // what type of square the tile is
+}
+#[derive(Debug)]
+enum TileType {
+    Floor,
+    Wall,
+    Door,
+}
+
+impl Tile {
+    fn new(pos: Point2, kind: TileType) -> Tile {
+        Tile {
+            pos: pos,
+            kind: kind,
+        }
+    }
+}
+
+// A type for the Station itself
+#[derive(Debug)]
+struct Station {
+    pos: Point2,                      // The "center" of the station, in world coordinates
+    tiles: HashMap<(i32, i32), Tile>, // All the Tiles that make up the station
+}
+
+impl Station {
+    // Creates a new station from scratch.
+    // Will eventually be randomly-generated
+    fn new(pos: Point2) -> Station {
+        let mut s = Station {
+            pos: pos,
+            tiles: HashMap::new(),
+        };
+
+        let tile = Tile::new(Point2::zero(), TileType::Floor);
+        s.add_tile(tile);
+
+        s
+    }
+
+    // Adds a tile to the station. Trusts the tile's position
+    fn add_tile(&mut self, tile: Tile) {
+        self.tiles
+            .insert((tile.pos.x as i32, tile.pos.y as i32), tile);
+    }
+}
+
 // Main game state object. Holds positions, scores, etc
 struct SpaceStationGodGame {
     dt: std::time::Duration, // Time between updates
     is_fullscreen: bool,
+    station: Station,
 }
 
 impl SpaceStationGodGame {
+    // Load/create resources such as images here and otherwise initialize state
     pub fn new(ctx: &mut Context) -> GameResult<SpaceStationGodGame> {
-        // Load/create resources such as images here and otherwise initialize state
+        // Make a new station
+        let station = Station::new(Point2::zero());
+
+        // Create game state and return it
         let s = SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
             is_fullscreen: false,
+            station: station,
         };
 
         Ok(s)
