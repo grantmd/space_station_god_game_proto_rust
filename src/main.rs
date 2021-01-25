@@ -16,7 +16,7 @@ use std::path;
 type Point2 = glam::Vec2;
 
 // A Tile object, which the Station is made of
-const TILE_WIDTH: f32 = 50.0;
+const TILE_WIDTH: f32 = 25.0;
 #[derive(Debug)]
 struct Tile {
     pos: Point2,    // x,y position of the tile within the station
@@ -48,14 +48,26 @@ struct Station {
 impl Station {
     // Creates a new station from scratch.
     // Will eventually be randomly-generated
-    fn new(pos: Point2) -> Station {
+    fn new(pos: Point2, size: u32) -> Station {
         let mut s = Station {
             pos: pos,
             tiles: HashMap::new(),
         };
 
-        let tile = Tile::new(Point2::zero(), TileType::Floor);
-        s.add_tile(tile);
+        let mut x = 0.0;
+        let mut y = 0.0;
+        let max_x = (size as f64).sqrt() as u32;
+        for i in 1..=size {
+            println!("{}: {},{}", i, x, y);
+            let tile = Tile::new(Point2::new(x, y), TileType::Floor);
+            s.add_tile(tile);
+
+            x += 1.0;
+            if i % max_x == 0 {
+                y += 1.0;
+                x = 0.0;
+            }
+        }
 
         s
     }
@@ -64,6 +76,26 @@ impl Station {
     fn add_tile(&mut self, tile: Tile) {
         self.tiles
             .insert((tile.pos.x as i32, tile.pos.y as i32), tile);
+    }
+
+    // How many tiles do we have?
+    fn num_tiles(&mut self) -> usize {
+        self.tiles.len()
+    }
+
+    // Do we have a tile at a spot?
+    fn has_tile(&mut self, pos: (i32, i32)) -> bool {
+        self.tiles.contains_key(&pos)
+    }
+
+    // Get tile at a spot, if any
+    fn get_tile(&mut self, pos: (i32, i32)) -> Option<&Tile> {
+        self.tiles.get(&pos)
+    }
+
+    // Removes a tile
+    fn remove_tile(&mut self, pos: (i32, i32)) {
+        self.tiles.remove(&pos);
     }
 }
 
@@ -78,7 +110,7 @@ impl SpaceStationGodGame {
     // Load/create resources such as images here and otherwise initialize state
     pub fn new(ctx: &mut Context) -> GameResult<SpaceStationGodGame> {
         // Make a new station
-        let station = Station::new(Point2::zero());
+        let station = Station::new(Point2::zero(), 25);
 
         // Create game state and return it
         let s = SpaceStationGodGame {
@@ -122,12 +154,27 @@ impl EventHandler for SpaceStationGodGame {
                 TILE_WIDTH,
                 TILE_WIDTH,
             );
-            let r1 = graphics::Mesh::new_rectangle(
-                ctx,
-                graphics::DrawMode::stroke(1.0),
-                rect,
-                graphics::WHITE,
-            )?;
+
+            let r1 = match tile.kind {
+                TileType::Floor => graphics::Mesh::new_rectangle(
+                    ctx,
+                    graphics::DrawMode::stroke(1.0),
+                    rect,
+                    graphics::WHITE,
+                )?,
+                TileType::Wall => graphics::Mesh::new_rectangle(
+                    ctx,
+                    graphics::DrawMode::fill(),
+                    rect,
+                    graphics::WHITE,
+                )?,
+                TileType::Door => graphics::Mesh::new_rectangle(
+                    ctx,
+                    graphics::DrawMode::fill(),
+                    rect,
+                    graphics::WHITE,
+                )?,
+            };
             graphics::draw(ctx, &r1, DrawParam::default())?;
         }
 
