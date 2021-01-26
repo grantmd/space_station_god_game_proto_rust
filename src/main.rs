@@ -156,6 +156,7 @@ impl EventHandler for SpaceStationGodGame {
         // TODO: Starfield
 
         // Draw the station
+        // TODO: MeshBatch
         for (index, tile) in &mut self.station.tiles {
             let rect = graphics::Rect::new(
                 self.station.pos.x + (TILE_WIDTH * index.0 as f32) - (TILE_WIDTH / 2.0),
@@ -164,7 +165,7 @@ impl EventHandler for SpaceStationGodGame {
                 TILE_WIDTH,
             );
 
-            let r1 = match tile.kind {
+            let mesh = match tile.kind {
                 TileType::Floor => graphics::Mesh::new_rectangle(
                     ctx,
                     graphics::DrawMode::stroke(1.0),
@@ -184,7 +185,7 @@ impl EventHandler for SpaceStationGodGame {
                     graphics::WHITE,
                 )?,
             };
-            graphics::draw(ctx, &r1, DrawParam::default())?;
+            graphics::draw(ctx, &mesh, DrawParam::default())?;
         }
 
         // Put our current FPS on top
