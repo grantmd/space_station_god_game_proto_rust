@@ -47,35 +47,26 @@ struct Station {
 impl Station {
     // Creates a new station from scratch.
     // Will eventually be randomly-generated
-    fn new(pos: Point2, size: u32) -> Station {
+    fn new(pos: Point2, width: u32, height: u32) -> Station {
         let mut s = Station {
             pos: pos,
             tiles: HashMap::new(),
         };
 
-        let mut x = 0.0;
-        let mut y = 0.0;
-        let max_x = (size as f64).sqrt() as u32;
-        for i in 1..=size {
-            // Figure out what type of tile
-            let mut tile_type = TileType::Floor;
-            if x == 0.0 || y == 0.0 {
-                tile_type = TileType::Wall;
-            }
-            if i % max_x == 0 || y == max_x as f32 {
-                tile_type = TileType::Wall;
-            }
+        for x in 0..width {
+            for y in 0..height {
+                // Figure out what type of tile
+                let mut tile_type = TileType::Floor;
+                if x == 0 || y == 0 {
+                    tile_type = TileType::Wall;
+                }
+                if x == width - 1 || y == height - 1 {
+                    tile_type = TileType::Wall;
+                }
 
-            // Place the tile
-            println!("{}: {},{}", i, x, y);
-            let tile = Tile::new(Point2::new(x, y), tile_type);
-            s.add_tile(tile);
-
-            // Move to the next spot
-            x += 1.0;
-            if i % max_x == 0 {
-                y += 1.0;
-                x = 0.0;
+                // Place the tile
+                let tile = Tile::new(Point2::new(x as f32, y as f32), tile_type);
+                s.add_tile(tile);
             }
         }
 
@@ -120,11 +111,17 @@ impl SpaceStationGodGame {
     // Load/create resources such as images here and otherwise initialize state
     pub fn new(ctx: &mut Context) -> GameResult<SpaceStationGodGame> {
         // Make a new station
-        let (width, height) = graphics::drawable_size(ctx);
+        let (screen_width, screen_height) = graphics::drawable_size(ctx);
 
-        let station_size = 90;
-        let center = Point2::new(width / 2.0, height / 2.0);
-        let station = Station::new(center, station_size);
+        let station_width = 15;
+        let station_height = 11;
+
+        let mut center = Point2::new(screen_width / 2.0, screen_height / 2.0);
+        center -= Point2::new(
+            station_width as f32 * TILE_WIDTH / 2.0,
+            station_height as f32 * TILE_WIDTH / 2.0,
+        );
+        let station = Station::new(center, station_width, station_height);
 
         // Create game state and return it
         let s = SpaceStationGodGame {
