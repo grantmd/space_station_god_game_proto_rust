@@ -5,8 +5,7 @@ use ggez;
 use glam;
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
-use ggez::graphics::DrawParam;
-use ggez::graphics::Text;
+use ggez::graphics::{Color, DrawParam, Text};
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 use std::collections::HashMap;
 use std::env;
@@ -16,7 +15,7 @@ use std::path;
 type Point2 = glam::Vec2;
 
 // A Tile object, which the Station is made of
-const TILE_WIDTH: f32 = 25.0;
+const TILE_WIDTH: f32 = 30.0;
 #[derive(Debug)]
 struct Tile {
     pos: Point2,    // x,y position of the tile within the station
@@ -58,10 +57,21 @@ impl Station {
         let mut y = 0.0;
         let max_x = (size as f64).sqrt() as u32;
         for i in 1..=size {
+            // Figure out what type of tile
+            let mut tile_type = TileType::Floor;
+            if x == 0.0 || y == 0.0 {
+                tile_type = TileType::Wall;
+            }
+            if i % max_x == 0 || y == max_x as f32 {
+                tile_type = TileType::Wall;
+            }
+
+            // Place the tile
             println!("{}: {},{}", i, x, y);
-            let tile = Tile::new(Point2::new(x, y), TileType::Floor);
+            let tile = Tile::new(Point2::new(x, y), tile_type);
             s.add_tile(tile);
 
+            // Move to the next spot
             x += 1.0;
             if i % max_x == 0 {
                 y += 1.0;
@@ -110,7 +120,11 @@ impl SpaceStationGodGame {
     // Load/create resources such as images here and otherwise initialize state
     pub fn new(ctx: &mut Context) -> GameResult<SpaceStationGodGame> {
         // Make a new station
-        let station = Station::new(Point2::zero(), 25);
+        let (width, height) = graphics::drawable_size(ctx);
+
+        let station_size = 90;
+        let center = Point2::new(width / 2.0, height / 2.0);
+        let station = Station::new(center, station_size);
 
         // Create game state and return it
         let s = SpaceStationGodGame {
@@ -142,15 +156,13 @@ impl EventHandler for SpaceStationGodGame {
         // Draw a black background
         graphics::clear(ctx, [0.0, 0.0, 0.0, 1.0].into());
 
-        let (width, height) = graphics::drawable_size(ctx);
-
         // TODO: Starfield
 
         // Draw the station
         for (index, tile) in &mut self.station.tiles {
             let rect = graphics::Rect::new(
-                (width / 2.0) + (TILE_WIDTH * index.0 as f32) - (TILE_WIDTH / 2.0),
-                (height / 2.0) + (TILE_WIDTH * index.1 as f32) - (TILE_WIDTH / 2.0),
+                self.station.pos.x + (TILE_WIDTH * index.0 as f32) - (TILE_WIDTH / 2.0),
+                self.station.pos.y + (TILE_WIDTH * index.1 as f32) - (TILE_WIDTH / 2.0),
                 TILE_WIDTH,
                 TILE_WIDTH,
             );
@@ -160,13 +172,13 @@ impl EventHandler for SpaceStationGodGame {
                     ctx,
                     graphics::DrawMode::stroke(1.0),
                     rect,
-                    graphics::WHITE,
+                    Color::new(0.3, 0.3, 0.3, 1.0),
                 )?,
                 TileType::Wall => graphics::Mesh::new_rectangle(
                     ctx,
                     graphics::DrawMode::fill(),
                     rect,
-                    graphics::WHITE,
+                    Color::new(0.3, 0.3, 0.3, 1.0),
                 )?,
                 TileType::Door => graphics::Mesh::new_rectangle(
                     ctx,
@@ -180,7 +192,7 @@ impl EventHandler for SpaceStationGodGame {
 
         // Put our current FPS on top
         let fps = timer::fps(ctx);
-        let fps_display = Text::new(format!("FPS: {}", fps));
+        let fps_display = Text::new(format!("FPS: {0:.1}", fps));
         graphics::draw(ctx, &fps_display, (Point2::new(10.0, 0.0), graphics::WHITE))?;
 
         // Actually draw everything to the screen
