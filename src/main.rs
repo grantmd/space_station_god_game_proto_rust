@@ -40,8 +40,9 @@ impl Tile {
 // A type for the Station itself
 #[derive(Debug)]
 struct Station {
-    pos: Point2,                      // The "center" of the station, in world coordinates
+    pos: Point2, // The position of the station (upper-left, basically), in world coordinates
     tiles: HashMap<(i32, i32), Tile>, // All the Tiles that make up the station
+    inhabitants: Vec<Inhabitant>, // All the Inhabitants in the station
 }
 
 impl Station {
@@ -51,6 +52,7 @@ impl Station {
         let mut s = Station {
             pos: pos,
             tiles: HashMap::new(),
+            inhabitants: Vec::new(),
         };
 
         for x in 0..width {
@@ -98,6 +100,61 @@ impl Station {
     fn remove_tile(&mut self, pos: (i32, i32)) {
         self.tiles.remove(&pos);
     }
+
+    // Add an inhabitant
+    fn add_inhabitant(&mut self, inhabitant: Inhabitant) {
+        self.inhabitants.push(inhabitant)
+    }
+}
+
+// An Inhabitant of the Station
+#[derive(Debug)]
+struct Inhabitant {
+    pos: Point2,
+    dest: Option<Point2>,
+    kind: InhabitantType,
+    health: i8,
+    hunger: i8,
+    thirst: i8,
+}
+
+#[derive(Debug)]
+enum InhabitantType {
+    Pilot,
+    Engineer,
+    Medic,
+    Soldier,
+    Miner,
+    Ghost,
+}
+
+impl Inhabitant {
+    fn new(pos: Point2, kind: InhabitantType) -> Inhabitant {
+        Inhabitant {
+            pos: pos,
+            dest: None,
+            kind: kind,
+            health: 100,
+            hunger: 0,
+            thirst: 0,
+        }
+    }
+
+    // Whether we can move to a type of tile
+    // Doesn't check whether we can _get_ there, but only if we can be there
+    fn can_move_to(&mut self, tile: Tile) -> bool {
+        match self.kind {
+            // Ghosts can go anywhere, lol
+            InhabitantType::Ghost => true,
+
+            // Everyone else needs to test the type of tile
+            _ => match tile.kind {
+                TileType::Wall => false,
+                TileType::Door => true, // TODO: Check if we can open it?
+                TileType::Floor => true,
+            },
+        }
+    }
 }
 
 // Main game state object. Holds positions, scores, etc
@@ -116,12 +173,20 @@ impl SpaceStationGodGame {
         let station_width = 15;
         let station_height = 11;
 
-        let mut center = Point2::new(screen_width / 2.0, screen_height / 2.0);
-        center -= Point2::new(
+        let mut station_pos = Point2::new(screen_width / 2.0, screen_height / 2.0);
+        station_pos -= Point2::new(
             station_width as f32 * TILE_WIDTH / 2.0,
             station_height as f32 * TILE_WIDTH / 2.0,
         );
-        let station = Station::new(center, station_width, station_height);
+        let mut station = Station::new(station_pos, station_width, station_height);
+
+        // Put some people in it
+        for _ in 0..1 {
+            station.add_inhabitant(Inhabitant::new(
+                Point2::new(station_width as f32 / 2.0, station_height as f32 / 2.0),
+                InhabitantType::Engineer, // TODO: Random
+            ));
+        }
 
         // Create game state and return it
         let s = SpaceStationGodGame {
@@ -144,7 +209,10 @@ impl EventHandler for SpaceStationGodGame {
 
         // Update at 60fps
         const DESIRED_FPS: u32 = 60;
-        while timer::check_update_time(ctx, DESIRED_FPS) {}
+        while timer::check_update_time(ctx, DESIRED_FPS) {
+            let seconds = 1.0 / (DESIRED_FPS as f32);
+            println!("{}: {:#?}", seconds, self.dt)
+        }
         Ok(())
     }
 
@@ -157,7 +225,7 @@ impl EventHandler for SpaceStationGodGame {
 
         // Draw the station
         // TODO: MeshBatch
-        for (index, tile) in &mut self.station.tiles {
+        for (index, tile) in &self.station.tiles {
             let rect = graphics::Rect::new(
                 self.station.pos.x + (TILE_WIDTH * index.0 as f32) - (TILE_WIDTH / 2.0),
                 self.station.pos.y + (TILE_WIDTH * index.1 as f32) - (TILE_WIDTH / 2.0),
@@ -185,6 +253,23 @@ impl EventHandler for SpaceStationGodGame {
                     graphics::WHITE,
                 )?,
             };
+            graphics::draw(ctx, &mesh, DrawParam::default())?;
+        }
+
+        // Draw the inhabitants
+        for inhabitant in &self.station.inhabitants {
+            let pos = Point2::new(
+                self.station.pos.x + (TILE_WIDTH * inhabitant.pos.x) - (TILE_WIDTH / 2.0),
+                self.station.pos.y + (TILE_WIDTH * inhabitant.pos.y) - (TILE_WIDTH / 2.0),
+            );
+            let mesh = graphics::Mesh::new_circle(
+                ctx,
+                graphics::DrawMode::fill(),
+                pos,
+                TILE_WIDTH / 2.0 - 5.0,
+                0.1,
+                graphics::WHITE,
+            )?;
             graphics::draw(ctx, &mesh, DrawParam::default())?;
         }
 
@@ -257,6 +342,7 @@ fn main() -> GameResult {
     let (mut ctx, event_loop) = ContextBuilder::new("space_station_god_game", "Myles Grant")
         .add_resource_path(resource_dir)
         .window_setup(conf::WindowSetup::default().title("Space Station God Game"))
+        .window_mode(conf::WindowMode::default().dimensions(1280.0, 720.0))
         .build()?;
     println!("{}", graphics::renderer_info(&ctx)?);
     println!("Game resource path: {:#?}", ctx.filesystem);
