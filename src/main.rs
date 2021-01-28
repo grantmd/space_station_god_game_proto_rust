@@ -42,7 +42,6 @@ impl Tile {
 struct Station {
     pos: Point2, // The position of the station (upper-left, basically), in world coordinates
     tiles: HashMap<(i32, i32), Tile>, // All the Tiles that make up the station
-    inhabitants: Vec<Inhabitant>, // All the Inhabitants in the station
 }
 
 impl Station {
@@ -52,7 +51,6 @@ impl Station {
         let mut s = Station {
             pos: pos,
             tiles: HashMap::new(),
-            inhabitants: Vec::new(),
         };
 
         for x in 0..width {
@@ -82,28 +80,23 @@ impl Station {
     }
 
     // How many tiles do we have?
-    fn num_tiles(&mut self) -> usize {
+    fn num_tiles(&self) -> usize {
         self.tiles.len()
     }
 
     // Do we have a tile at a spot?
-    fn has_tile(&mut self, pos: (i32, i32)) -> bool {
+    fn has_tile(&self, pos: (i32, i32)) -> bool {
         self.tiles.contains_key(&pos)
     }
 
     // Get tile at a spot, if any
-    fn get_tile(&mut self, pos: (i32, i32)) -> Option<&Tile> {
+    fn get_tile(&self, pos: (i32, i32)) -> Option<&Tile> {
         self.tiles.get(&pos)
     }
 
     // Removes a tile
     fn remove_tile(&mut self, pos: (i32, i32)) {
         self.tiles.remove(&pos);
-    }
-
-    // Add an inhabitant
-    fn add_inhabitant(&mut self, inhabitant: Inhabitant) {
-        self.inhabitants.push(inhabitant)
     }
 }
 
@@ -142,7 +135,7 @@ impl Inhabitant {
 
     // Whether we can move to a type of tile
     // Doesn't check whether we can _get_ there, but only if we can be there
-    fn can_move_to(&mut self, tile: Tile) -> bool {
+    fn can_move_to(&mut self, tile: &Tile) -> bool {
         match self.kind {
             // Ghosts can go anywhere, lol
             InhabitantType::Ghost => true,
@@ -162,6 +155,7 @@ struct SpaceStationGodGame {
     dt: std::time::Duration, // Time between updates
     is_fullscreen: bool,
     station: Station,
+    inhabitants: Vec<Inhabitant>,
 }
 
 impl SpaceStationGodGame {
@@ -178,11 +172,12 @@ impl SpaceStationGodGame {
             station_width as f32 * TILE_WIDTH / 2.0,
             station_height as f32 * TILE_WIDTH / 2.0,
         );
-        let mut station = Station::new(station_pos, station_width, station_height);
+        let station = Station::new(station_pos, station_width, station_height);
 
         // Put some people in it
+        let mut inhabitants = Vec::new();
         for _ in 0..1 {
-            station.add_inhabitant(Inhabitant::new(
+            inhabitants.push(Inhabitant::new(
                 Point2::new(station_width as f32 / 2.0, station_height as f32 / 2.0),
                 InhabitantType::Engineer, // TODO: Random
             ));
@@ -193,6 +188,7 @@ impl SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
             is_fullscreen: false,
             station: station,
+            inhabitants: inhabitants,
         };
 
         Ok(s)
@@ -210,8 +206,35 @@ impl EventHandler for SpaceStationGodGame {
         // Update at 60fps
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
-            let seconds = 1.0 / (DESIRED_FPS as f32);
-            println!("{}: {:#?}", seconds, self.dt)
+            // Move the inhabitants
+            for inhabitant in &mut self.inhabitants {
+                match inhabitant.dest {
+                    Some(dest) => {
+                        // Keep going until we get there
+                        println!("Continuing from {} to {}", inhabitant.pos, dest);
+                        inhabitant.pos = dest;
+                        inhabitant.dest = None;
+                    },
+                    None => {
+                        // Pick a random valid destination
+                        for x in -1..1 {
+                            for y in -1..1 {
+                                let tile = self.station.get_tile((inhabitant.pos.x as i32+x, inhabitant.pos.y as i32+y));
+                                match tile {
+                                    Some(t) => {
+                                      if inhabitant.can_move_to(t) {
+                                        println!("Moving to {}", t.pos);
+                                        inhabitant.dest = Some(t.pos);
+                                        break;
+                                      }
+                                    },
+                                    None => {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         Ok(())
     }
@@ -257,7 +280,7 @@ impl EventHandler for SpaceStationGodGame {
         }
 
         // Draw the inhabitants
-        for inhabitant in &self.station.inhabitants {
+        for inhabitant in &self.inhabitants {
             let pos = Point2::new(
                 self.station.pos.x + (TILE_WIDTH * inhabitant.pos.x) - (TILE_WIDTH / 2.0),
                 self.station.pos.y + (TILE_WIDTH * inhabitant.pos.y) - (TILE_WIDTH / 2.0),
