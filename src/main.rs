@@ -188,10 +188,15 @@ impl SpaceStationGodGame {
             ));
         }
 
+        // Create a seeded random-number generator
+        let mut seed: [u8; 8] = [0; 8];
+        getrandom::getrandom(&mut seed[..]).expect("Could not create RNG seed");
+        let rng = Rand32::new(u64::from_ne_bytes(seed));
+
         // Create game state and return it
         let s = SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
-            rng: Rand32::new(12345), // TODO: Raandom seed
+            rng: rng,
             is_fullscreen: false,
             station: station,
             inhabitants: inhabitants,
