@@ -204,37 +204,40 @@ impl EventHandler for SpaceStationGodGame {
     // `self` is state, `ctx` provides access to hardware (input, graphics, sound, etc)
     // Returns GameResult so ggez can handle any errors
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.dt = timer::delta(ctx);
+        self.dt += timer::delta(ctx);
 
         // Update at 60fps
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
-            // Move the inhabitants
-            for inhabitant in &mut self.inhabitants {
-                match inhabitant.dest {
-                    Some(dest) => {
-                        // Keep going until we get there
-                        println!("Continuing from {} to {}", inhabitant.pos, dest);
-                        inhabitant.pos = dest;
-                        inhabitant.dest = None;
-                    }
-                    None => {
-                        // Pick a random valid destination
-                        'outer: for x in -1..1 {
-                            for y in -1..1 {
-                                let tile = self.station.get_tile((
-                                    inhabitant.pos.x as i32 + x,
-                                    inhabitant.pos.y as i32 + y,
-                                ));
-                                if inhabitant.can_move_to(tile) {
-                                    let dest = Point2::new(
-                                        inhabitant.pos.x + x as f32,
-                                        inhabitant.pos.y + y as f32,
-                                    );
-                                    if dest != inhabitant.pos {
-                                        println!("Moving to {}", dest);
-                                        inhabitant.dest = Some(dest);
-                                        break 'outer;
+            if self.dt.as_secs() >= 1 {
+                self.dt -= std::time::Duration::new(1, 0);
+                // Move the inhabitants
+                for inhabitant in &mut self.inhabitants {
+                    match inhabitant.dest {
+                        Some(dest) => {
+                            // Keep going until we get there
+                            println!("Continuing from {} to {}", inhabitant.pos, dest);
+                            inhabitant.pos = dest;
+                            inhabitant.dest = None;
+                        }
+                        None => {
+                            // Pick a random valid destination
+                            'outer: for x in -1..1 {
+                                for y in -1..1 {
+                                    let tile = self.station.get_tile((
+                                        inhabitant.pos.x as i32 + x,
+                                        inhabitant.pos.y as i32 + y,
+                                    ));
+                                    if inhabitant.can_move_to(tile) {
+                                        let dest = Point2::new(
+                                            inhabitant.pos.x + x as f32,
+                                            inhabitant.pos.y + y as f32,
+                                        );
+                                        if dest != inhabitant.pos {
+                                            println!("Moving to {}", dest);
+                                            inhabitant.dest = Some(dest);
+                                            break 'outer;
+                                        }
                                     }
                                 }
                             }
