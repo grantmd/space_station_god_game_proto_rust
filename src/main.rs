@@ -220,7 +220,7 @@ impl EventHandler for SpaceStationGodGame {
                     }
                     None => {
                         // Pick a random valid destination
-                        for x in -1..1 {
+                        'outer: for x in -1..1 {
                             for y in -1..1 {
                                 let tile = self.station.get_tile((
                                     inhabitant.pos.x as i32 + x,
@@ -231,9 +231,11 @@ impl EventHandler for SpaceStationGodGame {
                                         inhabitant.pos.x + x as f32,
                                         inhabitant.pos.y + y as f32,
                                     );
-                                    println!("Moving to {}", dest);
-                                    inhabitant.dest = Some(dest);
-                                    break;
+                                    if dest != inhabitant.pos {
+                                        println!("Moving to {}", dest);
+                                        inhabitant.dest = Some(dest);
+                                        break 'outer;
+                                    }
                                 }
                             }
                         }
