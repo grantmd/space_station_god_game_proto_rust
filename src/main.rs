@@ -3,6 +3,7 @@
 
 use ggez;
 use glam;
+use oorandom::Rand32;
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::graphics::{Color, DrawParam, Text};
@@ -156,6 +157,7 @@ impl Inhabitant {
 // Main game state object. Holds positions, scores, etc
 struct SpaceStationGodGame {
     dt: std::time::Duration, // Time between updates
+    rng: oorandom::Rand32,
     is_fullscreen: bool,
     station: Station,
     inhabitants: Vec<Inhabitant>,
@@ -189,6 +191,7 @@ impl SpaceStationGodGame {
         // Create game state and return it
         let s = SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
+            rng: Rand32::new(12345), // TODO: Raandom seed
             is_fullscreen: false,
             station: station,
             inhabitants: inhabitants,
@@ -222,22 +225,22 @@ impl EventHandler for SpaceStationGodGame {
                         // Only move once per second
                         if self.dt.as_secs() >= 1 {
                             // Pick a random valid destination
-                            'outer: for x in -1..2 {
-                                for y in -1..2 {
-                                    let tile = self.station.get_tile((
-                                        inhabitant.pos.x as i32 + x,
-                                        inhabitant.pos.y as i32 + y,
-                                    ));
-                                    if inhabitant.can_move_to(tile) {
-                                        let dest = Point2::new(
-                                            inhabitant.pos.x + x as f32,
-                                            inhabitant.pos.y + y as f32,
-                                        );
-                                        if dest != inhabitant.pos {
-                                            println!("Moving to {}", dest);
-                                            inhabitant.dest = Some(dest);
-                                            break 'outer;
-                                        }
+                            loop {
+                                let x = self.rng.rand_range(0..3) as i32 - 1;
+                                let y = self.rng.rand_range(0..3) as i32 - 1;
+                                let tile = self.station.get_tile((
+                                    inhabitant.pos.x as i32 + x,
+                                    inhabitant.pos.y as i32 + y,
+                                ));
+                                if inhabitant.can_move_to(tile) {
+                                    let dest = Point2::new(
+                                        inhabitant.pos.x + x as f32,
+                                        inhabitant.pos.y + y as f32,
+                                    );
+                                    if dest != inhabitant.pos {
+                                        println!("Moving to {}", dest);
+                                        inhabitant.dest = Some(dest);
+                                        break;
                                     }
                                 }
                             }

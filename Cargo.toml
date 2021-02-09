@@ -10,6 +10,7 @@ edition = "2018"
 ggez = "0.6.0-rc0"
 cgmath = { version = "0.18.0", features = ["mint"] }
 glam = "0.12.0"
+oorandom = "11.1.3"
 
 # https://github.com/ggez/ggez/blob/master/docs/FAQ.md#imagesound-loading-and-font-rendering-is-slow
 [profile.dev]
