@@ -135,16 +135,19 @@ impl Inhabitant {
 
     // Whether we can move to a type of tile
     // Doesn't check whether we can _get_ there, but only if we can be there
-    fn can_move_to(&mut self, tile: &Tile) -> bool {
+    fn can_move_to(&mut self, tile: Option<&Tile>) -> bool {
         match self.kind {
             // Ghosts can go anywhere, lol
             InhabitantType::Ghost => true,
 
             // Everyone else needs to test the type of tile
-            _ => match tile.kind {
-                TileType::Wall => false,
-                TileType::Door => true, // TODO: Check if we can open it?
-                TileType::Floor => true,
+            _ => match tile {
+                Some(t) => match t.kind {
+                    TileType::Wall => false,
+                    TileType::Door => true, // TODO: Check if we can open it?
+                    TileType::Floor => true,
+                },
+                None => false,
             },
         }
     }
@@ -214,21 +217,23 @@ impl EventHandler for SpaceStationGodGame {
                         println!("Continuing from {} to {}", inhabitant.pos, dest);
                         inhabitant.pos = dest;
                         inhabitant.dest = None;
-                    },
+                    }
                     None => {
                         // Pick a random valid destination
                         for x in -1..1 {
                             for y in -1..1 {
-                                let tile = self.station.get_tile((inhabitant.pos.x as i32+x, inhabitant.pos.y as i32+y));
-                                match tile {
-                                    Some(t) => {
-                                      if inhabitant.can_move_to(t) {
-                                        println!("Moving to {}", t.pos);
-                                        inhabitant.dest = Some(t.pos);
-                                        break;
-                                      }
-                                    },
-                                    None => {}
+                                let tile = self.station.get_tile((
+                                    inhabitant.pos.x as i32 + x,
+                                    inhabitant.pos.y as i32 + y,
+                                ));
+                                if inhabitant.can_move_to(tile) {
+                                    let dest = Point2::new(
+                                        inhabitant.pos.x + x as f32,
+                                        inhabitant.pos.y + y as f32,
+                                    );
+                                    println!("Moving to {}", dest);
+                                    inhabitant.dest = Some(dest);
+                                    break;
                                 }
                             }
                         }
