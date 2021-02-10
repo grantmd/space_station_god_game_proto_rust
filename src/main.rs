@@ -8,6 +8,9 @@ use oorandom::Rand32;
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::graphics::{Color, DrawParam, Text};
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
+
+use keyframe::{ease, functions::EaseInOut};
+
 use std::collections::HashMap;
 use std::env;
 use std::path;
@@ -222,6 +225,7 @@ impl EventHandler for SpaceStationGodGame {
                 match inhabitant.dest {
                     Some(dest) => {
                         // Keep going until we get there
+                        //let pos = ease(EaseInOut, inhabitant.pos, inhabitant.dest.unwrap(), self.dt.as_secs_f64());
                         println!("Continuing from {} to {}", inhabitant.pos, dest);
                         inhabitant.pos = dest;
                         inhabitant.dest = None;
