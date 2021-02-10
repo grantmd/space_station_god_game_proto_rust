@@ -48,8 +48,8 @@ impl SpaceStationGodGame {
         // Make a new station
         let (screen_width, screen_height) = graphics::drawable_size(ctx);
 
-        let station_width = 15;
-        let station_height = 11;
+        let station_width = 21;
+        let station_height = 13;
 
         let mut station_pos = Point2::new(screen_width / 2.0, screen_height / 2.0);
         station_pos -= Point2::new(
