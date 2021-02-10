@@ -24,13 +24,13 @@ impl Starfield {
         let mut rng = Rand32::new(u64::from_ne_bytes(seed));
 
         // Create stars scaled to screen size
-        let num_stars = (screen_width * screen_height / 1000.0) as usize;
+        let num_stars = (screen_width * screen_height / 2500.0) as usize;
         let mut stars = Vec::with_capacity(num_stars);
         for _ in 0..num_stars {
             let x = rng.rand_range(0..screen_width as u32) as f32;
             let y = rng.rand_range(0..screen_height as u32) as f32;
 
-            let size = rng.rand_float() * 2.0;
+            let size = (rng.rand_float() + 0.1) * 2.0;
 
             stars.push(Star {
                 pos: Point2::new(x, y),
@@ -59,13 +59,11 @@ pub struct Star {
 }
 
 fn random_color(rng: &mut Rand32) -> Color {
-    let color = rng.rand_range(0..3);
+    let color = rng.rand_range(0..4);
     match color {
-        0 => Color::WHITE,
-        1 => Color::new(0.0, 0.0, 1.0, 1.0), // blue
-        2 => Color::new(0.0, 1.0, 1.0, 1.0), // yellow
-        3 => Color::new(1.0, 0.0, 0.0, 1.0), // red
-        _ => Color::BLACK,
+        0 => Color::new(0.0, 0.0, 1.0, 1.0), // cyan
+        1 => Color::new(1.0, 1.0, 0.0, 1.0), // yellow
+        _ => Color::WHITE,
     }
 }
 
@@ -76,7 +74,7 @@ fn generate_mesh(ctx: &mut Context, stars: &Vec<Star>) -> GameResult<graphics::M
             graphics::DrawMode::fill(),
             star.pos,
             star.size,
-            0.1,
+            1.0,
             star.color,
         )?;
     }
