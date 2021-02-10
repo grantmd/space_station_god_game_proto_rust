@@ -1,7 +1,13 @@
 // https://github.com/ggez/ggez/blob/master/docs/FAQ.md#i-get-a-console-window-when-i-launch-my-executable-on-windows
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod inhabitant;
 mod starfield;
+mod station;
+
+use inhabitant::{Inhabitant, InhabitantType};
+use starfield::Starfield;
+use station::{Station, Tile, TileType};
 
 use ggez;
 use glam;
@@ -13,158 +19,20 @@ use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 
 use keyframe::{ease, functions::EaseInOut};
 
-use std::collections::HashMap;
 use std::env;
 use std::path;
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;
 
-// A Tile object, which the Station is made of
 const TILE_WIDTH: f32 = 30.0;
-#[derive(Debug)]
-struct Tile {
-    pos: Point2,    // x,y position of the tile within the station
-    kind: TileType, // what type of square the tile is
-}
-#[derive(Debug)]
-enum TileType {
-    Floor,
-    Wall,
-    Door,
-}
-
-impl Tile {
-    fn new(pos: Point2, kind: TileType) -> Tile {
-        Tile {
-            pos: pos,
-            kind: kind,
-        }
-    }
-}
-
-// A type for the Station itself
-#[derive(Debug)]
-struct Station {
-    pos: Point2, // The position of the station (upper-left, basically), in world coordinates
-    tiles: HashMap<(i32, i32), Tile>, // All the Tiles that make up the station
-}
-
-impl Station {
-    // Creates a new station from scratch.
-    // Will eventually be randomly-generated
-    fn new(pos: Point2, width: u32, height: u32) -> Station {
-        let mut s = Station {
-            pos: pos,
-            tiles: HashMap::new(),
-        };
-
-        for x in 0..width {
-            for y in 0..height {
-                // Figure out what type of tile
-                let mut tile_type = TileType::Floor;
-                if x == 0 || y == 0 {
-                    tile_type = TileType::Wall;
-                }
-                if x == width - 1 || y == height - 1 {
-                    tile_type = TileType::Wall;
-                }
-
-                // Place the tile
-                let tile = Tile::new(Point2::new(x as f32, y as f32), tile_type);
-                s.add_tile(tile);
-            }
-        }
-
-        s
-    }
-
-    // Adds a tile to the station. Trusts the tile's position
-    fn add_tile(&mut self, tile: Tile) {
-        self.tiles
-            .insert((tile.pos.x as i32, tile.pos.y as i32), tile);
-    }
-
-    // How many tiles do we have?
-    fn num_tiles(&self) -> usize {
-        self.tiles.len()
-    }
-
-    // Do we have a tile at a spot?
-    fn has_tile(&self, pos: (i32, i32)) -> bool {
-        self.tiles.contains_key(&pos)
-    }
-
-    // Get tile at a spot, if any
-    fn get_tile(&self, pos: (i32, i32)) -> Option<&Tile> {
-        self.tiles.get(&pos)
-    }
-
-    // Removes a tile
-    fn remove_tile(&mut self, pos: (i32, i32)) {
-        self.tiles.remove(&pos);
-    }
-}
-
-// An Inhabitant of the Station
-#[derive(Debug)]
-struct Inhabitant {
-    pos: Point2,
-    dest: Option<Point2>,
-    kind: InhabitantType,
-    health: i8,
-    hunger: i8,
-    thirst: i8,
-}
-
-#[derive(Debug)]
-enum InhabitantType {
-    Pilot,
-    Engineer,
-    Medic,
-    Soldier,
-    Miner,
-    Ghost,
-}
-
-impl Inhabitant {
-    fn new(pos: Point2, kind: InhabitantType) -> Inhabitant {
-        Inhabitant {
-            pos: pos,
-            dest: None,
-            kind: kind,
-            health: 100,
-            hunger: 0,
-            thirst: 0,
-        }
-    }
-
-    // Whether we can move to a type of tile
-    // Doesn't check whether we can _get_ there, but only if we can be there
-    fn can_move_to(&mut self, tile: Option<&Tile>) -> bool {
-        match self.kind {
-            // Ghosts can go anywhere, lol
-            InhabitantType::Ghost => true,
-
-            // Everyone else needs to test the type of tile
-            _ => match tile {
-                Some(t) => match t.kind {
-                    TileType::Wall => false,
-                    TileType::Door => true, // TODO: Check if we can open it?
-                    TileType::Floor => true,
-                },
-                None => false,
-            },
-        }
-    }
-}
 
 // Main game state object. Holds positions, scores, etc
 struct SpaceStationGodGame {
     dt: std::time::Duration, // Time between updates
     rng: oorandom::Rand32,
     is_fullscreen: bool,
-    starfield: starfield::Starfield,
+    starfield: Starfield,
     station: Station,
     inhabitants: Vec<Inhabitant>,
 }
@@ -172,6 +40,11 @@ struct SpaceStationGodGame {
 impl SpaceStationGodGame {
     // Load/create resources such as images here and otherwise initialize state
     pub fn new(ctx: &mut Context) -> GameResult<SpaceStationGodGame> {
+        // Create a seeded random-number generator
+        let mut seed: [u8; 8] = [0; 8];
+        getrandom::getrandom(&mut seed[..]).expect("Could not create RNG seed");
+        let rng = Rand32::new(u64::from_ne_bytes(seed));
+
         // Make a new station
         let (screen_width, screen_height) = graphics::drawable_size(ctx);
 
@@ -194,17 +67,12 @@ impl SpaceStationGodGame {
             ));
         }
 
-        // Create a seeded random-number generator
-        let mut seed: [u8; 8] = [0; 8];
-        getrandom::getrandom(&mut seed[..]).expect("Could not create RNG seed");
-        let rng = Rand32::new(u64::from_ne_bytes(seed));
-
         // Create game state and return it
         let s = SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
             rng: rng,
             is_fullscreen: false,
-            starfield: starfield::Starfield::new(ctx),
+            starfield: Starfield::new(ctx),
             station: station,
             inhabitants: inhabitants,
         };
@@ -282,52 +150,11 @@ impl EventHandler for SpaceStationGodGame {
 
         // Draw the station
         // TODO: MeshBatch
-        for (index, tile) in &self.station.tiles {
-            let rect = graphics::Rect::new(
-                self.station.pos.x + (TILE_WIDTH * index.0 as f32) - (TILE_WIDTH / 2.0),
-                self.station.pos.y + (TILE_WIDTH * index.1 as f32) - (TILE_WIDTH / 2.0),
-                TILE_WIDTH,
-                TILE_WIDTH,
-            );
-
-            let mesh = match tile.kind {
-                TileType::Floor => graphics::Mesh::new_rectangle(
-                    ctx,
-                    graphics::DrawMode::stroke(1.0),
-                    rect,
-                    Color::new(0.3, 0.3, 0.3, 1.0),
-                )?,
-                TileType::Wall => graphics::Mesh::new_rectangle(
-                    ctx,
-                    graphics::DrawMode::fill(),
-                    rect,
-                    Color::new(0.3, 0.3, 0.3, 1.0),
-                )?,
-                TileType::Door => graphics::Mesh::new_rectangle(
-                    ctx,
-                    graphics::DrawMode::fill(),
-                    rect,
-                    Color::WHITE,
-                )?,
-            };
-            graphics::draw(ctx, &mesh, DrawParam::default())?;
-        }
+        self.station.draw(ctx)?;
 
         // Draw the inhabitants
-        for inhabitant in &self.inhabitants {
-            let pos = Point2::new(
-                self.station.pos.x + (TILE_WIDTH * inhabitant.pos.x) - (TILE_WIDTH / 2.0),
-                self.station.pos.y + (TILE_WIDTH * inhabitant.pos.y) - (TILE_WIDTH / 2.0),
-            );
-            let mesh = graphics::Mesh::new_circle(
-                ctx,
-                graphics::DrawMode::fill(),
-                pos,
-                TILE_WIDTH / 2.0 - 5.0,
-                0.1,
-                Color::WHITE,
-            )?;
-            graphics::draw(ctx, &mesh, DrawParam::default())?;
+        for inhabitant in &mut self.inhabitants {
+            inhabitant.draw(ctx, self.station.pos)?;
         }
 
         // Put our current FPS on top

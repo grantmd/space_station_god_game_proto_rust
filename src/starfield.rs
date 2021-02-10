@@ -1,6 +1,3 @@
-use ggez;
-use glam;
-
 use ggez::graphics::{Color, DrawParam};
 use ggez::{graphics, Context, GameResult};
 
