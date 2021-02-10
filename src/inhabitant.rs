@@ -1,10 +1,7 @@
 use crate::station::{Tile, TileType};
 
-use ggez::event::{self, EventHandler, KeyCode, KeyMods};
-use ggez::graphics::{Color, DrawParam, Text};
-use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
-
-use keyframe::{ease, functions::EaseInOut};
+use ggez::graphics::{Color, DrawParam};
+use ggez::{graphics, Context, GameResult};
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;

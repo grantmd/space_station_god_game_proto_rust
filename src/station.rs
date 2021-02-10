@@ -1,6 +1,5 @@
-use ggez::event::{self, EventHandler, KeyCode, KeyMods};
-use ggez::graphics::{Color, DrawParam, Text};
-use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
+use ggez::graphics::{Color, DrawParam};
+use ggez::{graphics, Context, GameResult};
 
 use std::collections::HashMap;
 

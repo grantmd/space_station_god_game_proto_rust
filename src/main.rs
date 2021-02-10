@@ -7,14 +7,14 @@ mod station;
 
 use inhabitant::{Inhabitant, InhabitantType};
 use starfield::Starfield;
-use station::{Station, Tile, TileType};
+use station::Station;
 
 use ggez;
 use glam;
 use oorandom::Rand32;
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
-use ggez::graphics::{Color, DrawParam, Text};
+use ggez::graphics::{Color, Text};
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 
 use keyframe::{ease, functions::EaseInOut};
