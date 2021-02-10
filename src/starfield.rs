@@ -42,9 +42,9 @@ pub struct Star {
 }
 
 fn random_color(rng: &mut Rand32) -> Color {
-    let color = rng.rand_range(0..4);
+    let color = rng.rand_range(0..7);
     match color {
-        0 => Color::new(0.0, 0.0, 1.0, 1.0), // cyan
+        0 => Color::new(0.0, 1.0, 1.0, 1.0), // cyan
         1 => Color::new(1.0, 1.0, 0.0, 1.0), // yellow
         _ => Color::WHITE,
     }
