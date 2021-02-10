@@ -112,8 +112,8 @@ impl EventHandler for SpaceStationGodGame {
                         inhabitant.dest = None;
                     }
                     None => {
-                        // Only move once per second
-                        if self.dt.as_secs() >= 1 {
+                        // Move twice per second
+                        if self.dt.as_secs_f32() >= 0.5 {
                             // Pick a random valid destination
                             loop {
                                 let x = self.rng.rand_range(0..3) as i32 - 1;
@@ -140,9 +140,9 @@ impl EventHandler for SpaceStationGodGame {
             }
         }
 
-        // Only count the seconds
-        if self.dt.as_secs() >= 1 {
-            self.dt -= std::time::Duration::new(1, 0);
+        // Only count the half seconds
+        if self.dt.as_secs_f32() >= 0.5 {
+            self.dt -= std::time::Duration::new(0, 500_000_000);
         }
 
         // Done processing
