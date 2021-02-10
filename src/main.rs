@@ -1,6 +1,8 @@
 // https://github.com/ggez/ggez/blob/master/docs/FAQ.md#i-get-a-console-window-when-i-launch-my-executable-on-windows
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod starfield;
+
 use ggez;
 use glam;
 use oorandom::Rand32;
@@ -162,6 +164,7 @@ struct SpaceStationGodGame {
     dt: std::time::Duration, // Time between updates
     rng: oorandom::Rand32,
     is_fullscreen: bool,
+    starfield: starfield::Starfield,
     station: Station,
     inhabitants: Vec<Inhabitant>,
 }
@@ -201,6 +204,7 @@ impl SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
             rng: rng,
             is_fullscreen: false,
+            starfield: starfield::Starfield::new(ctx),
             station: station,
             inhabitants: inhabitants,
         };
@@ -273,7 +277,8 @@ impl EventHandler for SpaceStationGodGame {
         // Draw a black background
         graphics::clear(ctx, [0.0, 0.0, 0.0, 1.0].into());
 
-        // TODO: Starfield
+        // Starfield
+        self.starfield.draw(ctx)?;
 
         // Draw the station
         // TODO: MeshBatch
@@ -302,7 +307,7 @@ impl EventHandler for SpaceStationGodGame {
                     ctx,
                     graphics::DrawMode::fill(),
                     rect,
-                    graphics::WHITE,
+                    Color::WHITE,
                 )?,
             };
             graphics::draw(ctx, &mesh, DrawParam::default())?;
@@ -320,7 +325,7 @@ impl EventHandler for SpaceStationGodGame {
                 pos,
                 TILE_WIDTH / 2.0 - 5.0,
                 0.1,
-                graphics::WHITE,
+                Color::WHITE,
             )?;
             graphics::draw(ctx, &mesh, DrawParam::default())?;
         }
@@ -328,7 +333,7 @@ impl EventHandler for SpaceStationGodGame {
         // Put our current FPS on top
         let fps = timer::fps(ctx);
         let fps_display = Text::new(format!("FPS: {0:.1}", fps));
-        graphics::draw(ctx, &fps_display, (Point2::new(10.0, 0.0), graphics::WHITE))?;
+        graphics::draw(ctx, &fps_display, (Point2::new(10.0, 0.0), Color::WHITE))?;
 
         // Actually draw everything to the screen
         graphics::present(ctx)?;
