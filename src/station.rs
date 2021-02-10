@@ -110,11 +110,20 @@ impl Station {
             );
 
             match tile.kind {
-                TileType::Floor => mb.rectangle(
-                    graphics::DrawMode::stroke(1.0),
-                    rect,
-                    Color::new(0.3, 0.3, 0.3, 1.0),
-                )?,
+                TileType::Floor => {
+                    // Fill the floor
+                    mb.rectangle(
+                        graphics::DrawMode::fill(),
+                        rect,
+                        Color::new(0.1, 0.1, 0.1, 1.0),
+                    )?;
+                    // Draw a line around it to make it a tile
+                    mb.rectangle(
+                        graphics::DrawMode::stroke(1.0),
+                        rect,
+                        Color::new(0.3, 0.3, 0.3, 1.0),
+                    )?
+                }
                 TileType::Wall => mb.rectangle(
                     graphics::DrawMode::fill(),
                     rect,
