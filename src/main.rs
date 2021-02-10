@@ -32,6 +32,7 @@ struct SpaceStationGodGame {
     dt: std::time::Duration, // Time between updates
     rng: oorandom::Rand32,
     is_fullscreen: bool,
+    is_paused: bool,
     starfield: Starfield,
     station: Station,
     inhabitants: Vec<Inhabitant>,
@@ -62,7 +63,8 @@ impl SpaceStationGodGame {
         let mut game = SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
             rng: rng,
-            is_fullscreen: false,
+            is_fullscreen: false, // TODO: Is it possible to know this on startup from context?
+            is_paused: false,
             starfield: Starfield::new(ctx, &mut rng),
             station: station,
             inhabitants: Vec::with_capacity(1),
@@ -88,6 +90,12 @@ impl EventHandler for SpaceStationGodGame {
     // `self` is state, `ctx` provides access to hardware (input, graphics, sound, etc)
     // Returns GameResult so ggez can handle any errors
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        // Are we paused?
+        if self.is_paused {
+            return Ok(());
+        }
+
+        // Step forward
         self.dt += timer::delta(ctx);
 
         // Update at 60fps
@@ -198,6 +206,15 @@ impl EventHandler for SpaceStationGodGame {
 
                 graphics::set_fullscreen(ctx, fullscreen_type).unwrap();
             }
+            // Toggle paused
+            KeyCode::Space => {
+                self.is_paused = !self.is_paused;
+                if self.is_paused {
+                    println!("Pausing");
+                } else {
+                    println!("Unpausing");
+                }
+            }
             // Add a new inhabitant
             KeyCode::N => {
                 self.add_inhabitant(
@@ -205,7 +222,8 @@ impl EventHandler for SpaceStationGodGame {
                     InhabitantType::Engineer, // TODO: Random
                 );
             }
-            _ => (), // Do nothing
+            // Everything else does nothing
+            _ => (),
         }
     }
 
