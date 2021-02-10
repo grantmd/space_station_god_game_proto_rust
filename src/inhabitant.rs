@@ -67,7 +67,7 @@ impl Inhabitant {
             ctx,
             graphics::DrawMode::fill(),
             pos,
-            crate::TILE_WIDTH / 2.0 - 5.0,
+            crate::TILE_WIDTH / 2.0 - 8.0,
             0.1,
             Color::WHITE,
         )?;
