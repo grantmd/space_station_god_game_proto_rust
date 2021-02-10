@@ -58,26 +58,27 @@ impl SpaceStationGodGame {
         );
         let station = Station::new(ctx, station_pos, station_width, station_height);
 
-        // Put some people in it
-        let mut inhabitants = Vec::new();
-        for _ in 0..1 {
-            inhabitants.push(Inhabitant::new(
-                Point2::new(station_width as f32 / 2.0, station_height as f32 / 2.0),
-                InhabitantType::Engineer, // TODO: Random
-            ));
-        }
-
         // Create game state and return it
-        let s = SpaceStationGodGame {
+        let mut game = SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
             rng: rng,
             is_fullscreen: false,
             starfield: Starfield::new(ctx, &mut rng),
             station: station,
-            inhabitants: inhabitants,
+            inhabitants: Vec::with_capacity(1),
         };
 
-        Ok(s)
+        // Put some people in it
+        game.add_inhabitant(
+            Point2::new(station_width as f32 / 2.0, station_height as f32 / 2.0),
+            InhabitantType::Engineer, // TODO: Random
+        );
+
+        Ok(game)
+    }
+
+    fn add_inhabitant(&mut self, pos: Point2, kind: InhabitantType) {
+        self.inhabitants.push(Inhabitant::new(pos, kind));
     }
 }
 
@@ -196,6 +197,13 @@ impl EventHandler for SpaceStationGodGame {
                 };
 
                 graphics::set_fullscreen(ctx, fullscreen_type).unwrap();
+            }
+            // Add a new inhabitant
+            KeyCode::N => {
+                self.add_inhabitant(
+                    Point2::new(1.5, 1.5),    // TODO: Maybe mouse location?
+                    InhabitantType::Engineer, // TODO: Random
+                );
             }
             _ => (), // Do nothing
         }
