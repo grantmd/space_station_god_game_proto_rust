@@ -1,4 +1,4 @@
-use ggez::graphics::{Color, DrawParam};
+use ggez::graphics::{Color, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
 
 use std::collections::HashMap;
@@ -28,19 +28,20 @@ impl Tile {
 }
 
 // A type for the Station itself
-#[derive(Debug)]
 pub struct Station {
     pub pos: Point2, // The position of the station (upper-left, basically), in world coordinates
     tiles: HashMap<(i32, i32), Tile>, // All the Tiles that make up the station
+    mesh: Option<graphics::Mesh>,
 }
 
 impl Station {
     // Creates a new station from scratch.
     // Will eventually be randomly-generated
-    pub fn new(pos: Point2, width: u32, height: u32) -> Station {
+    pub fn new(ctx: &mut Context, pos: Point2, width: u32, height: u32) -> Station {
         let mut s = Station {
             pos: pos,
             tiles: HashMap::new(),
+            mesh: None,
         };
 
         for x in 0..width {
@@ -59,6 +60,8 @@ impl Station {
                 s.add_tile(tile);
             }
         }
+
+        s.generate_mesh(ctx).unwrap();
 
         s
     }
@@ -90,6 +93,14 @@ impl Station {
     }
 
     pub fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+        match &self.mesh {
+            Some(mesh) => graphics::draw(ctx, mesh, DrawParam::default()),
+            None => Ok(()),
+        }
+    }
+
+    fn generate_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
+        let mut mb = graphics::MeshBuilder::new();
         for (index, tile) in &self.tiles {
             let rect = graphics::Rect::new(
                 self.pos.x + (crate::TILE_WIDTH * index.0 as f32) - (crate::TILE_WIDTH / 2.0),
@@ -98,28 +109,22 @@ impl Station {
                 crate::TILE_WIDTH,
             );
 
-            let mesh = match tile.kind {
-                TileType::Floor => graphics::Mesh::new_rectangle(
-                    ctx,
+            match tile.kind {
+                TileType::Floor => mb.rectangle(
                     graphics::DrawMode::stroke(1.0),
                     rect,
                     Color::new(0.3, 0.3, 0.3, 1.0),
                 )?,
-                TileType::Wall => graphics::Mesh::new_rectangle(
-                    ctx,
+                TileType::Wall => mb.rectangle(
                     graphics::DrawMode::fill(),
                     rect,
                     Color::new(0.3, 0.3, 0.3, 1.0),
                 )?,
-                TileType::Door => graphics::Mesh::new_rectangle(
-                    ctx,
-                    graphics::DrawMode::fill(),
-                    rect,
-                    Color::WHITE,
-                )?,
+                TileType::Door => mb.rectangle(graphics::DrawMode::fill(), rect, Color::WHITE)?,
             };
-            graphics::draw(ctx, &mesh, DrawParam::default())?;
         }
+
+        self.mesh = mb.build(ctx).ok();
 
         Ok(())
     }

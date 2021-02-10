@@ -56,7 +56,7 @@ impl SpaceStationGodGame {
             station_width as f32 * TILE_WIDTH / 2.0,
             station_height as f32 * TILE_WIDTH / 2.0,
         );
-        let station = Station::new(station_pos, station_width, station_height);
+        let station = Station::new(ctx, station_pos, station_width, station_height);
 
         // Put some people in it
         let mut inhabitants = Vec::new();
@@ -149,7 +149,6 @@ impl EventHandler for SpaceStationGodGame {
         self.starfield.draw(ctx)?;
 
         // Draw the station
-        // TODO: MeshBatch
         self.station.draw(ctx)?;
 
         // Draw the inhabitants
