@@ -6,46 +6,32 @@ use oorandom::Rand32;
 type Point2 = glam::Vec2;
 
 pub struct Starfield {
-    rng: Rand32,
-    stars: Vec<Star>,
     mesh: graphics::Mesh,
 }
 
 impl Starfield {
-    pub fn new(ctx: &mut Context) -> Starfield {
+    pub fn new(ctx: &mut Context, rng: &mut Rand32) -> Starfield {
         let (screen_width, screen_height) = graphics::drawable_size(ctx);
 
-        // Create a seeded random-number generator
-        let mut seed: [u8; 8] = [0; 8];
-        getrandom::getrandom(&mut seed[..]).expect("Could not create RNG seed");
-        let mut rng = Rand32::new(u64::from_ne_bytes(seed));
-
-        // Create stars scaled to screen size
-        let num_stars = (screen_width * screen_height / 2500.0) as usize;
-        let mut stars = Vec::with_capacity(num_stars);
-        for _ in 0..num_stars {
-            let x = rng.rand_range(0..screen_width as u32) as f32;
-            let y = rng.rand_range(0..screen_height as u32) as f32;
-
-            let size = (rng.rand_float() + 0.1) * 2.0;
-
-            stars.push(Star {
-                pos: Point2::new(x, y),
-                size: size,
-                color: random_color(&mut rng),
-            })
-        }
-
+        let stars = generate_stars(rng, screen_width, screen_height);
         let mb = generate_mesh(ctx, &stars);
-        Starfield {
-            rng: rng,
-            stars: stars,
-            mesh: mb.unwrap(),
-        }
+        Starfield { mesh: mb.unwrap() }
     }
 
     pub fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::draw(ctx, &self.mesh, DrawParam::default())
+    }
+
+    pub fn resize_event(
+        &mut self,
+        ctx: &mut Context,
+        rng: &mut Rand32,
+        screen_width: f32,
+        screen_height: f32,
+    ) {
+        let stars = generate_stars(rng, screen_width, screen_height);
+        let mb = generate_mesh(ctx, &stars);
+        self.mesh = mb.unwrap();
     }
 }
 
@@ -62,6 +48,26 @@ fn random_color(rng: &mut Rand32) -> Color {
         1 => Color::new(1.0, 1.0, 0.0, 1.0), // yellow
         _ => Color::WHITE,
     }
+}
+
+// Create stars scaled to screen size
+fn generate_stars(rng: &mut Rand32, screen_width: f32, screen_height: f32) -> Vec<Star> {
+    let num_stars = (screen_width * screen_height / 2500.0) as usize;
+    let mut stars = Vec::with_capacity(num_stars);
+    for _ in 0..num_stars {
+        let x = rng.rand_range(0..screen_width as u32) as f32;
+        let y = rng.rand_range(0..screen_height as u32) as f32;
+
+        let size = (rng.rand_float() + 0.1) * 2.0;
+
+        stars.push(Star {
+            pos: Point2::new(x, y),
+            size: size,
+            color: random_color(rng),
+        })
+    }
+
+    stars
 }
 
 fn generate_mesh(ctx: &mut Context, stars: &Vec<Star>) -> GameResult<graphics::Mesh> {

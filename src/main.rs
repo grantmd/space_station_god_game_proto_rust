@@ -43,7 +43,7 @@ impl SpaceStationGodGame {
         // Create a seeded random-number generator
         let mut seed: [u8; 8] = [0; 8];
         getrandom::getrandom(&mut seed[..]).expect("Could not create RNG seed");
-        let rng = Rand32::new(u64::from_ne_bytes(seed));
+        let mut rng = Rand32::new(u64::from_ne_bytes(seed));
 
         // Make a new station
         let (screen_width, screen_height) = graphics::drawable_size(ctx);
@@ -72,7 +72,7 @@ impl SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
             rng: rng,
             is_fullscreen: false,
-            starfield: Starfield::new(ctx),
+            starfield: Starfield::new(ctx, &mut rng),
             station: station,
             inhabitants: inhabitants,
         };
@@ -206,6 +206,8 @@ impl EventHandler for SpaceStationGodGame {
     fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) {
         let new_rect = graphics::Rect::new(0.0, 0.0, width, height);
         graphics::set_screen_coordinates(ctx, new_rect).unwrap();
+        self.starfield
+            .resize_event(ctx, &mut self.rng, width, height);
         println!("Resized screen to {}, {}", width, height);
     }
 }
