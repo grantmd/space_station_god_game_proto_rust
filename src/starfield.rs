@@ -11,6 +11,7 @@ type Point2 = glam::Vec2;
 pub struct Starfield {
     rng: Rand32,
     stars: Vec<Star>,
+    mesh: graphics::Mesh,
 }
 
 impl Starfield {
@@ -38,25 +39,16 @@ impl Starfield {
             })
         }
 
+        let mb = generate_mesh(ctx, &stars);
         Starfield {
             rng: rng,
             stars: stars,
+            mesh: mb.unwrap(),
         }
     }
 
     pub fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        for star in &self.stars {
-            let mesh = graphics::Mesh::new_circle(
-                ctx,
-                graphics::DrawMode::fill(),
-                star.pos,
-                star.size,
-                0.1,
-                star.color,
-            )?;
-            graphics::draw(ctx, &mesh, DrawParam::default())?;
-        }
-        Ok(())
+        graphics::draw(ctx, &self.mesh, DrawParam::default())
     }
 }
 
@@ -70,9 +62,24 @@ fn random_color(rng: &mut Rand32) -> Color {
     let color = rng.rand_range(0..3);
     match color {
         0 => Color::WHITE,
-        1 => Color::new(0.0, 0.0, 1.0, 1.0),
-        2 => Color::new(0.0, 1.0, 0.0, 1.0),
-        3 => Color::new(1.0, 0.0, 0.0, 1.0),
+        1 => Color::new(0.0, 0.0, 1.0, 1.0), // blue
+        2 => Color::new(0.0, 1.0, 1.0, 1.0), // yellow
+        3 => Color::new(1.0, 0.0, 0.0, 1.0), // red
         _ => Color::BLACK,
     }
+}
+
+fn generate_mesh(ctx: &mut Context, stars: &Vec<Star>) -> GameResult<graphics::Mesh> {
+    let mut mb = graphics::MeshBuilder::new();
+    for star in stars {
+        mb.circle(
+            graphics::DrawMode::fill(),
+            star.pos,
+            star.size,
+            0.1,
+            star.color,
+        )?;
+    }
+
+    mb.build(ctx)
 }
