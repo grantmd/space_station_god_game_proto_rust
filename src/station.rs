@@ -14,8 +14,24 @@ pub struct Tile {
 #[derive(Debug)]
 pub enum TileType {
     Floor,
-    Wall,
-    Door,
+    Wall(WallDirection),
+    Door(WallDirection),
+}
+
+// Walls have lots of different possible directions, which indicate how they are drawn
+#[derive(Debug)]
+pub enum WallDirection {
+    InteriorVertical,
+    InteriorHorizontal,
+    InteriorCross,
+    ExteriorTop,
+    ExteriorBottom,
+    ExteriorLeft,
+    ExteriorRight,
+    ExteriorCornerTopLeft,
+    ExteriorCornerTopRight,
+    ExteriorCornerBottomLeft,
+    ExteriorCornerBottomRight,
 }
 
 impl Tile {
@@ -49,10 +65,10 @@ impl Station {
                 // Figure out what type of tile
                 let mut tile_type = TileType::Floor;
                 if x == 0 || y == 0 {
-                    tile_type = TileType::Wall;
+                    tile_type = TileType::Wall(WallDirection::ExteriorCornerTopLeft);
                 }
                 if x == width - 1 || y == height - 1 {
-                    tile_type = TileType::Wall;
+                    tile_type = TileType::Wall(WallDirection::ExteriorCornerTopRight);
                 }
 
                 // Place the tile
@@ -124,12 +140,14 @@ impl Station {
                         Color::new(0.3, 0.3, 0.3, 1.0),
                     )?
                 }
-                TileType::Wall => mb.rectangle(
+                TileType::Wall(_) => mb.rectangle(
                     graphics::DrawMode::fill(),
                     rect,
                     Color::new(0.3, 0.3, 0.3, 1.0),
                 )?,
-                TileType::Door => mb.rectangle(graphics::DrawMode::fill(), rect, Color::WHITE)?,
+                TileType::Door(_) => {
+                    mb.rectangle(graphics::DrawMode::fill(), rect, Color::WHITE)?
+                }
             };
         }
 

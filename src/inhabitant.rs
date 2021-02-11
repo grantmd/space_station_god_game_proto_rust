@@ -49,8 +49,8 @@ impl Inhabitant {
             // Everyone else needs to test the type of tile
             _ => match tile {
                 Some(t) => match t.kind {
-                    TileType::Wall => false,
-                    TileType::Door => true, // TODO: Check if we can open it?
+                    TileType::Wall(_) => false,
+                    TileType::Door(_) => true, // TODO: Check if we can open it?
                     TileType::Floor => true,
                 },
                 None => false,
