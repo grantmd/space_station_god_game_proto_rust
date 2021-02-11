@@ -14,7 +14,7 @@ use glam;
 use oorandom::Rand32;
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
-use ggez::graphics::{Color, Text};
+use ggez::graphics::{Color, DrawParam, Text};
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 
 use keyframe::{ease, functions::EaseInOut};
@@ -165,10 +165,38 @@ impl EventHandler for SpaceStationGodGame {
             inhabitant.draw(ctx, self.station.pos)?;
         }
 
-        // Put our current FPS on top
+        // Put our current FPS on top along with other info
         let fps = timer::fps(ctx);
+        let mut height = 0.0;
         let fps_display = Text::new(format!("FPS: {0:.1}", fps));
-        graphics::draw(ctx, &fps_display, (Point2::new(10.0, 0.0), Color::WHITE))?;
+        graphics::queue_text(
+            ctx,
+            &fps_display,
+            Point2::new(10.0, 0.0 + height),
+            Some(Color::WHITE),
+        );
+        height += 5.0 + fps_display.height(ctx) as f32;
+        let station_display = Text::new(format!("Station Tiles: {}", self.station.num_tiles()));
+        graphics::queue_text(
+            ctx,
+            &station_display,
+            Point2::new(10.0, 0.0 + height),
+            Some(Color::WHITE),
+        );
+        height += 5.0 + station_display.height(ctx) as f32;
+        let inhabitant_display = Text::new(format!("Inhabitants: {}", self.inhabitants.len()));
+        graphics::queue_text(
+            ctx,
+            &inhabitant_display,
+            Point2::new(10.0, 0.0 + height),
+            Some(Color::WHITE),
+        );
+        graphics::draw_queued_text(
+            ctx,
+            DrawParam::default(),
+            None,
+            graphics::FilterMode::Linear,
+        )?;
 
         // Actually draw everything to the screen
         graphics::present(ctx)?;
