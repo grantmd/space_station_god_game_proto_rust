@@ -1,6 +1,6 @@
 use crate::station::{Tile, TileType};
 
-use ggez::graphics::{Color, DrawParam};
+use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
 use ggez::{graphics, Context, GameResult};
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
@@ -63,9 +63,9 @@ impl Inhabitant {
             station_pos.x + (crate::TILE_WIDTH * self.pos.x) - (crate::TILE_WIDTH / 2.0),
             station_pos.y + (crate::TILE_WIDTH * self.pos.y) - (crate::TILE_WIDTH / 2.0),
         );
-        let mesh = graphics::Mesh::new_circle(
+        let mesh = Mesh::new_circle(
             ctx,
-            graphics::DrawMode::fill(),
+            DrawMode::fill(),
             pos,
             crate::TILE_WIDTH / 2.0 - 8.0,
             0.1,

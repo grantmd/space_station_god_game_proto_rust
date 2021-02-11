@@ -1,4 +1,4 @@
-use ggez::graphics::{Color, DrawParam};
+use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
 
 use oorandom::Rand32;
@@ -6,7 +6,7 @@ use oorandom::Rand32;
 type Point2 = glam::Vec2;
 
 pub struct Starfield {
-    mesh: graphics::Mesh,
+    mesh: Mesh,
 }
 
 impl Starfield {
@@ -71,15 +71,9 @@ fn generate_stars(rng: &mut Rand32, screen_width: f32, screen_height: f32) -> Ve
 }
 
 fn generate_mesh(ctx: &mut Context, stars: &Vec<Star>) -> GameResult<graphics::Mesh> {
-    let mut mb = graphics::MeshBuilder::new();
+    let mut mb = MeshBuilder::new();
     for star in stars {
-        mb.circle(
-            graphics::DrawMode::fill(),
-            star.pos,
-            star.size,
-            1.0,
-            star.color,
-        )?;
+        mb.circle(DrawMode::fill(), star.pos, star.size, 1.0, star.color)?;
     }
 
     mb.build(ctx)

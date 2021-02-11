@@ -1,4 +1,4 @@
-use ggez::graphics::{Color, DrawParam, Mesh, MeshBuilder};
+use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
 
 use std::collections::HashMap;
@@ -47,7 +47,7 @@ impl Tile {
 pub struct Station {
     pub pos: Point2, // The position of the station (upper-left, basically), in world coordinates
     tiles: HashMap<(i32, i32), Tile>, // All the Tiles that make up the station
-    mesh: Option<graphics::Mesh>,
+    mesh: Option<Mesh>,
 }
 
 impl Station {
@@ -116,7 +116,7 @@ impl Station {
     }
 
     fn generate_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let mut mb = graphics::MeshBuilder::new();
+        let mut mb = MeshBuilder::new();
         for (index, tile) in &self.tiles {
             let rect = graphics::Rect::new(
                 self.pos.x + (crate::TILE_WIDTH * index.0 as f32) - (crate::TILE_WIDTH / 2.0),
@@ -128,26 +128,14 @@ impl Station {
             match tile.kind {
                 TileType::Floor => {
                     // Fill the floor
-                    mb.rectangle(
-                        graphics::DrawMode::fill(),
-                        rect,
-                        Color::new(0.1, 0.1, 0.1, 1.0),
-                    )?;
+                    mb.rectangle(DrawMode::fill(), rect, Color::new(0.1, 0.1, 0.1, 1.0))?;
                     // Draw a line around it to make it a tile
-                    mb.rectangle(
-                        graphics::DrawMode::stroke(1.0),
-                        rect,
-                        Color::new(0.3, 0.3, 0.3, 1.0),
-                    )?
+                    mb.rectangle(DrawMode::stroke(1.0), rect, Color::new(0.3, 0.3, 0.3, 1.0))?
                 }
-                TileType::Wall(_) => mb.rectangle(
-                    graphics::DrawMode::fill(),
-                    rect,
-                    Color::new(0.3, 0.3, 0.3, 1.0),
-                )?,
-                TileType::Door(_) => {
-                    mb.rectangle(graphics::DrawMode::fill(), rect, Color::WHITE)?
+                TileType::Wall(_) => {
+                    mb.rectangle(DrawMode::fill(), rect, Color::new(0.3, 0.3, 0.3, 1.0))?
                 }
+                TileType::Door(_) => mb.rectangle(DrawMode::fill(), rect, Color::WHITE)?,
             };
         }
 
