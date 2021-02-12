@@ -112,6 +112,9 @@ impl EventHandler for SpaceStationGodGame {
             // Step forward
             self.dt += timer::delta(ctx);
 
+            // Update the starfield
+            self.starfield.update(ctx)?;
+
             // Move the inhabitants
             for inhabitant in &mut self.inhabitants {
                 match inhabitant.dest {

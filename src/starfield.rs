@@ -18,6 +18,10 @@ impl Starfield {
         Starfield { mesh: mb.unwrap() }
     }
 
+    pub fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        Ok(())
+    }
+
     pub fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::draw(ctx, &self.mesh, DrawParam::default())
     }
