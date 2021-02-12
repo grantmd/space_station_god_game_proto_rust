@@ -343,7 +343,11 @@ fn main() -> GameResult {
     // Make a Context. This is passed to the game loop
     let (mut ctx, event_loop) = ContextBuilder::new("space_station_god_game", "Myles Grant")
         .add_resource_path(resource_dir)
-        .window_setup(conf::WindowSetup::default().title("Space Station God Game"))
+        .window_setup(
+            conf::WindowSetup::default()
+                .title("Space Station God Game")
+                .vsync(true),
+        )
         .window_mode(conf::WindowMode::default().dimensions(1280.0, 720.0))
         .build()?;
     println!("{}", graphics::renderer_info(&ctx)?);
