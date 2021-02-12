@@ -187,6 +187,14 @@ impl EventHandler for SpaceStationGodGame {
             Some(Color::WHITE),
         );
         height += 5.0 + fps_display.height(ctx) as f32;
+        let uptime_display = Text::new(format!("Uptime: {:?}", timer::time_since_start(ctx)));
+        graphics::queue_text(
+            ctx,
+            &uptime_display,
+            Point2::new(10.0, 0.0 + height),
+            Some(Color::WHITE),
+        );
+        height += 5.0 + uptime_display.height(ctx) as f32;
         let station_display = Text::new(format!(
             "Station Tiles: {} at {}",
             self.station.num_tiles(),
