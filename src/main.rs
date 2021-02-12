@@ -33,9 +33,15 @@ struct SpaceStationGodGame {
     rng: oorandom::Rand32,
     is_fullscreen: bool,
     is_paused: bool,
+    camera: Camera,
     starfield: Starfield,
     station: Station,
     inhabitants: Vec<Inhabitant>,
+}
+
+struct Camera {
+    pos: Point2,
+    zoom: f32,
 }
 
 impl SpaceStationGodGame {
@@ -65,6 +71,10 @@ impl SpaceStationGodGame {
             rng: rng,
             is_fullscreen: false, // TODO: Is it possible to know this on startup from context?
             is_paused: false,
+            camera: Camera {
+                pos: Point2::zero(),
+                zoom: 0.0,
+            },
             starfield: Starfield::new(ctx, &mut rng),
             station: station,
             inhabitants: Vec::with_capacity(1),
@@ -76,6 +86,7 @@ impl SpaceStationGodGame {
             InhabitantType::Engineer, // TODO: Random
         );
 
+        // Return the initial game state
         Ok(game)
     }
 
@@ -176,7 +187,11 @@ impl EventHandler for SpaceStationGodGame {
             Some(Color::WHITE),
         );
         height += 5.0 + fps_display.height(ctx) as f32;
-        let station_display = Text::new(format!("Station Tiles: {}", self.station.num_tiles()));
+        let station_display = Text::new(format!(
+            "Station Tiles: {} at {}",
+            self.station.num_tiles(),
+            self.station.pos
+        ));
         graphics::queue_text(
             ctx,
             &station_display,
@@ -191,6 +206,18 @@ impl EventHandler for SpaceStationGodGame {
             Point2::new(10.0, 0.0 + height),
             Some(Color::WHITE),
         );
+        height += 5.0 + inhabitant_display.height(ctx) as f32;
+        let camera_display = Text::new(format!(
+            "Camera: {} ({1:.1}x)",
+            self.camera.pos, self.camera.zoom
+        ));
+        graphics::queue_text(
+            ctx,
+            &camera_display,
+            Point2::new(10.0, 0.0 + height),
+            Some(Color::WHITE),
+        );
+
         graphics::draw_queued_text(
             ctx,
             DrawParam::default(),
@@ -220,6 +247,7 @@ impl EventHandler for SpaceStationGodGame {
             KeyCode::Escape | KeyCode::Q => {
                 event::quit(ctx);
             }
+
             // Toggle fullscreen
             KeyCode::F10 => {
                 self.is_fullscreen = !self.is_fullscreen;
@@ -234,6 +262,7 @@ impl EventHandler for SpaceStationGodGame {
 
                 graphics::set_fullscreen(ctx, fullscreen_type).unwrap();
             }
+
             // Toggle paused
             KeyCode::Space => {
                 self.is_paused = !self.is_paused;
@@ -243,6 +272,7 @@ impl EventHandler for SpaceStationGodGame {
                     println!("Unpausing");
                 }
             }
+
             // Add a new inhabitant
             KeyCode::N => {
                 self.add_inhabitant(
@@ -250,9 +280,42 @@ impl EventHandler for SpaceStationGodGame {
                     InhabitantType::Engineer, // TODO: Random
                 );
             }
+
+            // Camera movement from arrow keys
+            KeyCode::Up => {
+                self.camera.pos -= Point2::unit_y();
+            }
+            KeyCode::Down => {
+                self.camera.pos += Point2::unit_y();
+            }
+            KeyCode::Left => {
+                self.camera.pos -= Point2::unit_x();
+            }
+            KeyCode::Right => {
+                self.camera.pos += Point2::unit_x();
+            }
+            KeyCode::C => {
+                self.camera.pos = Point2::zero();
+                self.camera.zoom = 1.0;
+            }
+
             // Everything else does nothing
             _ => (),
         }
+    }
+
+    // The mouse was moved
+    fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, xrel: f32, yrel: f32) {
+        println!(
+            "Mouse motion, x: {}, y: {}, relative x: {}, relative y: {}",
+            x, y, xrel, yrel
+        );
+    }
+
+    // The mousewheel/trackpad was moved
+    fn mouse_wheel_event(&mut self, _ctx: &mut Context, x: f32, y: f32) {
+        println!("Mouse wheel, x: {}, y: {}", x, y);
+        self.camera.zoom += y * 2.0; // TODO: Tweak this multiple
     }
 
     // The window was resized
