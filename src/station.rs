@@ -116,7 +116,7 @@ impl Station {
     }
 
     fn generate_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let mut mb = MeshBuilder::new();
+        let mb = &mut MeshBuilder::new();
         for (index, tile) in &self.tiles {
             let rect = graphics::Rect::new(
                 self.pos.x + (crate::TILE_WIDTH * index.0 as f32) - (crate::TILE_WIDTH / 2.0),

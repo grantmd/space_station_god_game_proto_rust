@@ -71,7 +71,7 @@ fn generate_stars(rng: &mut Rand32, screen_width: f32, screen_height: f32) -> Ve
 }
 
 fn generate_mesh(ctx: &mut Context, stars: &Vec<Star>) -> GameResult<graphics::Mesh> {
-    let mut mb = MeshBuilder::new();
+    let mb = &mut MeshBuilder::new();
     for star in stars {
         mb.circle(DrawMode::fill(), star.pos, star.size, 1.0, star.color)?;
     }
