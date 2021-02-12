@@ -65,8 +65,8 @@ impl Inhabitant {
         camera: &crate::Camera,
     ) -> GameResult<()> {
         let pos = Point2::new(
-            station_pos.x + (crate::TILE_WIDTH * self.pos.x) - (crate::TILE_WIDTH / 2.0),
-            station_pos.y + (crate::TILE_WIDTH * self.pos.y) - (crate::TILE_WIDTH / 2.0),
+            (crate::TILE_WIDTH * self.pos.x) - (crate::TILE_WIDTH / 2.0),
+            (crate::TILE_WIDTH * self.pos.y) - (crate::TILE_WIDTH / 2.0),
         );
         let mesh = Mesh::new_circle(
             ctx,
@@ -79,7 +79,10 @@ impl Inhabitant {
         graphics::draw(
             ctx,
             &mesh,
-            DrawParam::default().offset(camera.pos).scale(camera.zoom),
+            DrawParam::default()
+                .dest(station_pos)
+                .offset(camera.pos)
+                .scale(camera.zoom),
         )
     }
 }

@@ -113,7 +113,10 @@ impl Station {
             Some(mesh) => graphics::draw(
                 ctx,
                 mesh,
-                DrawParam::default().offset(camera.pos).scale(camera.zoom),
+                DrawParam::default()
+                    .dest(self.pos)
+                    .offset(camera.pos)
+                    .scale(camera.zoom),
             ),
             None => Ok(()),
         }
@@ -123,8 +126,8 @@ impl Station {
         let mb = &mut MeshBuilder::new();
         for (index, tile) in &self.tiles {
             let rect = graphics::Rect::new(
-                self.pos.x + (crate::TILE_WIDTH * index.0 as f32) - (crate::TILE_WIDTH / 2.0),
-                self.pos.y + (crate::TILE_WIDTH * index.1 as f32) - (crate::TILE_WIDTH / 2.0),
+                (crate::TILE_WIDTH * index.0 as f32) - (crate::TILE_WIDTH / 2.0),
+                (crate::TILE_WIDTH * index.1 as f32) - (crate::TILE_WIDTH / 2.0),
                 crate::TILE_WIDTH,
                 crate::TILE_WIDTH,
             );
