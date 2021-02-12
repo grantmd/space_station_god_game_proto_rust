@@ -58,7 +58,12 @@ impl Inhabitant {
         }
     }
 
-    pub fn draw(&mut self, ctx: &mut Context, station_pos: Point2) -> GameResult<()> {
+    pub fn draw(
+        &mut self,
+        ctx: &mut Context,
+        station_pos: Point2,
+        camera: &crate::Camera,
+    ) -> GameResult<()> {
         let pos = Point2::new(
             station_pos.x + (crate::TILE_WIDTH * self.pos.x) - (crate::TILE_WIDTH / 2.0),
             station_pos.y + (crate::TILE_WIDTH * self.pos.y) - (crate::TILE_WIDTH / 2.0),
@@ -71,6 +76,10 @@ impl Inhabitant {
             0.1,
             Color::WHITE,
         )?;
-        graphics::draw(ctx, &mesh, DrawParam::default())
+        graphics::draw(
+            ctx,
+            &mesh,
+            DrawParam::default().offset(camera.pos).scale(camera.zoom),
+        )
     }
 }

@@ -39,9 +39,9 @@ struct SpaceStationGodGame {
     inhabitants: Vec<Inhabitant>,
 }
 
-struct Camera {
+pub struct Camera {
     pos: Point2,
-    zoom: f32,
+    zoom: Point2,
 }
 
 impl SpaceStationGodGame {
@@ -73,7 +73,7 @@ impl SpaceStationGodGame {
             is_paused: false,
             camera: Camera {
                 pos: Point2::zero(),
-                zoom: 0.0,
+                zoom: Point2::one(),
             },
             starfield: Starfield::new(ctx, &mut rng),
             station: station,
@@ -169,11 +169,11 @@ impl EventHandler for SpaceStationGodGame {
         self.starfield.draw(ctx)?;
 
         // Draw the station
-        self.station.draw(ctx)?;
+        self.station.draw(ctx, &self.camera)?;
 
         // Draw the inhabitants
         for inhabitant in &mut self.inhabitants {
-            inhabitant.draw(ctx, self.station.pos)?;
+            inhabitant.draw(ctx, self.station.pos, &self.camera)?;
         }
 
         // Put our current FPS on top along with other info
@@ -209,7 +209,7 @@ impl EventHandler for SpaceStationGodGame {
         height += 5.0 + inhabitant_display.height(ctx) as f32;
         let camera_display = Text::new(format!(
             "Camera: {} ({1:.1}x)",
-            self.camera.pos, self.camera.zoom
+            self.camera.pos, self.camera.zoom.x
         ));
         graphics::queue_text(
             ctx,
@@ -283,20 +283,20 @@ impl EventHandler for SpaceStationGodGame {
 
             // Camera movement from arrow keys
             KeyCode::Up => {
-                self.camera.pos -= Point2::unit_y();
+                self.camera.pos += Point2::unit_y() * 10.0;
             }
             KeyCode::Down => {
-                self.camera.pos += Point2::unit_y();
+                self.camera.pos -= Point2::unit_y() * 10.0;
             }
             KeyCode::Left => {
-                self.camera.pos -= Point2::unit_x();
+                self.camera.pos += Point2::unit_x() * 10.0;
             }
             KeyCode::Right => {
-                self.camera.pos += Point2::unit_x();
+                self.camera.pos -= Point2::unit_x() * 10.0;
             }
             KeyCode::C => {
                 self.camera.pos = Point2::zero();
-                self.camera.zoom = 1.0;
+                self.camera.zoom = Point2::one();
             }
 
             // Everything else does nothing
@@ -315,7 +315,7 @@ impl EventHandler for SpaceStationGodGame {
     // The mousewheel/trackpad was moved
     fn mouse_wheel_event(&mut self, _ctx: &mut Context, x: f32, y: f32) {
         println!("Mouse wheel, x: {}, y: {}", x, y);
-        self.camera.zoom += y * 2.0; // TODO: Tweak this multiple
+        self.camera.zoom += Point2::one() * y * 2.0; // TODO: Tweak this multiple
     }
 
     // The window was resized

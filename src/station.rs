@@ -108,9 +108,13 @@ impl Station {
         self.tiles.remove(&pos);
     }
 
-    pub fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+    pub fn draw(&mut self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
         match &self.mesh {
-            Some(mesh) => graphics::draw(ctx, mesh, DrawParam::default()),
+            Some(mesh) => graphics::draw(
+                ctx,
+                mesh,
+                DrawParam::default().offset(camera.pos).scale(camera.zoom),
+            ),
             None => Ok(()),
         }
     }
