@@ -106,12 +106,12 @@ impl EventHandler for SpaceStationGodGame {
             return Ok(());
         }
 
-        // Step forward
-        self.dt += timer::delta(ctx);
-
         // Update at 60fps
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
+            // Step forward
+            self.dt += timer::delta(ctx);
+
             // Move the inhabitants
             for inhabitant in &mut self.inhabitants {
                 match inhabitant.dest {
@@ -149,13 +149,12 @@ impl EventHandler for SpaceStationGodGame {
                     }
                 }
             }
-        }
 
-        // Only count the half seconds
-        if self.dt.as_secs_f32() >= 0.5 {
-            self.dt -= std::time::Duration::new(0, 500_000_000);
+            // Only count the half seconds
+            if self.dt.as_secs_f32() >= 0.5 {
+                self.dt -= std::time::Duration::new(0, 500_000_000);
+            }
         }
-
         // Done processing
         Ok(())
     }
