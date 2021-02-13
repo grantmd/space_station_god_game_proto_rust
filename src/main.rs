@@ -13,6 +13,7 @@ use ggez;
 use glam;
 use oorandom::Rand32;
 
+use ggez::audio::{self, SoundSource};
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::graphics::{Color, DrawParam, Text};
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
@@ -37,6 +38,7 @@ struct SpaceStationGodGame {
     starfield: Starfield,
     station: Station,
     inhabitants: Vec<Inhabitant>,
+    music: audio::Source,
 }
 
 pub struct Camera {
@@ -65,6 +67,10 @@ impl SpaceStationGodGame {
         );
         let station = Station::new(ctx, station_pos, station_width, station_height);
 
+        // Start our music
+        let mut music = audio::Source::new(ctx, "/music/bensound-deepblue.mp3")?;
+        music.set_repeat(true);
+
         // Create game state and return it
         let mut game = SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
@@ -78,6 +84,7 @@ impl SpaceStationGodGame {
             starfield: Starfield::new(ctx, &mut rng),
             station: station,
             inhabitants: Vec::with_capacity(1),
+            music: music,
         };
 
         // Put some people in it
@@ -106,6 +113,11 @@ impl EventHandler for SpaceStationGodGame {
             return Ok(());
         }
 
+        // Check music
+        if !self.music.playing() {
+            self.music.play(ctx)?;
+        }
+
         // Update at 60fps
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
@@ -121,7 +133,6 @@ impl EventHandler for SpaceStationGodGame {
                     Some(dest) => {
                         // Keep going until we get there
                         //let pos = ease(EaseInOut, inhabitant.pos, inhabitant.dest.unwrap(), self.dt.as_secs_f64());
-                        println!("Continuing from {} to {}", inhabitant.pos, dest);
                         inhabitant.pos = dest;
                         inhabitant.dest = None;
                     }
@@ -142,7 +153,6 @@ impl EventHandler for SpaceStationGodGame {
                                         inhabitant.pos.y + y as f32,
                                     );
                                     if dest != inhabitant.pos {
-                                        println!("Moving to {}", dest);
                                         inhabitant.dest = Some(dest);
                                         break;
                                     }
@@ -224,6 +234,14 @@ impl EventHandler for SpaceStationGodGame {
         graphics::queue_text(
             ctx,
             &camera_display,
+            Point2::new(10.0, 0.0 + height),
+            Some(Color::WHITE),
+        );
+        height += 5.0 + camera_display.height(ctx) as f32;
+        let music_display = Text::new(format!("Music: {:?}", self.music.elapsed()));
+        graphics::queue_text(
+            ctx,
+            &music_display,
             Point2::new(10.0, 0.0 + height),
             Some(Color::WHITE),
         );
