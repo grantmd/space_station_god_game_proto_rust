@@ -2,10 +2,12 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod inhabitant;
+mod music;
 mod starfield;
 mod station;
 
 use inhabitant::{Inhabitant, InhabitantType};
+use music::Music;
 use starfield::Starfield;
 use station::Station;
 
@@ -13,7 +15,6 @@ use ggez;
 use glam;
 use oorandom::Rand32;
 
-use ggez::audio::{self, SoundSource};
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::graphics::{Color, DrawParam, Text};
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
@@ -38,7 +39,7 @@ struct SpaceStationGodGame {
     starfield: Starfield,
     station: Station,
     inhabitants: Vec<Inhabitant>,
-    music: audio::Source,
+    music: Music,
 }
 
 pub struct Camera {
@@ -67,10 +68,6 @@ impl SpaceStationGodGame {
         );
         let station = Station::new(ctx, station_pos, station_width, station_height);
 
-        // Start our music
-        let mut music = audio::Source::new(ctx, "/music/bensound-deepblue.mp3")?;
-        music.set_repeat(true);
-
         // Create game state and return it
         let mut game = SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
@@ -84,7 +81,7 @@ impl SpaceStationGodGame {
             starfield: Starfield::new(ctx, &mut rng),
             station: station,
             inhabitants: Vec::with_capacity(1),
-            music: music,
+            music: Music::new(ctx),
         };
 
         // Put some people in it
@@ -114,9 +111,7 @@ impl EventHandler for SpaceStationGodGame {
         }
 
         // Check music
-        if !self.music.playing() {
-            self.music.play(ctx)?;
-        }
+        self.music.update(ctx)?;
 
         // Update at 60fps
         const DESIRED_FPS: u32 = 60;
@@ -238,7 +233,7 @@ impl EventHandler for SpaceStationGodGame {
             Some(Color::WHITE),
         );
         height += 5.0 + camera_display.height(ctx) as f32;
-        let music_display = Text::new(format!("Music: {:?}", self.music.elapsed()));
+        let music_display = Text::new(format!("Music: {}", self.music));
         graphics::queue_text(
             ctx,
             &music_display,
