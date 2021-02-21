@@ -60,6 +60,13 @@ impl Station {
             mesh: None,
         };
 
+        s.generate(width, height);
+        s.build_mesh(ctx).unwrap();
+
+        s
+    }
+
+    fn generate(&mut self, width: u32, height: u32) {
         for x in 0..width {
             for y in 0..height {
                 // Figure out what type of tile
@@ -73,13 +80,9 @@ impl Station {
 
                 // Place the tile
                 let tile = Tile::new(Point2::new(x as f32, y as f32), tile_type);
-                s.add_tile(tile);
+                self.add_tile(tile);
             }
         }
-
-        s.build_mesh(ctx).unwrap();
-
-        s
     }
 
     // Adds a tile to the station. Trusts the tile's position
