@@ -29,7 +29,7 @@ impl Music {
                     let path = choose_music(&self.paths);
                     println!("Choosing new music: {}", path.display());
                     let mut sound = audio::Source::new(ctx, path).unwrap();
-                    sound.set_fade_in(Duration::from_millis(1000));
+                    sound.set_fade_in(Duration::from_millis(5000));
                     sound.play(ctx)?;
 
                     self.sound = Some(sound);
@@ -39,7 +39,7 @@ impl Music {
                 let path = choose_music(&self.paths);
                 println!("Starting music: {}", path.display());
                 let mut sound = audio::Source::new(ctx, path).unwrap();
-                sound.set_fade_in(Duration::from_millis(1000));
+                sound.set_fade_in(Duration::from_millis(5000));
                 sound.play(ctx)?;
 
                 self.sound = Some(sound);
