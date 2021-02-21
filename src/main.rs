@@ -17,6 +17,7 @@ use oorandom::Rand32;
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::graphics::{Color, DrawParam, Text};
+use ggez::input::mouse;
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 
 use keyframe::{ease, functions::EaseInOut};
@@ -183,6 +184,12 @@ impl EventHandler for SpaceStationGodGame {
             inhabitant.draw(ctx, self.station.pos, &self.camera)?;
         }
 
+        // Draw where the mouse is
+        let mut mouse_pos = mouse::position(ctx);
+        let mouse_display = Text::new(format!("Mouse: {}, {}", mouse_pos.x, mouse_pos.y));
+        mouse_pos.y -= mouse_display.height(ctx);
+        graphics::queue_text(ctx, &mouse_display, mouse_pos, Some(Color::WHITE));
+
         // Put our current FPS on top along with other info
         let fps = timer::fps(ctx);
         let mut height = 0.0;
@@ -241,6 +248,7 @@ impl EventHandler for SpaceStationGodGame {
             Some(Color::WHITE),
         );
 
+        // Render all queued text
         graphics::draw_queued_text(
             ctx,
             DrawParam::default(),
@@ -325,14 +333,6 @@ impl EventHandler for SpaceStationGodGame {
             // Everything else does nothing
             _ => (),
         }
-    }
-
-    // The mouse was moved
-    fn mouse_motion_event(&mut self, _ctx: &mut Context, x: f32, y: f32, xrel: f32, yrel: f32) {
-        println!(
-            "Mouse motion, x: {}, y: {}, relative x: {}, relative y: {}",
-            x, y, xrel, yrel
-        );
     }
 
     // The mousewheel/trackpad was moved
