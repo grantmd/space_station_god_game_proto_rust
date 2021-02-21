@@ -77,7 +77,7 @@ impl Station {
             }
         }
 
-        s.generate_mesh(ctx).unwrap();
+        s.build_mesh(ctx).unwrap();
 
         s
     }
@@ -122,7 +122,7 @@ impl Station {
         }
     }
 
-    fn generate_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
+    fn build_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
         let mb = &mut MeshBuilder::new();
         for (index, tile) in &self.tiles {
             let rect = graphics::Rect::new(
