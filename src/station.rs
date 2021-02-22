@@ -7,6 +7,7 @@ type Point2 = glam::Vec2;
 
 const FLOOR_COLOR: Color = Color::new(0.1, 0.1, 0.1, 1.0);
 const WALL_COLOR: Color = Color::new(0.3, 0.3, 0.3, 1.0);
+const BORDER_COLOR: Color = Color::BLACK;
 
 // A Tile object, which the Station is made of
 #[derive(Debug)]
@@ -157,9 +158,7 @@ impl Station {
             match &tile.kind {
                 TileType::Floor => {
                     // Fill the floor
-                    mb.rectangle(DrawMode::fill(), tile_rect, FLOOR_COLOR)?;
-                    // Draw a line around it to make it a tile
-                    mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                    mb.rectangle(DrawMode::fill(), tile_rect, FLOOR_COLOR)?
                 }
                 TileType::Wall(wall_direction) => match wall_direction {
                     WallDirection::ExteriorCornerTopLeft => {
@@ -186,10 +185,7 @@ impl Station {
                             crate::TILE_WIDTH / 2.0,
                             crate::TILE_WIDTH,
                         );
-                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?;
-
-                        // Draw a line around it to make it a tile
-                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
                     }
                     WallDirection::ExteriorCornerTopRight => {
                         // Fill the bottom-left quarter of the tile as a floor
@@ -215,10 +211,7 @@ impl Station {
                             crate::TILE_WIDTH / 2.0,
                             crate::TILE_WIDTH,
                         );
-                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?;
-
-                        // Draw a line around it to make it a tile
-                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
                     }
                     WallDirection::ExteriorCornerBottomLeft => {
                         // Fill the top-right quarter of the tile as a floor
@@ -244,10 +237,7 @@ impl Station {
                             crate::TILE_WIDTH / 2.0,
                             crate::TILE_WIDTH,
                         );
-                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?;
-
-                        // Draw a line around it to make it a tile
-                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
                     }
                     WallDirection::ExteriorCornerBottomRight => {
                         // Fill the top-left quarter of the tile as a floor
@@ -273,10 +263,7 @@ impl Station {
                             crate::TILE_WIDTH / 2.0,
                             crate::TILE_WIDTH,
                         );
-                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?;
-
-                        // Draw a line around it to make it a tile
-                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
                     }
                     WallDirection::ExteriorTop => {
                         // Fill the bottom-half of the tile as a floor
@@ -295,10 +282,7 @@ impl Station {
                             crate::TILE_WIDTH,
                             crate::TILE_WIDTH / 2.0,
                         );
-                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
-
-                        // Draw a line around it to make it a tile
-                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
                     }
                     WallDirection::ExteriorBottom => {
                         // Fill the top-half of the tile as a floor
@@ -317,10 +301,7 @@ impl Station {
                             crate::TILE_WIDTH,
                             crate::TILE_WIDTH / 2.0,
                         );
-                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
-
-                        // Draw a line around it to make it a tile
-                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
                     }
                     WallDirection::ExteriorLeft => {
                         // Fill the right-half of the tile as a floor
@@ -339,10 +320,7 @@ impl Station {
                             crate::TILE_WIDTH / 2.0,
                             crate::TILE_WIDTH,
                         );
-                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
-
-                        // Draw a line around it to make it a tile
-                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
                     }
                     WallDirection::ExteriorRight => {
                         // Fill the left-half of the tile as a floor
@@ -361,15 +339,15 @@ impl Station {
                             crate::TILE_WIDTH / 2.0,
                             crate::TILE_WIDTH,
                         );
-                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
-
-                        // Draw a line around it to make it a tile
-                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
                     }
                     _ => mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?,
                 },
                 TileType::Door(_) => mb.rectangle(DrawMode::fill(), tile_rect, Color::WHITE)?,
             };
+
+            // Draw a line around it to make it a tile
+            mb.rectangle(DrawMode::stroke(1.0), tile_rect, BORDER_COLOR)?;
         }
 
         self.mesh = mb.build(ctx).ok();
