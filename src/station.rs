@@ -176,13 +176,13 @@ impl Station {
                             tile_rect.x,
                             tile_rect.y,
                             crate::TILE_WIDTH,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
                         let wall_rect2 = graphics::Rect::new(
                             tile_rect.x,
                             tile_rect.y,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                             crate::TILE_WIDTH,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
@@ -202,13 +202,13 @@ impl Station {
                             tile_rect.x,
                             tile_rect.y,
                             crate::TILE_WIDTH,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
                         let wall_rect2 = graphics::Rect::new(
-                            center.x,
+                            center.x + 1.0,
                             tile_rect.y,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                             crate::TILE_WIDTH,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
@@ -226,15 +226,15 @@ impl Station {
                         // Draw two "wall" sections on the outside of the fill. One vertical, one horizontal.
                         let wall_rect = graphics::Rect::new(
                             tile_rect.x,
-                            center.y,
+                            center.y + 1.0,
                             crate::TILE_WIDTH,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
                         let wall_rect2 = graphics::Rect::new(
                             tile_rect.x,
                             tile_rect.y,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                             crate::TILE_WIDTH,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
@@ -252,15 +252,15 @@ impl Station {
                         // Draw two "wall" sections on the outside of the fill. One vertical, one horizontal.
                         let wall_rect = graphics::Rect::new(
                             tile_rect.x,
-                            center.y,
+                            center.y + 1.0,
                             crate::TILE_WIDTH,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
                         let wall_rect2 = graphics::Rect::new(
-                            center.x,
+                            center.x + 1.0,
                             tile_rect.y,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                             crate::TILE_WIDTH,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
@@ -280,7 +280,7 @@ impl Station {
                             tile_rect.x,
                             tile_rect.y,
                             crate::TILE_WIDTH,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
                     }
@@ -297,9 +297,9 @@ impl Station {
                         // Draw the bottom-half of the tile as wall
                         let wall_rect = graphics::Rect::new(
                             tile_rect.x,
-                            center.y,
+                            center.y + 1.0,
                             crate::TILE_WIDTH,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
                     }
@@ -317,7 +317,7 @@ impl Station {
                         let wall_rect = graphics::Rect::new(
                             tile_rect.x,
                             tile_rect.y,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                             crate::TILE_WIDTH,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
@@ -334,9 +334,9 @@ impl Station {
 
                         // Draw the right-half of the tile as wall
                         let wall_rect = graphics::Rect::new(
-                            center.x,
+                            center.x + 1.0,
                             tile_rect.y,
-                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
                             crate::TILE_WIDTH,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
