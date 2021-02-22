@@ -5,6 +5,9 @@ use std::collections::HashMap;
 
 type Point2 = glam::Vec2;
 
+const FLOOR_COLOR: Color = Color::new(0.1, 0.1, 0.1, 1.0);
+const WALL_COLOR: Color = Color::new(0.3, 0.3, 0.3, 1.0);
+
 // A Tile object, which the Station is made of
 #[derive(Debug)]
 pub struct Tile {
@@ -71,11 +74,22 @@ impl Station {
             for y in 0..height {
                 // Figure out what type of tile
                 let mut tile_type = TileType::Floor;
-                if x == 0 || y == 0 {
+                if x == 0 && y == 0 {
                     tile_type = TileType::Wall(WallDirection::ExteriorCornerTopLeft);
-                }
-                if x == width - 1 || y == height - 1 {
+                } else if x == 0 && y != 0 {
+                    tile_type = TileType::Wall(WallDirection::ExteriorTop);
+                } else if x == width - 1 && y == 0 {
                     tile_type = TileType::Wall(WallDirection::ExteriorCornerTopRight);
+                } else if x != 0 && y == 0 {
+                    tile_type = TileType::Wall(WallDirection::ExteriorLeft);
+                } else if x == width - 1 && y != height - 1 {
+                    tile_type = TileType::Wall(WallDirection::ExteriorRight);
+                } else if x != width - 1 && y == height - 1 {
+                    tile_type = TileType::Wall(WallDirection::ExteriorBottom);
+                } else if x == 0 && y == height - 1 {
+                    tile_type = TileType::Wall(WallDirection::ExteriorCornerBottomLeft);
+                } else if x == width - 1 && y == height - 1 {
+                    tile_type = TileType::Wall(WallDirection::ExteriorCornerBottomRight);
                 }
 
                 // Place the tile
@@ -128,24 +142,155 @@ impl Station {
     fn build_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
         let mb = &mut MeshBuilder::new();
         for (index, tile) in &self.tiles {
-            let rect = graphics::Rect::new(
+            let tile_rect = graphics::Rect::new(
                 (crate::TILE_WIDTH * index.0 as f32) - (crate::TILE_WIDTH / 2.0),
                 (crate::TILE_WIDTH * index.1 as f32) - (crate::TILE_WIDTH / 2.0),
                 crate::TILE_WIDTH,
                 crate::TILE_WIDTH,
             );
 
-            match tile.kind {
+            match &tile.kind {
                 TileType::Floor => {
                     // Fill the floor
-                    mb.rectangle(DrawMode::fill(), rect, Color::new(0.1, 0.1, 0.1, 1.0))?;
+                    mb.rectangle(DrawMode::fill(), tile_rect, FLOOR_COLOR)?;
                     // Draw a line around it to make it a tile
-                    mb.rectangle(DrawMode::stroke(1.0), rect, Color::new(0.3, 0.3, 0.3, 1.0))?
+                    mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
                 }
-                TileType::Wall(_) => {
-                    mb.rectangle(DrawMode::fill(), rect, Color::new(0.3, 0.3, 0.3, 1.0))?
-                }
-                TileType::Door(_) => mb.rectangle(DrawMode::fill(), rect, Color::WHITE)?,
+                TileType::Wall(wall_direction) => match wall_direction {
+                    WallDirection::ExteriorCornerTopLeft => {
+                        // Fill the bottom-right quarter of the tile as a floor
+                        let center = tile_rect.center();
+                        let floor_rect = graphics::Rect::new(
+                            center.x,
+                            center.y,
+                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), floor_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections on the outside of the fill. One vertical, one horizontal.
+                        //mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?
+
+                        // Draw a line around it to make it a tile
+                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                    }
+                    WallDirection::ExteriorCornerTopRight => {
+                        // Fill the bottom-left quarter of the tile as a floor
+                        let floor_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            tile_rect.y + crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), floor_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections on the outside of the fill. One vertical, one horizontal.
+                        //mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?
+
+                        // Draw a line around it to make it a tile
+                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                    }
+                    WallDirection::ExteriorCornerBottomLeft => {
+                        // Fill the top-right quarter of the tile as a floor
+                        let floor_rect = graphics::Rect::new(
+                            tile_rect.x + crate::TILE_WIDTH / 2.0,
+                            tile_rect.y,
+                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), floor_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections on the outside of the fill. One vertical, one horizontal.
+                        //mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?
+
+                        // Draw a line around it to make it a tile
+                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                    }
+                    WallDirection::ExteriorCornerBottomRight => {
+                        // Fill the top-left quarter of the tile as a floor
+                        let floor_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            tile_rect.y,
+                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH / 2.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), floor_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections on the outside of the fill. One vertical, one horizontal.
+                        //mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?
+
+                        // Draw a line around it to make it a tile
+                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                    }
+                    WallDirection::ExteriorTop => {
+                        // Fill the bottom-half of the tile as a floor
+                        let center = tile_rect.center();
+                        let floor_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            center.y,
+                            crate::TILE_WIDTH,
+                            crate::TILE_WIDTH / 2.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), floor_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections on the outside of the fill. One vertical, one horizontal.
+                        //mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?
+
+                        // Draw a line around it to make it a tile
+                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                    }
+                    WallDirection::ExteriorBottom => {
+                        // Fill the top-half of the tile as a floor
+                        let floor_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            tile_rect.y,
+                            crate::TILE_WIDTH,
+                            crate::TILE_WIDTH / 2.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), floor_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections on the outside of the fill. One vertical, one horizontal.
+                        //mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?
+
+                        // Draw a line around it to make it a tile
+                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                    }
+                    WallDirection::ExteriorLeft => {
+                        // Fill the right-half of the tile as a floor
+                        let center = tile_rect.center();
+                        let floor_rect = graphics::Rect::new(
+                            center.x,
+                            tile_rect.y,
+                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH,
+                        );
+                        mb.rectangle(DrawMode::fill(), floor_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections on the outside of the fill. One vertical, one horizontal.
+                        //mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?
+
+                        // Draw a line around it to make it a tile
+                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                    }
+                    WallDirection::ExteriorRight => {
+                        // Fill the left-half of the tile as a floor
+                        let floor_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            tile_rect.y,
+                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH,
+                        );
+                        mb.rectangle(DrawMode::fill(), floor_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections on the outside of the fill. One vertical, one horizontal.
+                        //mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?
+
+                        // Draw a line around it to make it a tile
+                        mb.rectangle(DrawMode::stroke(1.0), tile_rect, WALL_COLOR)?
+                    }
+                    _ => mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?,
+                },
+                TileType::Door(_) => mb.rectangle(DrawMode::fill(), tile_rect, Color::WHITE)?,
             };
         }
 
