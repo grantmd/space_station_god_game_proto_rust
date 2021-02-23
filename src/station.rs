@@ -61,10 +61,10 @@ pub struct Station {
 impl Station {
     // Creates a new station from scratch.
     // Will eventually be randomly-generated
-    pub fn new(ctx: &mut Context, pos: Point2, width: u32, height: u32) -> Station {
+    pub fn new(ctx: &mut Context, pos: Point2, width: usize, height: usize) -> Station {
         let mut s = Station {
             pos: pos,
-            tiles: HashMap::new(),
+            tiles: HashMap::with_capacity(width * height),
             mesh: None,
         };
 
@@ -74,7 +74,7 @@ impl Station {
         s
     }
 
-    fn generate(&mut self, width: u32, height: u32) {
+    fn generate(&mut self, width: usize, height: usize) {
         for x in 0..width {
             for y in 0..height {
                 // Figure out what type of tile
