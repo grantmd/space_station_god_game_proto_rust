@@ -125,6 +125,21 @@ impl Station {
         self.tiles.get(&pos)
     }
 
+    // Get the neighbors of a tile
+    pub fn get_neighbors(&self, pos: (i32, i32)) -> Vec<&Tile> {
+        let mut neighbors = Vec::new();
+
+        for x in -1..2 {
+            for y in -1..2 {
+                if let Some(tile) = self.get_tile((pos.0 + x, pos.1 + y)) {
+                    neighbors.push(tile);
+                }
+            }
+        }
+
+        neighbors
+    }
+
     // Removes a tile
     pub fn remove_tile(&mut self, pos: (i32, i32)) {
         self.tiles.remove(&pos);
