@@ -127,11 +127,11 @@ impl Station {
                         // If the neighbor doesn't have a floor, make it a wall
                         if !self.has_tile((pos.0 + x, pos.1 + y)) {
                             // Decide on the type of wall
-                            let will_direction = WallDirection::InteriorHorizontal;
+                            let wall_direction = WallDirection::InteriorCross;
 
                             // Add it
                             let tile =
-                                Tile::new((pos.0 + x, pos.1 + y), TileType::Wall(will_direction));
+                                Tile::new((pos.0 + x, pos.1 + y), TileType::Wall(wall_direction));
                             self.add_tile(tile);
                         }
                     }
@@ -393,6 +393,54 @@ impl Station {
                             center.x + 1.0,
                             tile_rect.y,
                             crate::TILE_WIDTH / 2.0 - 1.0,
+                            crate::TILE_WIDTH,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
+                    }
+                    WallDirection::InteriorVertical => {
+                        // Fill the floor
+                        mb.rectangle(DrawMode::fill(), tile_rect, FLOOR_COLOR)?;
+
+                        // Create a vertical wall centered to the tile
+                        let wall_rect = graphics::Rect::new(
+                            center.x - crate::TILE_WIDTH / 4.0,
+                            tile_rect.y,
+                            crate::TILE_WIDTH / 2.0,
+                            crate::TILE_WIDTH,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
+                    }
+                    WallDirection::InteriorHorizontal => {
+                        // Fill the floor
+                        mb.rectangle(DrawMode::fill(), tile_rect, FLOOR_COLOR)?;
+
+                        // Create a horizontal wall centered to the tile
+                        let wall_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            center.y - crate::TILE_WIDTH / 4.0,
+                            crate::TILE_WIDTH,
+                            crate::TILE_WIDTH / 2.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
+                    }
+                    WallDirection::InteriorCross => {
+                        // Fill the floor
+                        mb.rectangle(DrawMode::fill(), tile_rect, FLOOR_COLOR)?;
+
+                        // Create a horizontal wall centered to the tile
+                        let wall_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            center.y - crate::TILE_WIDTH / 4.0,
+                            crate::TILE_WIDTH,
+                            crate::TILE_WIDTH / 2.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
+
+                        // Create a vertical wall centered to the tile
+                        let wall_rect = graphics::Rect::new(
+                            center.x - crate::TILE_WIDTH / 4.0,
+                            tile_rect.y,
+                            crate::TILE_WIDTH / 2.0,
                             crate::TILE_WIDTH,
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
