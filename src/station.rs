@@ -128,17 +128,25 @@ impl Station {
                         // If the neighbor doesn't have a floor, make it a wall
                         if !self.has_tile((pos.0 + x, pos.1 + y)) {
                             // Decide on the type of wall
-                            let wall_direction = WallDirection::Full;
-
-                            // Add it
-                            let new_tile =
-                                Tile::new((pos.0 + x, pos.1 + y), TileType::Wall(wall_direction));
-                            self.add_tile(new_tile);
+                            if let Some(wall_direction) = self.get_wall_direction(pos) {
+                                // Add it
+                                let new_tile = Tile::new(
+                                    (pos.0 + x, pos.1 + y),
+                                    TileType::Wall(wall_direction),
+                                );
+                                self.add_tile(new_tile);
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    // For a given position, get the best wall direction based on neighbors
+    // Used for station generation
+    fn get_wall_direction(&self, pos: (i32, i32)) -> Option<WallDirection> {
+        Some(WallDirection::Full)
     }
 
     // Adds a tile to the station. Trusts the tile's position
