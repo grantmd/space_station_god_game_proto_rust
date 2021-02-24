@@ -67,7 +67,7 @@ impl SpaceStationGodGame {
             station_width as f32 * TILE_WIDTH / 2.0,
             station_height as f32 * TILE_WIDTH / 2.0,
         );
-        let station = Station::new(ctx, station_pos, station_width, station_height);
+        let station = Station::new(ctx, station_pos, station_width, station_height, &mut rng);
 
         // Create game state and return it
         let mut game = SpaceStationGodGame {

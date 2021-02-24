@@ -7,7 +7,7 @@ use ggez::{graphics, Context, GameResult};
 type Point2 = glam::Vec2;
 
 // An Inhabitant of the Station
-#[derive(Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Inhabitant {
     pub pos: Point2,
     pub dest: Option<Point2>,
@@ -17,7 +17,7 @@ pub struct Inhabitant {
     thirst: i8,
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum InhabitantType {
     Pilot,
     Engineer,

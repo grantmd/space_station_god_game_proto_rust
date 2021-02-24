@@ -7,6 +7,7 @@ use num;
 
 type Point2 = glam::Vec2;
 
+#[derive(Clone, PartialEq, Debug)]
 pub struct Starfield {
     mesh: Mesh,
 }
@@ -41,6 +42,7 @@ impl Starfield {
     }
 }
 
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Star {
     pos: Point2,
     size: f32,

@@ -1,6 +1,7 @@
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
 
+use oorandom::Rand32;
 use std::collections::HashMap;
 
 type Point2 = glam::Vec2;
@@ -10,12 +11,12 @@ const WALL_COLOR: Color = Color::new(0.3, 0.3, 0.3, 1.0);
 const BORDER_COLOR: Color = Color::BLACK;
 
 // A Tile object, which the Station is made of
-#[derive(Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Tile {
-    pos: Point2,        // x,y position of the tile within the station
+    pos: (i32, i32),    // x,y position of the tile within the station
     pub kind: TileType, // what type of square the tile is
 }
-#[derive(Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum TileType {
     Floor,
     Wall(WallDirection),
@@ -23,7 +24,7 @@ pub enum TileType {
 }
 
 // Walls have lots of different possible directions, which indicate how they are drawn
-#[derive(Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum WallDirection {
     InteriorVertical,
     InteriorHorizontal,
@@ -43,7 +44,7 @@ pub enum WallDirection {
 }
 
 impl Tile {
-    fn new(pos: Point2, kind: TileType) -> Tile {
+    fn new(pos: (i32, i32), kind: TileType) -> Tile {
         Tile {
             pos: pos,
             kind: kind,
@@ -61,53 +62,87 @@ pub struct Station {
 impl Station {
     // Creates a new station from scratch.
     // Will eventually be randomly-generated
-    pub fn new(ctx: &mut Context, pos: Point2, width: usize, height: usize) -> Station {
+    pub fn new(
+        ctx: &mut Context,
+        pos: Point2,
+        width: usize,
+        height: usize,
+        rng: &mut Rand32,
+    ) -> Station {
         let mut s = Station {
             pos: pos,
             tiles: HashMap::with_capacity(width * height),
             mesh: None,
         };
 
-        s.generate(width, height);
+        s.generate(width, height, rng);
         s.build_mesh(ctx).unwrap();
 
         s
     }
 
-    fn generate(&mut self, width: usize, height: usize) {
-        for x in 0..width {
-            for y in 0..height {
-                // Figure out what type of tile
-                let mut tile_type = TileType::Floor;
-                if x == 0 && y == 0 {
-                    tile_type = TileType::Wall(WallDirection::ExteriorCornerTopLeft);
-                } else if x == width - 1 && y == 0 {
-                    tile_type = TileType::Wall(WallDirection::ExteriorCornerTopRight);
-                } else if x == 0 && y == height - 1 {
-                    tile_type = TileType::Wall(WallDirection::ExteriorCornerBottomLeft);
-                } else if x == width - 1 && y == height - 1 {
-                    tile_type = TileType::Wall(WallDirection::ExteriorCornerBottomRight);
-                } else if x == 0 && y != 0 {
-                    tile_type = TileType::Wall(WallDirection::ExteriorLeft);
-                } else if x != 0 && y == 0 {
-                    tile_type = TileType::Wall(WallDirection::ExteriorTop);
-                } else if x == width - 1 && y != height - 1 {
-                    tile_type = TileType::Wall(WallDirection::ExteriorRight);
-                } else if x != width - 1 && y == height - 1 {
-                    tile_type = TileType::Wall(WallDirection::ExteriorBottom);
+    fn generate(&mut self, width: usize, height: usize, rng: &mut Rand32) {
+        // Randomly place floor tiles to give us a base
+        for x in 0..width as i32 {
+            for y in 0..height as i32 {
+                if rng.rand_float() < 0.45 {
+                    let tile = Tile::new((x, y), TileType::Floor);
+                    self.add_tile(tile);
                 }
+            }
+        }
 
-                // Place the tile
-                let tile = Tile::new(Point2::new(x as f32, y as f32), tile_type);
-                self.add_tile(tile);
+        // Loop over the floor tiles we placed and expand into bigger spaces
+        // Do this a couple times
+        for _ in 0..2 {
+            for x in 0..width as i32 {
+                for y in 0..height as i32 {
+                    let pos = (x, y);
+                    let neighbor_count = self.get_neighbors(pos).len();
+                    if self.has_tile(pos) {
+                        if neighbor_count < 2 {
+                            self.remove_tile(pos);
+                        }
+                    } else {
+                        if neighbor_count == 3 {
+                            let tile = Tile::new(pos, TileType::Floor);
+                            self.add_tile(tile);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Loop over the floor tiles and place walls around the edges
+        let tiles = self.tiles.clone();
+        for (pos, tile) in tiles {
+            if tile.kind == TileType::Floor {
+                for x in -1..2 {
+                    for y in -1..2 {
+                        // Don't consider ourselves
+                        if x == 0 && y == 0 {
+                            continue;
+                        }
+
+                        // If the neighbor doesn't have a floor, make it a wall
+                        if !self.has_tile((pos.0 + x, pos.1 + y)) {
+                            // Decide on the type of wall
+                            let will_direction = WallDirection::InteriorHorizontal;
+
+                            // Add it
+                            let tile =
+                                Tile::new((pos.0 + x, pos.1 + y), TileType::Wall(will_direction));
+                            self.add_tile(tile);
+                        }
+                    }
+                }
             }
         }
     }
 
     // Adds a tile to the station. Trusts the tile's position
     pub fn add_tile(&mut self, tile: Tile) {
-        self.tiles
-            .insert((tile.pos.x as i32, tile.pos.y as i32), tile);
+        self.tiles.insert((tile.pos.0, tile.pos.1), tile);
     }
 
     // How many tiles do we have?
@@ -131,6 +166,12 @@ impl Station {
 
         for x in -1..2 {
             for y in -1..2 {
+                // Don't consider ourselves
+                if x == 0 && y == 0 {
+                    continue;
+                }
+
+                // Check if there is a tile there, and add it if so
                 if let Some(tile) = self.get_tile((pos.0 + x, pos.1 + y)) {
                     neighbors.push(tile);
                 }
