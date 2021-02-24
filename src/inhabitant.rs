@@ -15,6 +15,7 @@ pub struct Inhabitant {
     health: i8,
     hunger: i8,
     thirst: i8,
+    age: i8,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
