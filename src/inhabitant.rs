@@ -37,6 +37,7 @@ impl Inhabitant {
             health: 100,
             hunger: 0,
             thirst: 0,
+            age: 0,
         }
     }
 
