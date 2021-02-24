@@ -22,6 +22,7 @@ use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 
 use keyframe::{ease, functions::EaseInOut};
 
+use std::cmp;
 use std::env;
 use std::path;
 
@@ -336,9 +337,11 @@ impl EventHandler for SpaceStationGodGame {
     }
 
     // The mousewheel/trackpad was moved
-    fn mouse_wheel_event(&mut self, _ctx: &mut Context, x: f32, y: f32) {
-        println!("Mouse wheel, x: {}, y: {}", x, y);
+    fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, y: f32) {
         self.camera.zoom += Point2::one() * y * 2.0; // TODO: Tweak this multiple
+        if self.camera.zoom < Point2::one() {
+            self.camera.zoom = Point2::one();
+        }
     }
 
     // The window was resized
