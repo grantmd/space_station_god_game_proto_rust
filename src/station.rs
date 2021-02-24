@@ -24,6 +24,7 @@ pub enum TileType {
 }
 
 // Walls have lots of different possible directions, which indicate how they are drawn
+// Directions like "top-left" indicate that in a square walled room, this is the top-left corner
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum WallDirection {
     InteriorVertical,
@@ -41,6 +42,7 @@ pub enum WallDirection {
     ExteriorCornerTopRight,
     ExteriorCornerBottomLeft,
     ExteriorCornerBottomRight,
+    Full,
 }
 
 impl Tile {
@@ -127,7 +129,7 @@ impl Station {
                         // If the neighbor doesn't have a floor, make it a wall
                         if !self.has_tile((pos.0 + x, pos.1 + y)) {
                             // Decide on the type of wall
-                            let wall_direction = WallDirection::InteriorCross;
+                            let wall_direction = WallDirection::Full;
 
                             // Add it
                             let tile =
@@ -445,7 +447,87 @@ impl Station {
                         );
                         mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?
                     }
-                    _ => mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?,
+                    WallDirection::InteriorCornerTopLeft => {
+                        // Fill the floor
+                        mb.rectangle(DrawMode::fill(), tile_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections. One vertical, one horizontal.
+                        let wall_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            tile_rect.y,
+                            crate::TILE_WIDTH,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
+                        let wall_rect2 = graphics::Rect::new(
+                            tile_rect.x,
+                            tile_rect.y,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
+                            crate::TILE_WIDTH,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
+                    }
+                    WallDirection::InteriorCornerTopRight => {
+                        // Fill the floor
+                        mb.rectangle(DrawMode::fill(), tile_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections. One vertical, one horizontal.
+                        let wall_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            tile_rect.y,
+                            crate::TILE_WIDTH,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
+                        let wall_rect2 = graphics::Rect::new(
+                            center.x + 1.0,
+                            tile_rect.y,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
+                            crate::TILE_WIDTH,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
+                    }
+                    WallDirection::InteriorCornerBottomLeft => {
+                        // Fill the floor
+                        mb.rectangle(DrawMode::fill(), tile_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections. One vertical, one horizontal.
+                        let wall_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            center.y + 1.0,
+                            crate::TILE_WIDTH,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
+                        let wall_rect2 = graphics::Rect::new(
+                            tile_rect.x,
+                            tile_rect.y,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
+                            crate::TILE_WIDTH,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
+                    }
+                    WallDirection::InteriorCornerBottomRight => {
+                        // Fill the floor
+                        mb.rectangle(DrawMode::fill(), tile_rect, FLOOR_COLOR)?;
+
+                        // Draw two "wall" sections. One vertical, one horizontal.
+                        let wall_rect = graphics::Rect::new(
+                            tile_rect.x,
+                            center.y + 1.0,
+                            crate::TILE_WIDTH,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect, WALL_COLOR)?;
+                        let wall_rect2 = graphics::Rect::new(
+                            center.x + 1.0,
+                            tile_rect.y,
+                            crate::TILE_WIDTH / 2.0 - 1.0,
+                            crate::TILE_WIDTH,
+                        );
+                        mb.rectangle(DrawMode::fill(), wall_rect2, WALL_COLOR)?
+                    }
+                    WallDirection::Full => mb.rectangle(DrawMode::fill(), tile_rect, WALL_COLOR)?,
                 },
                 TileType::Door(_) => mb.rectangle(DrawMode::fill(), tile_rect, Color::WHITE)?,
             };
