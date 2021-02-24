@@ -63,7 +63,6 @@ pub struct Station {
 
 impl Station {
     // Creates a new station from scratch.
-    // Will eventually be randomly-generated
     pub fn new(
         ctx: &mut Context,
         pos: Point2,
@@ -132,9 +131,9 @@ impl Station {
                             let wall_direction = WallDirection::Full;
 
                             // Add it
-                            let tile =
+                            let new_tile =
                                 Tile::new((pos.0 + x, pos.1 + y), TileType::Wall(wall_direction));
-                            self.add_tile(tile);
+                            self.add_tile(new_tile);
                         }
                     }
                 }
