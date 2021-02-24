@@ -146,6 +146,19 @@ impl Station {
     // For a given position, get the best wall direction based on neighbors
     // Used for station generation
     fn get_wall_direction(&self, pos: (i32, i32)) -> Option<WallDirection> {
+        let neighbors = self.get_neighbors(pos);
+
+        // Exterior walls are fairly easy
+        if !neighbors.contains_key(&(-1, 1)) {
+            Some(WallDirection::ExteriorLeft);
+        } else if !neighbors.contains_key(&(1, 1)) {
+            Some(WallDirection::ExteriorRight);
+        } else if !neighbors.contains_key(&(0, 0)) {
+            Some(WallDirection::ExteriorTop);
+        } else if !neighbors.contains_key(&(1, 1)) {
+            Some(WallDirection::ExteriorBottom);
+        }
+
         Some(WallDirection::Full)
     }
 
