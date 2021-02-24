@@ -170,8 +170,8 @@ impl Station {
     }
 
     // Get the neighbors of a tile
-    pub fn get_neighbors(&self, pos: (i32, i32)) -> Vec<&Tile> {
-        let mut neighbors = Vec::new();
+    pub fn get_neighbors(&self, pos: (i32, i32)) -> HashMap<(i32, i32), &Tile> {
+        let mut neighbors = HashMap::with_capacity(8);
 
         for x in -1..2 {
             for y in -1..2 {
@@ -182,7 +182,7 @@ impl Station {
 
                 // Check if there is a tile there, and add it if so
                 if let Some(tile) = self.get_tile((pos.0 + x, pos.1 + y)) {
-                    neighbors.push(tile);
+                    neighbors.insert((x, y), tile);
                 }
             }
         }
