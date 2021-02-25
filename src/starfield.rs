@@ -60,7 +60,7 @@ fn random_color(rng: &mut Rand32) -> Color {
 
 // Create stars scaled to screen size
 fn generate_stars(rng: &mut Rand32, screen_width: f32, screen_height: f32) -> Vec<Star> {
-    let num_stars = (screen_width * screen_height / 2000.0) as usize;
+    let num_stars = (screen_width * screen_height / 1000.0) as usize;
     let mut stars = Vec::with_capacity(num_stars);
     for _ in 0..num_stars {
         let x = rng.rand_range(0..screen_width as u32) as f32;
