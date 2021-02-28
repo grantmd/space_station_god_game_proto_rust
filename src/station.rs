@@ -10,10 +10,32 @@ const FLOOR_COLOR: Color = Color::new(0.1, 0.1, 0.1, 1.0);
 const WALL_COLOR: Color = Color::new(0.3, 0.3, 0.3, 1.0);
 const BORDER_COLOR: Color = Color::BLACK;
 
+// A position on a grid
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+pub struct GridPosition {
+    x: i32,
+    y: i32,
+}
+
+impl GridPosition {
+    /// We make a standard helper function so that we can create a new `GridPosition`
+    /// more easily.
+    pub fn new(x: i32, y: i32) -> Self {
+        GridPosition { x, y }
+    }
+}
+
+// Convenient creation of a GridPosition from a tuple
+impl From<(i32, i32)> for GridPosition {
+    fn from(pos: (i32, i32)) -> Self {
+        GridPosition { x: pos.0, y: pos.1 }
+    }
+}
+
 // A Tile object, which the Station is made of
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Tile {
-    pos: (i32, i32),    // x,y position of the tile within the station
+    pos: GridPosition,  // x,y position of the tile within the station
     pub kind: TileType, // what type of square the tile is
 }
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -46,7 +68,7 @@ pub enum WallDirection {
 }
 
 impl Tile {
-    fn new(pos: (i32, i32), kind: TileType) -> Tile {
+    fn new(pos: GridPosition, kind: TileType) -> Tile {
         Tile {
             pos: pos,
             kind: kind,
@@ -57,7 +79,7 @@ impl Tile {
 // A type for the Station itself
 pub struct Station {
     pub pos: Point2, // The position of the station (upper-left, basically), in world coordinates
-    tiles: HashMap<(i32, i32), Tile>, // All the Tiles that make up the station
+    tiles: HashMap<GridPosition, Tile>, // All the Tiles that make up the station
     mesh: Option<Mesh>,
 }
 
@@ -87,7 +109,7 @@ impl Station {
         for x in 0..width as i32 {
             for y in 0..height as i32 {
                 if rng.rand_float() < 0.45 {
-                    let tile = Tile::new((x, y), TileType::Floor);
+                    let tile = Tile::new(GridPosition::new(x, y), TileType::Floor);
                     self.add_tile(tile);
                 }
             }
@@ -98,7 +120,7 @@ impl Station {
         for _ in 0..2 {
             for x in 0..width as i32 {
                 for y in 0..height as i32 {
-                    let pos = (x, y);
+                    let pos = GridPosition::new(x, y);
                     let neighbor_count = self.get_neighbors(pos).len();
                     if self.has_tile(pos) {
                         if neighbor_count < 2 {
@@ -126,7 +148,7 @@ impl Station {
                         }
 
                         // If the neighbor doesn't have a floor, make it a wall
-                        let neighbor_pos = (pos.0 + x, pos.1 + y);
+                        let neighbor_pos = GridPosition::new(pos.x + x, pos.y + y);
                         if !self.has_tile(neighbor_pos) {
                             // Decide on the type of wall
                             if let Some(wall_direction) = self.get_wall_direction(pos) {
@@ -144,7 +166,7 @@ impl Station {
 
     // For a given position, get the best wall direction based on neighbors
     // Used for station generation
-    fn get_wall_direction(&self, pos: (i32, i32)) -> Option<WallDirection> {
+    fn get_wall_direction(&self, pos: GridPosition) -> Option<WallDirection> {
         let neighbors = self.get_neighbors(pos);
 
         let mut direction = WallDirection::Full;
@@ -170,12 +192,13 @@ impl Station {
             direction = WallDirection::ExteriorBottom;
         }
 
+        direction = WallDirection::Full;
         Some(direction)
     }
 
     // Adds a tile to the station. Trusts the tile's position
     pub fn add_tile(&mut self, tile: Tile) {
-        self.tiles.insert((tile.pos.0, tile.pos.1), tile);
+        self.tiles.insert(tile.pos, tile);
     }
 
     // How many tiles do we have?
@@ -184,17 +207,17 @@ impl Station {
     }
 
     // Do we have a tile at a spot?
-    pub fn has_tile(&self, pos: (i32, i32)) -> bool {
+    pub fn has_tile(&self, pos: GridPosition) -> bool {
         self.tiles.contains_key(&pos)
     }
 
     // Get tile at a spot, if any
-    pub fn get_tile(&self, pos: (i32, i32)) -> Option<&Tile> {
+    pub fn get_tile(&self, pos: GridPosition) -> Option<&Tile> {
         self.tiles.get(&pos)
     }
 
     // Get the neighbors of a tile
-    pub fn get_neighbors(&self, pos: (i32, i32)) -> HashMap<(i32, i32), &Tile> {
+    pub fn get_neighbors(&self, pos: GridPosition) -> HashMap<(i32, i32), &Tile> {
         let mut neighbors = HashMap::with_capacity(8);
 
         for x in -1..2 {
@@ -205,7 +228,7 @@ impl Station {
                 }
 
                 // Check if there is a tile there, and add it if so
-                if let Some(tile) = self.get_tile((pos.0 + x, pos.1 + y)) {
+                if let Some(tile) = self.get_tile(GridPosition::new(pos.x + x, pos.y + y)) {
                     neighbors.insert((x, y), tile);
                 }
             }
@@ -215,7 +238,7 @@ impl Station {
     }
 
     // Removes a tile
-    pub fn remove_tile(&mut self, pos: (i32, i32)) {
+    pub fn remove_tile(&mut self, pos: GridPosition) {
         self.tiles.remove(&pos);
     }
 
@@ -237,8 +260,8 @@ impl Station {
         let mb = &mut MeshBuilder::new();
         for (index, tile) in &self.tiles {
             let tile_rect = graphics::Rect::new(
-                (crate::TILE_WIDTH * index.0 as f32) - (crate::TILE_WIDTH / 2.0),
-                (crate::TILE_WIDTH * index.1 as f32) - (crate::TILE_WIDTH / 2.0),
+                (crate::TILE_WIDTH * index.x as f32) - (crate::TILE_WIDTH / 2.0),
+                (crate::TILE_WIDTH * index.y as f32) - (crate::TILE_WIDTH / 2.0),
                 crate::TILE_WIDTH,
                 crate::TILE_WIDTH,
             );

@@ -9,7 +9,7 @@ mod station;
 use inhabitant::{Inhabitant, InhabitantType};
 use music::Music;
 use starfield::Starfield;
-use station::Station;
+use station::{GridPosition, Station};
 
 use ggez;
 use glam;
@@ -22,7 +22,6 @@ use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 
 use keyframe::{ease, functions::EaseInOut};
 
-use std::cmp;
 use std::env;
 use std::path;
 
@@ -140,7 +139,7 @@ impl EventHandler for SpaceStationGodGame {
                             loop {
                                 let x = self.rng.rand_range(0..3) as i32 - 1;
                                 let y = self.rng.rand_range(0..3) as i32 - 1;
-                                let tile = self.station.get_tile((
+                                let tile = self.station.get_tile(GridPosition::new(
                                     inhabitant.pos.x as i32 + x,
                                     inhabitant.pos.y as i32 + y,
                                 ));
