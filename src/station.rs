@@ -126,14 +126,13 @@ impl Station {
                         }
 
                         // If the neighbor doesn't have a floor, make it a wall
-                        if !self.has_tile((pos.0 + x, pos.1 + y)) {
+                        let neighbor_pos = (pos.0 + x, pos.1 + y);
+                        if !self.has_tile(neighbor_pos) {
                             // Decide on the type of wall
                             if let Some(wall_direction) = self.get_wall_direction(pos) {
                                 // Add it
-                                let new_tile = Tile::new(
-                                    (pos.0 + x, pos.1 + y),
-                                    TileType::Wall(wall_direction),
-                                );
+                                let new_tile =
+                                    Tile::new(neighbor_pos, TileType::Wall(wall_direction));
                                 self.add_tile(new_tile);
                             }
                         }
@@ -148,18 +147,30 @@ impl Station {
     fn get_wall_direction(&self, pos: (i32, i32)) -> Option<WallDirection> {
         let neighbors = self.get_neighbors(pos);
 
+        let mut direction = WallDirection::Full;
+
+        // Place the exterior corners first
+        if !neighbors.contains_key(&(-1, 1)) && !neighbors.contains_key(&(0, 0)) {
+            direction = WallDirection::ExteriorCornerTopLeft;
+        } else if !neighbors.contains_key(&(1, 1)) && !neighbors.contains_key(&(0, 0)) {
+            direction = WallDirection::ExteriorCornerTopRight;
+        } else if !neighbors.contains_key(&(-1, 1)) && !neighbors.contains_key(&(0, 1)) {
+            direction = WallDirection::ExteriorCornerBottomLeft;
+        } else if !neighbors.contains_key(&(1, 1)) && !neighbors.contains_key(&(0, 1)) {
+            direction = WallDirection::ExteriorCornerBottomRight;
+        }
         // Exterior walls are fairly easy
-        if !neighbors.contains_key(&(-1, 1)) {
-            Some(WallDirection::ExteriorLeft);
+        else if !neighbors.contains_key(&(-1, 1)) {
+            direction = WallDirection::ExteriorLeft;
         } else if !neighbors.contains_key(&(1, 1)) {
-            Some(WallDirection::ExteriorRight);
+            direction = WallDirection::ExteriorRight;
         } else if !neighbors.contains_key(&(0, 0)) {
-            Some(WallDirection::ExteriorTop);
-        } else if !neighbors.contains_key(&(1, 1)) {
-            Some(WallDirection::ExteriorBottom);
+            direction = WallDirection::ExteriorTop;
+        } else if !neighbors.contains_key(&(0, 1)) {
+            direction = WallDirection::ExteriorBottom;
         }
 
-        Some(WallDirection::Full)
+        Some(direction)
     }
 
     // Adds a tile to the station. Trusts the tile's position
