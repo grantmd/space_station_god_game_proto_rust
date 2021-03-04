@@ -3,6 +3,7 @@ use ggez::{graphics, Context, GameResult};
 
 use oorandom::Rand32;
 use std::collections::HashMap;
+use std::fmt;
 
 type Point2 = glam::Vec2;
 
@@ -13,8 +14,8 @@ const BORDER_COLOR: Color = Color::BLACK;
 // A position on a grid
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct GridPosition {
-    x: i32,
-    y: i32,
+    pub x: i32,
+    pub y: i32,
 }
 
 impl GridPosition {
@@ -32,11 +33,17 @@ impl From<(i32, i32)> for GridPosition {
     }
 }
 
+impl fmt::Display for GridPosition {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
 // A Tile object, which the Station is made of
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Tile {
-    pos: GridPosition,  // x,y position of the tile within the station
-    pub kind: TileType, // what type of square the tile is
+    pub pos: GridPosition, // x,y position of the tile within the station
+    pub kind: TileType,    // what type of square the tile is
 }
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum TileType {
@@ -206,14 +213,29 @@ impl Station {
         self.tiles.len()
     }
 
-    // Do we have a tile at a spot?
+    // Do we have a tile at a grid position?
     pub fn has_tile(&self, pos: GridPosition) -> bool {
         self.tiles.contains_key(&pos)
     }
 
-    // Get tile at a spot, if any
+    // Get tile at a grid position, if any
     pub fn get_tile(&self, pos: GridPosition) -> Option<&Tile> {
         self.tiles.get(&pos)
+    }
+
+    // Get a tile at a screen position, if any
+    // TODO: position should be a Point2 once ggez updates it
+    pub fn get_tile_from_screen(&self, pos: Point2, camera: &crate::Camera) -> Option<&Tile> {
+        // Translate the screen position into a grid position
+        let translated = (pos - self.pos) / crate::TILE_WIDTH;
+        let grid_pos = GridPosition::new(translated.x.ceil() as i32, translated.y.ceil() as i32);
+        println!(
+            "Station: {}, Screen: {}, Camera: {}, Translated: {}, Grid: {}",
+            self.pos, pos, camera.pos, translated, grid_pos
+        );
+
+        // Return the tile, if any
+        self.get_tile(grid_pos)
     }
 
     // Get the neighbors of a tile

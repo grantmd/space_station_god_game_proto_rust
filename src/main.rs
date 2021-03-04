@@ -186,7 +186,16 @@ impl EventHandler for SpaceStationGodGame {
 
         // Draw where the mouse is
         let mut mouse_pos = mouse::position(ctx);
-        let mouse_display = Text::new(format!("Mouse: {}, {}", mouse_pos.x, mouse_pos.y));
+        let mut mouse_display = Text::new(format!("Mouse: ({}, {})", mouse_pos.x, mouse_pos.y));
+        if let Some(selected_tile) = self
+            .station
+            .get_tile_from_screen(Point2::new(mouse_pos.x, mouse_pos.y), &self.camera)
+        {
+            mouse_display.add(format!(
+                "\nTile: ({}, {}), {:?}",
+                selected_tile.pos.x, selected_tile.pos.y, selected_tile.kind
+            ));
+        }
         mouse_pos.y -= mouse_display.height(ctx);
         graphics::queue_text(ctx, &mouse_display, mouse_pos, Some(Color::WHITE));
 
@@ -210,7 +219,7 @@ impl EventHandler for SpaceStationGodGame {
         );
         height += 5.0 + uptime_display.height(ctx) as f32;
         let station_display = Text::new(format!(
-            "Station Tiles: {} at {}",
+            "Station Tiles: {} at {}, Selected: None",
             self.station.num_tiles(),
             self.station.pos
         ));
