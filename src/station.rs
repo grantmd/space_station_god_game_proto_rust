@@ -111,6 +111,7 @@ impl Station {
         s
     }
 
+    // Randomly generate a new station
     fn generate(&mut self, width: usize, height: usize, rng: &mut Rand32) {
         // Randomly place floor tiles to give us a base
         for x in 0..width as i32 {
@@ -227,8 +228,9 @@ impl Station {
     // TODO: position should be a Point2 once ggez updates it
     pub fn get_tile_from_screen(&self, pos: Point2, camera: &crate::Camera) -> Option<&Tile> {
         // Translate the screen position into a grid position
-        let translated = (pos - self.pos) / crate::TILE_WIDTH;
-        let grid_pos = GridPosition::new(translated.x.ceil() as i32, translated.y.ceil() as i32);
+        let mut translated = (pos - self.pos) / crate::TILE_WIDTH;
+        translated = translated.ceil();
+        let grid_pos = GridPosition::new(translated.x as i32, translated.y as i32);
         println!(
             "Station: {}, Screen: {}, Camera: {}, Translated: {}, Grid: {}",
             self.pos, pos, camera.pos, translated, grid_pos
@@ -264,6 +266,7 @@ impl Station {
         self.tiles.remove(&pos);
     }
 
+    // Draw callback
     pub fn draw(&mut self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
         match &self.mesh {
             Some(mesh) => graphics::draw(
@@ -278,6 +281,7 @@ impl Station {
         }
     }
 
+    // Create a mesh from our state
     fn build_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
         let mb = &mut MeshBuilder::new();
         for (index, tile) in &self.tiles {
