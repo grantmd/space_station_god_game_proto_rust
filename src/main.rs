@@ -16,7 +16,7 @@ use glam;
 use oorandom::Rand32;
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
-use ggez::graphics::{Color, DrawParam, Text};
+use ggez::graphics::{Color, DrawMode, DrawParam, Text};
 use ggez::input::mouse;
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 
@@ -195,6 +195,20 @@ impl EventHandler for SpaceStationGodGame {
                 "\nTile: ({}, {}), {:?}",
                 selected_tile.pos.x, selected_tile.pos.y, selected_tile.kind
             ));
+
+            let tile_rect = graphics::Rect::new(
+                (crate::TILE_WIDTH * selected_tile.pos.x as f32) - (crate::TILE_WIDTH / 2.0),
+                (crate::TILE_WIDTH * selected_tile.pos.y as f32) - (crate::TILE_WIDTH / 2.0),
+                crate::TILE_WIDTH,
+                crate::TILE_WIDTH,
+            );
+            let mesh = graphics::Mesh::new_rectangle(
+                ctx,
+                DrawMode::stroke(1.0),
+                tile_rect,
+                Color::new(1.0, 1.0, 0.0, 1.0),
+            )?;
+            graphics::draw(ctx, &mesh, DrawParam::default().dest(self.station.pos))?;
         }
         mouse_pos.y -= mouse_display.height(ctx);
         graphics::queue_text(ctx, &mouse_display, mouse_pos, Some(Color::WHITE));

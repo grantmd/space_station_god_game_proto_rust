@@ -200,7 +200,7 @@ impl Station {
             direction = WallDirection::ExteriorBottom;
         }
 
-        direction = WallDirection::Full;
+        direction = WallDirection::Full; // Temporary override while I figure this function out
         Some(direction)
     }
 
