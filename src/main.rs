@@ -74,7 +74,7 @@ impl SpaceStationGodGame {
             dt: std::time::Duration::new(0, 0),
             rng: rng,
             is_fullscreen: false, // TODO: Is it possible to know this on startup from context?
-            is_paused: false,
+            is_paused: true,
             camera: Camera {
                 pos: Point2::zero(),
                 zoom: Point2::one(),
