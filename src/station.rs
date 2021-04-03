@@ -228,9 +228,10 @@ impl Station {
     // TODO: position should be a Point2 once ggez updates it
     pub fn get_tile_from_screen(&self, pos: Point2, camera: &crate::Camera) -> Option<&Tile> {
         // Translate the screen position into a grid position
-        let mut translated = (pos - self.pos) / crate::TILE_WIDTH;
-        translated = translated.ceil();
-        let grid_pos = GridPosition::new(translated.x as i32, translated.y as i32);
+        let screen_pos = pos - (Point2::one() * crate::TILE_WIDTH / 2.0); // Move up and to the left by half a tile on screen
+        let mut translated = (screen_pos / crate::TILE_WIDTH) - (self.pos / crate::TILE_WIDTH); // Move from screen to grid by dividing by tile width
+        translated = translated.ceil(); // Snap to gride
+        let grid_pos = GridPosition::new(translated.x as i32, translated.y as i32); // Convert types
         println!(
             "Station: {}, Screen: {}, Camera: {}, Translated: {}, Grid: {}",
             self.pos, pos, camera.pos, translated, grid_pos
