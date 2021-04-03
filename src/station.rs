@@ -232,10 +232,6 @@ impl Station {
         let mut translated = (screen_pos / crate::TILE_WIDTH) - (self.pos / crate::TILE_WIDTH); // Move from screen to grid by dividing by tile width
         translated = translated.ceil(); // Snap to gride
         let grid_pos = GridPosition::new(translated.x as i32, translated.y as i32); // Convert types
-        println!(
-            "Station: {}, Screen: {}, Camera: {}, Translated: {}, Grid: {}",
-            self.pos, pos, camera.pos, translated, grid_pos
-        );
 
         // Return the tile, if any
         self.get_tile(grid_pos)
