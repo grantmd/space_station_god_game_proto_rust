@@ -1,3 +1,4 @@
+use crate::station::item::*;
 use crate::station::{Tile, TileType};
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
@@ -7,7 +8,7 @@ use ggez::{graphics, Context, GameResult};
 type Point2 = glam::Vec2;
 
 // An Inhabitant of the Station
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug)]
 pub struct Inhabitant {
     pub pos: Point2,
     pub dest: Option<Point2>,
@@ -16,6 +17,7 @@ pub struct Inhabitant {
     hunger: i8,
     thirst: i8,
     age: i8,
+    items: Vec<Box<dyn Item>>,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -38,6 +40,7 @@ impl Inhabitant {
             hunger: 0,
             thirst: 0,
             age: 0,
+            items: Vec::new(),
         }
     }
 

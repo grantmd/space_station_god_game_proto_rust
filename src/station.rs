@@ -1,3 +1,7 @@
+pub mod item;
+
+use item::*;
+
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
 
@@ -40,10 +44,11 @@ impl fmt::Display for GridPosition {
 }
 
 // A Tile object, which the Station is made of
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug)]
 pub struct Tile {
-    pub pos: GridPosition, // x,y position of the tile within the station
-    pub kind: TileType,    // what type of square the tile is
+    pub pos: GridPosition,     // x,y position of the tile within the station
+    pub kind: TileType,        // what type of square the tile is
+    items: Vec<Box<dyn Item>>, // Items that are present on/in the tile
 }
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum TileType {
@@ -79,6 +84,7 @@ impl Tile {
         Tile {
             pos: pos,
             kind: kind,
+            items: Vec::new(),
         }
     }
 }
@@ -87,7 +93,7 @@ impl Tile {
 pub struct Station {
     pub pos: Point2, // The position of the station (upper-left, basically), in world coordinates
     tiles: HashMap<GridPosition, Tile>, // All the Tiles that make up the station
-    mesh: Option<Mesh>,
+    mesh: Option<Mesh>, // A cache of the mesh making up the station structure
 }
 
 impl Station {
@@ -145,8 +151,10 @@ impl Station {
         }
 
         // Loop over the floor tiles and place walls around the edges
-        let tiles = self.tiles.clone();
-        for (pos, tile) in tiles {
+        // This is done in two loops because I am not good at Rust and don't
+        // know how to solve the memory access issues of modifying while looping
+        let mut to_place = HashMap::new();
+        for (pos, tile) in self.tiles.iter() {
             if tile.kind == TileType::Floor {
                 for x in -1..2 {
                     for y in -1..2 {
@@ -159,16 +167,19 @@ impl Station {
                         let neighbor_pos = GridPosition::new(pos.x + x, pos.y + y);
                         if !self.has_tile(neighbor_pos) {
                             // Decide on the type of wall
-                            if let Some(wall_direction) = self.get_wall_direction(pos) {
+                            if let Some(wall_direction) = self.get_wall_direction(*pos) {
                                 // Add it
-                                let new_tile =
-                                    Tile::new(neighbor_pos, TileType::Wall(wall_direction));
-                                self.add_tile(new_tile);
+                                to_place.insert(neighbor_pos, TileType::Wall(wall_direction));
                             }
                         }
                     }
                 }
             }
+        }
+
+        for (&pos, &tile_type) in to_place.iter() {
+            let new_tile = Tile::new(pos, tile_type);
+            self.add_tile(new_tile);
         }
     }
 
