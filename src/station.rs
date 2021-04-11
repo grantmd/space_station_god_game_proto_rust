@@ -46,9 +46,9 @@ impl fmt::Display for GridPosition {
 // A Tile object, which the Station is made of
 #[derive(Debug)]
 pub struct Tile {
-    pub pos: GridPosition,     // x,y position of the tile within the station
-    pub kind: TileType,        // what type of square the tile is
-    items: Vec<Box<dyn Item>>, // Items that are present on/in the tile
+    pub pos: GridPosition,         // x,y position of the tile within the station
+    pub kind: TileType,            // what type of square the tile is
+    pub items: Vec<Box<dyn Item>>, // Items that are present on/in the tile
 }
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum TileType {
@@ -86,6 +86,10 @@ impl Tile {
             kind: kind,
             items: Vec::new(),
         }
+    }
+
+    fn add_item<T: Item + 'static>(&mut self, item: T) {
+        self.items.push(Box::new(item));
     }
 }
 
@@ -180,6 +184,15 @@ impl Station {
         for (&pos, &tile_type) in to_place.iter() {
             let new_tile = Tile::new(pos, tile_type);
             self.add_tile(new_tile);
+        }
+
+        // Place some items on the tiles
+        for (_pos, tile) in self.tiles.iter_mut() {
+            if tile.kind == TileType::Floor {
+                println!("Placing fridge at {:#?}", tile);
+                tile.add_item(item::Fridge::new(tile.pos));
+                break;
+            }
         }
     }
 

@@ -19,7 +19,7 @@ impl Debug for dyn Item {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Debug)]
 pub struct Food {
     pub energy: i8,
     pos: super::GridPosition,
@@ -60,5 +60,65 @@ impl Item for Food {
 
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         Ok(())
+    }
+}
+
+impl Food {
+    pub fn new(pos: super::GridPosition) -> Food {
+        Food {
+            pos: pos,
+            energy: 10,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Fridge {
+    items: Vec<Food>,
+    pos: super::GridPosition,
+}
+
+impl Item for Fridge {
+    fn get_name(&self) -> String {
+        format!("Food storage. Has {} items.", self.items.len())
+    }
+
+    fn draw(
+        &mut self,
+        ctx: &mut Context,
+        station_pos: Point2,
+        camera: &crate::Camera,
+    ) -> GameResult<()> {
+        let pos = Point2::new(
+            (crate::TILE_WIDTH * self.pos.x as f32) - (crate::TILE_WIDTH / 2.0),
+            (crate::TILE_WIDTH * self.pos.y as f32) - (crate::TILE_WIDTH / 2.0),
+        );
+        let mesh = Mesh::new_rectangle(
+            ctx,
+            DrawMode::fill(),
+            graphics::Rect::new(pos.x - 10.0, pos.y - 10.0, 20.0, 20.0),
+            Color::new(0.5, 0.5, 0.5, 1.0),
+        )?;
+        graphics::draw(
+            ctx,
+            &mesh,
+            DrawParam::default()
+                .dest(station_pos)
+                .offset(camera.pos)
+                .scale(camera.zoom),
+        )
+    }
+
+    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+        Ok(())
+    }
+}
+
+impl Fridge {
+    pub fn new(pos: super::GridPosition) -> Fridge {
+        Fridge {
+            pos: pos,
+            items: vec![Food::new(pos)],
+        }
     }
 }

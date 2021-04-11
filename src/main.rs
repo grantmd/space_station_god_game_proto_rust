@@ -192,8 +192,8 @@ impl EventHandler for SpaceStationGodGame {
             .get_tile_from_screen(Point2::new(mouse_pos.x, mouse_pos.y), &self.camera)
         {
             mouse_display.add(format!(
-                "\nTile: ({}, {}), {:?}",
-                selected_tile.pos.x, selected_tile.pos.y, selected_tile.kind
+                "\nTile: ({}, {}), {:?}, {:?}",
+                selected_tile.pos.x, selected_tile.pos.y, selected_tile.kind, selected_tile.items
             ));
 
             let tile_rect = graphics::Rect::new(
