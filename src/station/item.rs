@@ -9,7 +9,7 @@ type Point2 = glam::Vec2;
 // An item is the base of objects that live inside the station on tiles and inhabitants can interact
 pub trait Item {
     fn get_name(&self) -> String;
-    fn draw(&mut self, ctx: &mut Context, pos: Point2, camera: &crate::Camera) -> GameResult<()>;
+    fn draw(&self, ctx: &mut Context, pos: Point2, camera: &crate::Camera) -> GameResult<()>;
     fn update(&mut self, ctx: &mut Context) -> GameResult<()>;
 }
 
@@ -31,7 +31,7 @@ impl Item for Food {
     }
 
     fn draw(
-        &mut self,
+        &self,
         ctx: &mut Context,
         station_pos: Point2,
         camera: &crate::Camera,
@@ -84,7 +84,7 @@ impl Item for Fridge {
     }
 
     fn draw(
-        &mut self,
+        &self,
         ctx: &mut Context,
         station_pos: Point2,
         camera: &crate::Camera,
@@ -96,7 +96,7 @@ impl Item for Fridge {
         let mesh = Mesh::new_rectangle(
             ctx,
             DrawMode::fill(),
-            graphics::Rect::new(pos.x - 10.0, pos.y - 10.0, 20.0, 20.0),
+            graphics::Rect::new(pos.x + 10.0, pos.y + 10.0, 10.0, 10.0),
             Color::new(0.5, 0.5, 0.5, 1.0),
         )?;
         graphics::draw(

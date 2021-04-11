@@ -289,6 +289,7 @@ impl Station {
 
     // Draw callback
     pub fn draw(&mut self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
+        // Draw the pre-calculated station mesh
         match &self.mesh {
             Some(mesh) => graphics::draw(
                 ctx,
@@ -299,7 +300,16 @@ impl Station {
                     .scale(camera.zoom),
             ),
             None => Ok(()),
+        }?;
+
+        // Draw items on tiles
+        for (_pos, tile) in self.tiles.iter() {
+            for item in tile.items.iter() {
+                item.draw(ctx, self.pos, camera)?;
+            }
         }
+
+        Ok(())
     }
 
     // Create a mesh from our state
