@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod inhabitant;
+mod item;
 mod music;
 mod starfield;
 mod station;

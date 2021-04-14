@@ -1,6 +1,4 @@
-pub mod item;
-
-use item::*;
+use crate::item::*;
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
@@ -190,7 +188,7 @@ impl Station {
         for (_pos, tile) in self.tiles.iter_mut() {
             if tile.kind == TileType::Floor {
                 println!("Placing fridge at {:#?}", tile);
-                tile.add_item(item::Fridge::new(tile.pos));
+                tile.add_item(Fridge::new(tile.pos));
                 break;
             }
         }
