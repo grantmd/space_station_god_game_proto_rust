@@ -27,6 +27,7 @@ pub enum InhabitantType {
     Medic,
     Soldier,
     Miner,
+    Cook,
     Ghost,
 }
 

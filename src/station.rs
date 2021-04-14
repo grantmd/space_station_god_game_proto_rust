@@ -124,7 +124,7 @@ impl Station {
         // Randomly place floor tiles to give us a base
         for x in 0..width as i32 {
             for y in 0..height as i32 {
-                if rng.rand_float() < 0.45 {
+                if rng.rand_float() < 0.70 {
                     let tile = Tile::new(GridPosition::new(x, y), TileType::Floor);
                     self.add_tile(tile);
                 }
