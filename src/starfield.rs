@@ -9,24 +9,45 @@ type Point2 = glam::Vec2;
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Starfield {
-    mesh: Mesh,
+    stars: Vec<Star>,
+    mesh: Option<Mesh>,
 }
 
 impl Starfield {
     pub fn new(ctx: &mut Context, rng: &mut Rand32) -> Starfield {
         let (screen_width, screen_height) = graphics::drawable_size(ctx);
 
-        let stars = generate_stars(rng, screen_width, screen_height);
-        let mb = generate_mesh(ctx, &stars);
-        Starfield { mesh: mb.unwrap() }
+        let mut s = Starfield {
+            stars: Vec::with_capacity(1000),
+            mesh: None,
+        };
+
+        s.generate_stars(rng, screen_width, screen_height).unwrap();
+        s.generate_mesh(ctx).unwrap();
+
+        s
     }
 
-    pub fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+    pub fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        let (screen_width, _) = graphics::drawable_size(ctx);
+
+        for star in self.stars.iter_mut() {
+            star.pos -= Point2::unit_x() * 0.01;
+            if star.pos.x < 0.0 {
+                star.pos += Point2::unit_x() * screen_width;
+            }
+        }
+
+        self.generate_mesh(ctx)?;
+
         Ok(())
     }
 
     pub fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        graphics::draw(ctx, &self.mesh, DrawParam::default())
+        match &self.mesh {
+            Some(mesh) => graphics::draw(ctx, mesh, DrawParam::default()),
+            None => Ok(()),
+        }
     }
 
     pub fn resize_event(
@@ -36,15 +57,52 @@ impl Starfield {
         screen_width: f32,
         screen_height: f32,
     ) {
-        let stars = generate_stars(rng, screen_width, screen_height);
-        let mb = generate_mesh(ctx, &stars);
-        self.mesh = mb.unwrap();
+        self.generate_stars(rng, screen_width, screen_height)
+            .unwrap();
+        self.generate_mesh(ctx).unwrap();
+    }
+
+    // Create stars scaled to screen size
+    fn generate_stars(
+        &mut self,
+        rng: &mut Rand32,
+        screen_width: f32,
+        screen_height: f32,
+    ) -> GameResult<()> {
+        let num_stars = (screen_width * screen_height / 1000.0) as usize;
+        self.stars.clear();
+
+        for _ in 0..num_stars {
+            let x = rng.rand_range(0..screen_width as u32) as f32;
+            let y = rng.rand_range(0..screen_height as u32) as f32;
+
+            let size = num::pow(rng.rand_float() + 0.1, 4) * 2.0;
+
+            self.stars.push(Star {
+                pos: Point2::new(x, y),
+                size: size,
+                color: random_color(rng),
+            })
+        }
+
+        Ok(())
+    }
+
+    fn generate_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
+        let mb = &mut MeshBuilder::new();
+        for star in self.stars.iter() {
+            mb.circle(DrawMode::fill(), star.pos, star.size, 1.0, star.color)?;
+        }
+
+        self.mesh = mb.build(ctx).ok();
+
+        Ok(())
     }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct Star {
-    pos: Point2,
+    pub pos: Point2,
     size: f32,
     color: Color,
 }
@@ -56,33 +114,4 @@ fn random_color(rng: &mut Rand32) -> Color {
         1 => Color::new(1.0, 1.0, 0.0, 1.0), // yellow
         _ => Color::WHITE,
     }
-}
-
-// Create stars scaled to screen size
-fn generate_stars(rng: &mut Rand32, screen_width: f32, screen_height: f32) -> Vec<Star> {
-    let num_stars = (screen_width * screen_height / 1000.0) as usize;
-    let mut stars = Vec::with_capacity(num_stars);
-    for _ in 0..num_stars {
-        let x = rng.rand_range(0..screen_width as u32) as f32;
-        let y = rng.rand_range(0..screen_height as u32) as f32;
-
-        let size = num::pow(rng.rand_float() + 0.1, 4) * 2.0;
-
-        stars.push(Star {
-            pos: Point2::new(x, y),
-            size: size,
-            color: random_color(rng),
-        })
-    }
-
-    stars
-}
-
-fn generate_mesh(ctx: &mut Context, stars: &Vec<Star>) -> GameResult<graphics::Mesh> {
-    let mb = &mut MeshBuilder::new();
-    for star in stars {
-        mb.circle(DrawMode::fill(), star.pos, star.size, 1.0, star.color)?;
-    }
-
-    mb.build(ctx)
 }

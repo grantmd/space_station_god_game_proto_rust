@@ -107,22 +107,22 @@ impl EventHandler for SpaceStationGodGame {
     // `self` is state, `ctx` provides access to hardware (input, graphics, sound, etc)
     // Returns GameResult so ggez can handle any errors
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        // Are we paused?
-        if self.is_paused {
-            return Ok(());
-        }
-
         // Check music
         self.music.update(ctx)?;
 
         // Update at 60fps
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
+            // lways update the starfield
+            self.starfield.update(ctx)?;
+
+            // Are we paused?
+            if self.is_paused {
+                continue;
+            }
+
             // Step forward
             self.dt += timer::delta(ctx);
-
-            // Update the starfield
-            self.starfield.update(ctx)?;
 
             // Update the station
             self.station.update(ctx)?;
@@ -168,6 +168,7 @@ impl EventHandler for SpaceStationGodGame {
                 self.dt -= std::time::Duration::new(0, 500_000_000);
             }
         }
+
         // Done processing
         Ok(())
     }
