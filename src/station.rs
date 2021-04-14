@@ -287,6 +287,18 @@ impl Station {
         self.tiles.remove(&pos);
     }
 
+    // Update callback on the station
+    pub fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        // Update all items
+        for (_pos, tile) in self.tiles.iter_mut() {
+            for item in tile.items.iter_mut() {
+                item.update(ctx)?;
+            }
+        }
+
+        Ok(())
+    }
+
     // Draw callback
     pub fn draw(&mut self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
         // Draw the pre-calculated station mesh

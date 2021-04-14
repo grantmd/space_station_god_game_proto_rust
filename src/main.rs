@@ -123,6 +123,9 @@ impl EventHandler for SpaceStationGodGame {
             // Update the starfield
             self.starfield.update(ctx)?;
 
+            // Update the station
+            self.station.update(ctx)?;
+
             // Move the inhabitants
             for inhabitant in &mut self.inhabitants {
                 match inhabitant.dest {
@@ -192,7 +195,7 @@ impl EventHandler for SpaceStationGodGame {
             .get_tile_from_screen(Point2::new(mouse_pos.x, mouse_pos.y), &self.camera)
         {
             mouse_display.add(format!(
-                "\nTile: ({}, {}), {:?}, {:?}",
+                "\nTile: ({}, {}), {:?}\n{:?}",
                 selected_tile.pos.x, selected_tile.pos.y, selected_tile.kind, selected_tile.items
             ));
 

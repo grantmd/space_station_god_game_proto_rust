@@ -1,5 +1,5 @@
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
-use ggez::{graphics, Context, GameResult};
+use ggez::{graphics, Context, GameError, GameResult};
 
 use core::fmt::Debug;
 
@@ -75,6 +75,7 @@ impl Food {
 #[derive(Debug)]
 pub struct Fridge {
     items: Vec<Food>,
+    capacity: usize,
     pos: super::GridPosition,
 }
 
@@ -109,16 +110,36 @@ impl Item for Fridge {
         )
     }
 
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        // Update all the contents
+        for item in self.items.iter_mut() {
+            item.update(ctx)?;
+        }
+
         Ok(())
     }
 }
 
 impl Fridge {
     pub fn new(pos: super::GridPosition) -> Fridge {
-        Fridge {
+        let mut fridge = Fridge {
             pos: pos,
-            items: vec![Food::new(pos)],
+            capacity: 10,
+            items: Vec::with_capacity(10),
+        };
+
+        fridge.add_item(Food::new(pos)).unwrap();
+
+        fridge
+    }
+
+    pub fn add_item(&mut self, item: Food) -> GameResult<()> {
+        if self.items.len() >= self.capacity {
+            return Err(GameError::CustomError(format!("Fridge is at capacity")));
         }
+
+        self.items.push(item);
+
+        Ok(())
     }
 }
