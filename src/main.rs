@@ -113,7 +113,7 @@ impl EventHandler for SpaceStationGodGame {
         // Update at 60fps
         const DESIRED_FPS: u32 = 60;
         while timer::check_update_time(ctx, DESIRED_FPS) {
-            // lways update the starfield
+            // Always update the starfield
             self.starfield.update(ctx)?;
 
             // Are we paused?
@@ -140,22 +140,21 @@ impl EventHandler for SpaceStationGodGame {
                         // Move twice per second
                         if self.dt.as_secs_f32() >= 0.5 {
                             // Pick a random valid destination
-                            loop {
-                                let x = self.rng.rand_range(0..3) as i32 - 1;
-                                let y = self.rng.rand_range(0..3) as i32 - 1;
-                                let tile = self.station.get_tile(GridPosition::new(
-                                    inhabitant.pos.x as i32 + x,
-                                    inhabitant.pos.y as i32 + y,
-                                ));
-                                if inhabitant.can_move_to(tile) {
-                                    let dest = Point2::new(
-                                        inhabitant.pos.x + x as f32,
-                                        inhabitant.pos.y + y as f32,
-                                    );
-                                    if dest != inhabitant.pos {
-                                        inhabitant.dest = Some(dest);
-                                        break;
-                                    }
+                            let x = self.rng.rand_range(0..3) as i32 - 1;
+                            let y = self.rng.rand_range(0..3) as i32 - 1;
+                            let tile = self.station.get_tile(GridPosition::new(
+                                inhabitant.pos.x as i32 + x,
+                                inhabitant.pos.y as i32 + y,
+                            ));
+
+                            if inhabitant.can_move_to(tile) {
+                                let dest = Point2::new(
+                                    inhabitant.pos.x + x as f32,
+                                    inhabitant.pos.y + y as f32,
+                                );
+                                if dest != inhabitant.pos {
+                                    inhabitant.dest = Some(dest);
+                                    break;
                                 }
                             }
                         }
