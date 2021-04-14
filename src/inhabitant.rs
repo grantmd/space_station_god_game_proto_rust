@@ -13,10 +13,10 @@ pub struct Inhabitant {
     pub pos: Point2,
     pub dest: Option<Point2>,
     kind: InhabitantType,
-    health: i8,
-    hunger: i8,
-    thirst: i8,
-    age: i8,
+    health: u8,
+    hunger: u8,
+    thirst: u8,
+    age: u8,
     items: Vec<Box<dyn Item>>,
 }
 
@@ -39,7 +39,7 @@ impl Inhabitant {
             health: 100,
             hunger: 0,
             thirst: 0,
-            age: 0,
+            age: 1,
             items: Vec::new(),
         }
     }
@@ -61,6 +61,14 @@ impl Inhabitant {
                 None => false,
             },
         }
+    }
+
+    pub fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        if self.hunger >= 100 {
+            self.take_damage(1);
+        }
+
+        Ok(())
     }
 
     pub fn draw(
@@ -89,5 +97,21 @@ impl Inhabitant {
                 .offset(camera.pos)
                 .scale(camera.zoom),
         )
+    }
+
+    pub fn eat(&mut self, item: &Food) {
+        self.hunger -= item.energy;
+    }
+
+    pub fn take_damage(&mut self, amount: u8) {
+        self.health -= amount;
+        if self.health <= 0 {
+            self.die();
+        }
+    }
+
+    pub fn die(&mut self) {
+        // TODO: What if already a ghost!?
+        self.kind = InhabitantType::Ghost;
     }
 }

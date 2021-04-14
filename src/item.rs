@@ -21,7 +21,7 @@ impl Debug for dyn Item {
 
 #[derive(Debug)]
 pub struct Food {
-    pub energy: i8,
+    pub energy: u8,
     pos: super::GridPosition,
 }
 

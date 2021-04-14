@@ -127,7 +127,7 @@ impl EventHandler for SpaceStationGodGame {
             // Update the station
             self.station.update(ctx)?;
 
-            // Move the inhabitants
+            // Update and move the inhabitants
             for inhabitant in &mut self.inhabitants {
                 match inhabitant.dest {
                     Some(dest) => {
@@ -160,6 +160,8 @@ impl EventHandler for SpaceStationGodGame {
                         }
                     }
                 }
+
+                inhabitant.update(ctx)?;
             }
 
             // Only count the half seconds
