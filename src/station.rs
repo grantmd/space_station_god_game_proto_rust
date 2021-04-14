@@ -1,4 +1,6 @@
-use crate::item;
+pub mod item;
+
+use item::*;
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
@@ -44,9 +46,9 @@ impl fmt::Display for GridPosition {
 // A Tile object, which the Station is made of
 #[derive(Debug)]
 pub struct Tile {
-    pub pos: GridPosition, // x,y position of the tile within the station
-    pub kind: TileType,    // what type of square the tile is
-    pub items: Vec<Box<dyn item::Item>>, // Items that are present on/in the tile
+    pub pos: GridPosition,         // x,y position of the tile within the station
+    pub kind: TileType,            // what type of square the tile is
+    pub items: Vec<Box<dyn Item>>, // Items that are present on/in the tile
 }
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum TileType {
@@ -86,7 +88,7 @@ impl Tile {
         }
     }
 
-    fn add_item<T: item::Item + 'static>(&mut self, item: T) {
+    fn add_item<T: Item + 'static>(&mut self, item: T) {
         self.items.push(Box::new(item));
     }
 }
