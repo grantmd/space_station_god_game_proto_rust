@@ -2350,6 +2350,7 @@ dependencies = [
  "ggez",
  "glam",
  "keyframe",
+ "mint",
  "num",
  "oorandom",
  "rand 0.8.3",

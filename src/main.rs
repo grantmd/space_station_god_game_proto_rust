@@ -21,8 +21,6 @@ use ggez::graphics::{Color, DrawMode, DrawParam, Font, PxScale, Text, TextFragme
 use ggez::input::mouse;
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 
-use keyframe::{ease, functions::EaseInOut};
-
 use std::env;
 use std::path;
 
@@ -33,7 +31,6 @@ const TILE_WIDTH: f32 = 30.0;
 
 // Main game state object. Holds positions, scores, etc
 struct SpaceStationGodGame {
-    dt: std::time::Duration, // Time between updates
     rng: oorandom::Rand32,
     is_fullscreen: bool,
     is_paused: bool,
@@ -72,7 +69,6 @@ impl SpaceStationGodGame {
 
         // Create game state and return it
         let mut game = SpaceStationGodGame {
-            dt: std::time::Duration::new(0, 0),
             rng: rng,
             is_fullscreen: false, // TODO: Is it possible to know this on startup from context?
             is_paused: true,
@@ -121,52 +117,12 @@ impl EventHandler for SpaceStationGodGame {
                 continue;
             }
 
-            // Step forward
-            self.dt += timer::delta(ctx);
-
             // Update the station
             self.station.update(ctx)?;
 
             // Update and move the inhabitants
             for inhabitant in &mut self.inhabitants {
-                match inhabitant.dest {
-                    Some(dest) => {
-                        // Keep going until we get there
-                        //let pos = ease(EaseInOut, inhabitant.pos, inhabitant.dest.unwrap(), self.dt.as_secs_f64());
-                        inhabitant.pos = dest;
-                        inhabitant.dest = None;
-                    }
-                    None => {
-                        // Move twice per second
-                        if self.dt.as_secs_f32() >= 0.5 {
-                            // Pick a random valid destination
-                            let x = self.rng.rand_range(0..3) as i32 - 1;
-                            let y = self.rng.rand_range(0..3) as i32 - 1;
-                            let tile = self.station.get_tile(GridPosition::new(
-                                inhabitant.pos.x as i32 + x,
-                                inhabitant.pos.y as i32 + y,
-                            ));
-
-                            if inhabitant.can_move_to(tile) {
-                                let dest = Point2::new(
-                                    inhabitant.pos.x + x as f32,
-                                    inhabitant.pos.y + y as f32,
-                                );
-                                if dest != inhabitant.pos {
-                                    inhabitant.dest = Some(dest);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                inhabitant.update(ctx)?;
-            }
-
-            // Only count the half seconds
-            if self.dt.as_secs_f32() >= 0.5 {
-                self.dt -= std::time::Duration::new(0, 500_000_000);
+                inhabitant.update(ctx, &self.station, &mut self.rng)?;
             }
         }
 

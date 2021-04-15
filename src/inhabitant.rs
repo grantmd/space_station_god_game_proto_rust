@@ -1,8 +1,13 @@
 use crate::item::*;
-use crate::station::{Tile, TileType};
+use crate::station::{GridPosition, Station, Tile, TileType};
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
-use ggez::{graphics, Context, GameResult};
+use ggez::{graphics, timer, Context, GameResult};
+
+use keyframe::{ease, functions::EaseInOut};
+use oorandom::Rand32;
+
+use std::time;
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;
@@ -11,12 +16,14 @@ type Point2 = glam::Vec2;
 #[derive(Debug)]
 pub struct Inhabitant {
     pub pos: Point2,
+    source: Point2,
+    move_elapsed: f64,
     pub dest: Option<Point2>,
     kind: InhabitantType,
     health: u8,
     hunger: u8,
     thirst: u8,
-    age: u8,
+    age: time::Duration,
     items: Vec<Box<dyn Item>>,
 }
 
@@ -35,12 +42,14 @@ impl Inhabitant {
     pub fn new(pos: Point2, kind: InhabitantType) -> Inhabitant {
         Inhabitant {
             pos: pos,
+            source: pos,
             dest: None,
+            move_elapsed: 0.0,
             kind: kind,
             health: 100,
             hunger: 0,
             thirst: 0,
-            age: 1,
+            age: time::Duration::from_micros(0),
             items: Vec::new(),
         }
     }
@@ -64,9 +73,57 @@ impl Inhabitant {
         }
     }
 
-    pub fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+    pub fn update(
+        &mut self,
+        ctx: &mut Context,
+        station: &Station,
+        rng: &mut Rand32,
+    ) -> GameResult<()> {
+        let dt = timer::delta(ctx); // Time since last frame
+
+        // Look, we're growing!
+        self.age += dt;
+
+        // Take damage when starving
         if self.hunger >= 100 {
             self.take_damage(1);
+        }
+
+        // Move
+        match self.dest {
+            Some(_) => {
+                // Keep going until we get there
+                self.move_elapsed += timer::duration_to_f64(dt);
+
+                // The ease functions want mint types
+                let source: mint::Point2<f32> = self.source.into();
+                let dest: mint::Point2<f32> = self.dest.unwrap().into();
+
+                // Ease in over 2 seconds
+                self.pos = ease(EaseInOut, source, dest, self.move_elapsed / 2.0).into();
+
+                // We there?
+                if self.pos == dest.into() {
+                    self.dest = None;
+                }
+            }
+            None => {
+                let x = rng.rand_range(0..3) as i32 - 1;
+                let y = rng.rand_range(0..3) as i32 - 1;
+                let tile = station.get_tile(GridPosition::new(
+                    self.pos.x as i32 + x,
+                    self.pos.y as i32 + y,
+                ));
+
+                if self.can_move_to(tile) {
+                    let dest = Point2::new(self.pos.x + x as f32, self.pos.y + y as f32);
+                    if dest != self.pos {
+                        self.move_elapsed = 0.0;
+                        self.source = self.pos;
+                        self.dest = Some(dest);
+                    }
+                }
+            }
         }
 
         Ok(())
