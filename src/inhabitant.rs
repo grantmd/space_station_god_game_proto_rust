@@ -15,15 +15,18 @@ type Point2 = glam::Vec2;
 // An Inhabitant of the Station
 #[derive(Debug)]
 pub struct Inhabitant {
+    // These are all world positions
     pub pos: Point2,
     source: Point2,
-    move_elapsed: f64,
     pub dest: Option<Point2>,
+    move_elapsed: f64, // Seconds we've been moving from source to dest
+
     kind: InhabitantType,
     health: u8,
     hunger: u8,
     thirst: u8,
     age: time::Duration,
+
     items: Vec<Box<dyn Item>>,
 }
 
@@ -99,8 +102,9 @@ impl Inhabitant {
                 let source: mint::Point2<f32> = self.source.into();
                 let dest: mint::Point2<f32> = self.dest.unwrap().into();
 
-                // Ease in over 2 seconds
-                self.pos = ease(EaseInOut, source, dest, self.move_elapsed / 2.0).into();
+                // Ease in over 2 seconds per square
+                let distance: f64 = self.source.distance(self.dest.unwrap()).into();
+                self.pos = ease(EaseInOut, source, dest, self.move_elapsed / 2.0 * distance).into();
 
                 // We there?
                 if self.pos == dest.into() {
