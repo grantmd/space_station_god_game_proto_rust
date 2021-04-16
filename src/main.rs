@@ -333,6 +333,10 @@ impl EventHandler for SpaceStationGodGame {
 
             // Add a new inhabitant
             KeyCode::N => {
+                if self.is_paused {
+                    return;
+                }
+
                 let tile = self
                     .station
                     .get_random_tile(TileType::Floor, &mut self.rng)
