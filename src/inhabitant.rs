@@ -93,41 +93,16 @@ impl Inhabitant {
         }
 
         // Move
-        // TODO: Make this a method or two
         match self.dest {
             Some(_) => {
-                // Keep going until we get there
-                self.move_elapsed += timer::duration_to_f64(dt);
-
-                // The ease functions want mint types
-                let source: mint::Point2<f32> = self.source.into();
-                let dest: mint::Point2<f32> = self.dest.unwrap().into();
-
-                // Ease in over 2 seconds per square
-                let distance: f64 = self.source.distance(self.dest.unwrap()).into();
-                self.pos = ease(
-                    EaseInOut,
-                    source,
-                    dest,
-                    self.move_elapsed / 2.0 * distance / crate::TILE_WIDTH as f64,
-                )
-                .into();
-
-                // We there?
-                if self.pos == dest.into() {
-                    self.dest = None;
-                }
+                self.keep_moving(dt);
             }
             None => {
                 let tile = station.get_random_tile(TileType::Floor, rng);
 
                 if self.can_move_to(tile) {
                     let dest = tile.unwrap().to_world_position(station);
-                    if dest != self.pos {
-                        self.move_elapsed = 0.0;
-                        self.source = self.pos;
-                        self.dest = Some(dest);
-                    }
+                    self.set_destination(dest);
                 }
             }
         }
@@ -149,6 +124,42 @@ impl Inhabitant {
             &mesh,
             DrawParam::default().offset(camera.pos).scale(camera.zoom),
         )
+    }
+
+    pub fn set_destination(&mut self, dest: Point2) {
+        if dest != self.pos {
+            self.move_elapsed = 0.0;
+            self.source = self.pos;
+            self.dest = Some(dest);
+        }
+    }
+
+    fn keep_moving(&mut self, dt: time::Duration) {
+        if self.dest == None {
+            return;
+        }
+
+        // Keep going until we get there
+        self.move_elapsed += timer::duration_to_f64(dt);
+
+        // The ease functions want mint types
+        let source: mint::Point2<f32> = self.source.into();
+        let dest: mint::Point2<f32> = self.dest.unwrap().into();
+
+        // Ease in over 2 seconds per square
+        let distance: f64 = self.source.distance(self.dest.unwrap()).into();
+        self.pos = ease(
+            EaseInOut,
+            source,
+            dest,
+            self.move_elapsed / 2.0 * distance / crate::TILE_WIDTH as f64,
+        )
+        .into();
+
+        // We there?
+        if self.pos == dest.into() {
+            self.dest = None;
+        }
     }
 
     pub fn eat(&mut self, item: &Food) {
