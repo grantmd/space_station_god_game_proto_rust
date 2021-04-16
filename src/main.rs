@@ -333,8 +333,13 @@ impl EventHandler for SpaceStationGodGame {
 
             // Add a new inhabitant
             KeyCode::N => {
+                let tile = self
+                    .station
+                    .get_random_tile(TileType::Floor, &mut self.rng)
+                    .unwrap();
+                let pos = tile.to_world_position(&self.station);
                 self.add_inhabitant(
-                    Point2::new(1.5, 1.5),    // TODO: Maybe mouse location?
+                    pos,
                     InhabitantType::Engineer, // TODO: Random
                 );
             }
