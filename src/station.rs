@@ -21,8 +21,7 @@ pub struct GridPosition {
 }
 
 impl GridPosition {
-    /// We make a standard helper function so that we can create a new `GridPosition`
-    /// more easily.
+    // We make a standard helper function so that we can create a new `GridPosition` more easily.
     pub fn new(x: i32, y: i32) -> Self {
         GridPosition { x, y }
     }
@@ -86,8 +85,15 @@ impl Tile {
         }
     }
 
-    fn add_item<T: Item + 'static>(&mut self, item: T) {
+    pub fn add_item<T: Item + 'static>(&mut self, item: T) {
         self.items.push(Box::new(item));
+    }
+
+    pub fn to_world_position(&self, station: &Station) -> Point2 {
+        Point2::new(
+            station.pos.x + (self.pos.x as f32 * crate::TILE_WIDTH),
+            station.pos.y + (self.pos.y as f32 * crate::TILE_WIDTH),
+        )
     }
 }
 
@@ -246,13 +252,30 @@ impl Station {
         self.tiles.get(&pos)
     }
 
+    // Get a random tile within the station
+    pub fn get_random_tile(&self, kind: TileType, rng: &mut Rand32) -> Option<&Tile> {
+        let mut options = Vec::with_capacity(self.num_tiles());
+        for tile in self.tiles.values() {
+            if tile.kind == kind {
+                options.push(tile);
+            }
+        }
+
+        if options.len() == 0 {
+            return None;
+        }
+
+        let index = rng.rand_range(0..options.len() as u32) as usize;
+        Some(options[index])
+    }
+
     // Get a tile at a screen position, if any
     // TODO: position should be a Point2 once ggez updates it
     pub fn get_tile_from_screen(&self, pos: Point2, camera: &crate::Camera) -> Option<&Tile> {
         // Translate the screen position into a grid position
         let screen_pos = pos - (Point2::one() * crate::TILE_WIDTH / 2.0); // Move up and to the left by half a tile on screen
         let mut translated = (screen_pos / crate::TILE_WIDTH) - (self.pos / crate::TILE_WIDTH); // Move from screen to grid by dividing by tile width
-        translated = translated.ceil(); // Snap to gride
+        translated = translated.ceil(); // Snap to grid
         let grid_pos = GridPosition::new(translated.x as i32, translated.y as i32); // Convert types
 
         // Return the tile, if any

@@ -93,6 +93,7 @@ impl Inhabitant {
         }
 
         // Move
+        // TODO: Make this a method or two
         match self.dest {
             Some(_) => {
                 // Keep going until we get there
@@ -104,7 +105,13 @@ impl Inhabitant {
 
                 // Ease in over 2 seconds per square
                 let distance: f64 = self.source.distance(self.dest.unwrap()).into();
-                self.pos = ease(EaseInOut, source, dest, self.move_elapsed / 2.0 * distance).into();
+                self.pos = ease(
+                    EaseInOut,
+                    source,
+                    dest,
+                    self.move_elapsed / 2.0 * distance / crate::TILE_WIDTH as f64,
+                )
+                .into();
 
                 // We there?
                 if self.pos == dest.into() {
@@ -112,15 +119,10 @@ impl Inhabitant {
                 }
             }
             None => {
-                let x = rng.rand_range(0..3) as i32 - 1;
-                let y = rng.rand_range(0..3) as i32 - 1;
-                let tile = station.get_tile(GridPosition::new(
-                    self.pos.x as i32 + x,
-                    self.pos.y as i32 + y,
-                ));
+                let tile = station.get_random_tile(TileType::Floor, rng);
 
                 if self.can_move_to(tile) {
-                    let dest = Point2::new(self.pos.x + x as f32, self.pos.y + y as f32);
+                    let dest = tile.unwrap().to_world_position(station);
                     if dest != self.pos {
                         self.move_elapsed = 0.0;
                         self.source = self.pos;
@@ -133,20 +135,11 @@ impl Inhabitant {
         Ok(())
     }
 
-    pub fn draw(
-        &mut self,
-        ctx: &mut Context,
-        station_pos: Point2,
-        camera: &crate::Camera,
-    ) -> GameResult<()> {
-        let pos = Point2::new(
-            (crate::TILE_WIDTH * self.pos.x) - (crate::TILE_WIDTH / 2.0),
-            (crate::TILE_WIDTH * self.pos.y) - (crate::TILE_WIDTH / 2.0),
-        );
+    pub fn draw(&mut self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
         let mesh = Mesh::new_circle(
             ctx,
             DrawMode::fill(),
-            pos,
+            self.pos,
             crate::TILE_WIDTH / 2.0 - 10.0,
             0.1,
             Color::WHITE,
@@ -154,10 +147,7 @@ impl Inhabitant {
         graphics::draw(
             ctx,
             &mesh,
-            DrawParam::default()
-                .dest(station_pos)
-                .offset(camera.pos)
-                .scale(camera.zoom),
+            DrawParam::default().offset(camera.pos).scale(camera.zoom),
         )
     }
 

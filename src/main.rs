@@ -10,7 +10,7 @@ mod station;
 use inhabitant::{Inhabitant, InhabitantType};
 use music::Music;
 use starfield::Starfield;
-use station::{GridPosition, Station};
+use station::{GridPosition, Station, TileType};
 
 use ggez;
 use glam;
@@ -83,8 +83,13 @@ impl SpaceStationGodGame {
         };
 
         // Put some people in it
+        let tile = game
+            .station
+            .get_random_tile(TileType::Floor, &mut game.rng)
+            .unwrap();
+        let pos = tile.to_world_position(&game.station);
         game.add_inhabitant(
-            Point2::new(station_width as f32 / 2.0, station_height as f32 / 2.0),
+            pos,
             InhabitantType::Engineer, // TODO: Random
         );
 
@@ -93,6 +98,7 @@ impl SpaceStationGodGame {
     }
 
     fn add_inhabitant(&mut self, pos: Point2, kind: InhabitantType) {
+        println!("Putting inhabitant at {}", pos);
         self.inhabitants.push(Inhabitant::new(pos, kind));
     }
 }
@@ -143,7 +149,7 @@ impl EventHandler for SpaceStationGodGame {
 
         // Draw the inhabitants
         for inhabitant in &mut self.inhabitants {
-            inhabitant.draw(ctx, self.station.pos, &self.camera)?;
+            inhabitant.draw(ctx, &self.camera)?;
         }
 
         // Draw where the mouse is
@@ -153,9 +159,15 @@ impl EventHandler for SpaceStationGodGame {
             .station
             .get_tile_from_screen(Point2::new(mouse_pos.x, mouse_pos.y), &self.camera)
         {
+            let world_pos = selected_tile.to_world_position(&self.station);
             mouse_display.add(format!(
-                "\nTile: ({}, {}), {:?}\n{:?}",
-                selected_tile.pos.x, selected_tile.pos.y, selected_tile.kind, selected_tile.items
+                "\nTile: Grid ({}, {}), World ({},{}), {:?}\n{:?}",
+                selected_tile.pos.x,
+                selected_tile.pos.y,
+                world_pos.x,
+                world_pos.y,
+                selected_tile.kind,
+                selected_tile.items
             ));
 
             let tile_rect = graphics::Rect::new(
