@@ -4,7 +4,7 @@ use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
 
 use oorandom::Rand32;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
@@ -326,30 +326,31 @@ impl Station {
     }
 
     // From a tile in the station, generate a list of reachable non-wall tiles via breadth-first search
-    fn search<'a>(&'a self, start: &'a Tile) -> HashSet<&'a Tile> {
+    // Keys are reached tiles, values are where we came from to get there
+    fn search<'a>(&'a self, start: &'a Tile) -> HashMap<&'a Tile, Option<&Tile>> {
         let mut frontier = Vec::new();
         frontier.push(start);
 
-        let mut reached = HashSet::new();
-        reached.insert(start);
+        let mut came_from = HashMap::new();
+        came_from.insert(start, None);
 
         while !frontier.is_empty() {
             let current = frontier.pop().unwrap();
             for (_pos, next) in self.get_neighbors(current.pos) {
-                if !reached.contains(next) {
+                if !came_from.contains_key(next) {
                     match next.kind {
                         TileType::Wall(_) => {}
                         _ => {
                             // TODO: Locked doors
                             frontier.push(next);
-                            reached.insert(next);
+                            came_from.insert(next, Some(current));
                         }
                     }
                 }
             }
         }
 
-        reached
+        came_from
     }
 
     // Update callback on the station
