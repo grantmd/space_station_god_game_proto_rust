@@ -1,5 +1,5 @@
 use crate::item::*;
-use crate::station::{GridPosition, Station, Tile, TileType};
+use crate::station::{Station, Tile, TileType};
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
 use ggez::{graphics, timer, Context, GameResult};

@@ -4,8 +4,9 @@ use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
 
 use oorandom::Rand32;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
+use std::hash::{Hash, Hasher};
 
 type Point2 = glam::Vec2;
 
@@ -47,6 +48,22 @@ pub struct Tile {
     pub kind: TileType,            // what type of square the tile is
     pub items: Vec<Box<dyn Item>>, // Items that are present on/in the tile
 }
+
+// Tiles are equal if they are in the same spot
+impl PartialEq for Tile {
+    fn eq(&self, other: &Self) -> bool {
+        self.pos == other.pos
+    }
+}
+
+impl Eq for Tile {}
+
+impl Hash for Tile {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.pos.hash(state);
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum TileType {
     Floor,
@@ -306,6 +323,33 @@ impl Station {
     // Removes a tile
     pub fn remove_tile(&mut self, pos: GridPosition) {
         self.tiles.remove(&pos);
+    }
+
+    // From a tile in the station, generate a list of non-wall tiles via breadth-first search
+    fn search<'a>(&'a self, start: &'a Tile) -> HashSet<&'a Tile> {
+        let mut frontier = Vec::new();
+        frontier.push(start);
+
+        let mut reached = HashSet::new();
+        reached.insert(start);
+
+        while !frontier.is_empty() {
+            let current = frontier.pop().unwrap();
+            for (_pos, next) in self.get_neighbors(current.pos) {
+                if !reached.contains(next) {
+                    match next.kind {
+                        TileType::Wall(_) => {}
+                        _ => {
+                            // TODO: Locked doors
+                            frontier.push(next);
+                            reached.insert(next);
+                        }
+                    }
+                }
+            }
+        }
+
+        reached
     }
 
     // Update callback on the station
