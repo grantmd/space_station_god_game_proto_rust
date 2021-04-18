@@ -325,7 +325,7 @@ impl Station {
         self.tiles.remove(&pos);
     }
 
-    // From a tile in the station, generate a list of non-wall tiles via breadth-first search
+    // From a tile in the station, generate a list of reachable non-wall tiles via breadth-first search
     fn search<'a>(&'a self, start: &'a Tile) -> HashSet<&'a Tile> {
         let mut frontier = Vec::new();
         frontier.push(start);
