@@ -327,7 +327,11 @@ impl Station {
 
     // From a tile in the station, generate a list of reachable non-wall tiles via breadth-first search
     // Keys are reached tiles, values are where we came from to get there
-    fn search<'a>(&'a self, start: &'a Tile) -> HashMap<&'a Tile, Option<&Tile>> {
+    fn search<'a>(
+        &'a self,
+        start: &'a Tile,
+        target: Option<&Tile>,
+    ) -> HashMap<&'a Tile, Option<&Tile>> {
         let mut frontier = Vec::new();
         frontier.push(start);
 
@@ -336,6 +340,11 @@ impl Station {
 
         while !frontier.is_empty() {
             let current = frontier.pop().unwrap();
+
+            if Some(current) == target {
+                break;
+            }
+
             for (_pos, next) in self.get_neighbors(current.pos) {
                 if !came_from.contains_key(next) {
                     match next.kind {
@@ -351,6 +360,24 @@ impl Station {
         }
 
         came_from
+    }
+
+    // Given a start and an end, generate a path that doesn't include walls
+    pub fn path_to<'a>(&'a self, start: &Tile, target: &'a Tile) -> Vec<&Tile> {
+        // Start at the end and work backwards
+        let mut current = target;
+        let mut path = Vec::new();
+
+        let reachable = self.search(target, Some(start));
+        while current != start {
+            path.push(current);
+            if let Some(next) = reachable[current] {
+                current = next;
+            }
+        }
+
+        path.reverse();
+        path
     }
 
     // Update callback on the station
