@@ -15,10 +15,12 @@ type Point2 = glam::Vec2;
 // An Inhabitant of the Station
 #[derive(Debug)]
 pub struct Inhabitant {
-    // These are all world positions
-    pub pos: Point2,
-    source: Point2,
-    pub dest: Option<Point2>,
+    // These are all world positions (since they can go outside the station)
+    pub pos: Point2,          // Current position
+    source: Point2,           // Pathfinding source position
+    next_waypoint: Point2,    // Pathfinding next waypoint to move to
+    pub dest: Option<Point2>, // Pathfinding destination to reach
+
     move_elapsed: f64, // Seconds we've been moving from source to dest
 
     kind: InhabitantType,
@@ -46,6 +48,7 @@ impl Inhabitant {
         Inhabitant {
             pos: pos,
             source: pos,
+            next_waypoint: pos,
             dest: None,
             move_elapsed: 0.0,
             kind: kind,
@@ -95,7 +98,7 @@ impl Inhabitant {
         // Move
         match self.dest {
             Some(_) => {
-                self.keep_moving(dt);
+                self.keep_moving(dt, station);
             }
             None => {
                 let tile = station.get_random_tile(TileType::Floor, rng);
@@ -124,40 +127,57 @@ impl Inhabitant {
             &mesh,
             DrawParam::default().offset(camera.pos).scale(camera.zoom),
         )
+
+        // TODO: Highlight our destination and maybe path if we have one
     }
 
     pub fn set_destination(&mut self, dest: Point2) {
         if dest != self.pos {
             self.move_elapsed = 0.0;
             self.source = self.pos;
+            self.next_waypoint = self.pos;
             self.dest = Some(dest);
         }
     }
 
-    fn keep_moving(&mut self, dt: time::Duration) {
+    fn keep_moving(&mut self, dt: time::Duration, station: &Station) {
         if self.dest == None {
             return;
         }
 
         // Keep going until we get there
+        if self.pos == self.next_waypoint {
+            println!(
+                "Pathing from {} ({:?}) to {} ({:?})",
+                self.pos,
+                station.get_tile_from_world(self.pos).unwrap(),
+                self.dest.unwrap(),
+                station.get_tile_from_world(self.dest.unwrap()).unwrap(),
+            );
+            let path = station.path_to(
+                station.get_tile_from_world(self.pos).unwrap(),
+                station.get_tile_from_world(self.dest.unwrap()).unwrap(),
+            );
+            println!("Path: {:?}", path);
+            if path.len() > 0 {
+                self.next_waypoint = path[0].to_world_position(station);
+                self.move_elapsed = 0.0;
+            } else {
+                self.dest = None;
+                return;
+            }
+        }
         self.move_elapsed += timer::duration_to_f64(dt);
 
         // The ease functions want mint types
         let source: mint::Point2<f32> = self.source.into();
-        let dest: mint::Point2<f32> = self.dest.unwrap().into();
+        let next: mint::Point2<f32> = self.next_waypoint.into();
 
-        // Ease in over 2 seconds per square
-        let distance: f64 = self.source.distance(self.dest.unwrap()).into();
-        self.pos = ease(
-            EaseInOut,
-            source,
-            dest,
-            self.move_elapsed / 2.0 * distance / crate::TILE_WIDTH as f64,
-        )
-        .into();
+        // Ease in over 3 seconds per square
+        self.pos = ease(EaseInOut, source, next, self.move_elapsed / 3.0).into();
 
         // We there?
-        if self.pos == dest.into() {
+        if Some(self.pos) == self.dest {
             self.dest = None;
         }
     }

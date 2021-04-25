@@ -289,6 +289,11 @@ impl Station {
     // Get a tile at a screen position, if any
     // TODO: position should be a Point2 once ggez updates it
     pub fn get_tile_from_screen(&self, pos: Point2, camera: &crate::Camera) -> Option<&Tile> {
+        // This is just world coordinates with camera translation
+        return self.get_tile_from_world(pos);
+    }
+
+    pub fn get_tile_from_world(&self, pos: Point2) -> Option<&Tile> {
         // Translate the screen position into a grid position
         let screen_pos = pos - (Point2::one() * crate::TILE_WIDTH / 2.0); // Move up and to the left by half a tile on screen
         let mut translated = (screen_pos / crate::TILE_WIDTH) - (self.pos / crate::TILE_WIDTH); // Move from screen to grid by dividing by tile width
@@ -363,16 +368,24 @@ impl Station {
     }
 
     // Given a start and an end, generate a path that doesn't include walls
+    // TODO: This infinite loops if there's no path
     pub fn path_to<'a>(&'a self, start: &Tile, target: &'a Tile) -> Vec<&Tile> {
         // Start at the end and work backwards
         let mut current = target;
         let mut path = Vec::new();
 
         let reachable = self.search(target, Some(start));
+        let mut count = 0;
         while current != start {
             path.push(current);
             if let Some(next) = reachable[current] {
                 current = next;
+            }
+
+            count += 1;
+            if count > 10000 {
+                // TODO: Return an error instead
+                return Vec::new();
             }
         }
 
