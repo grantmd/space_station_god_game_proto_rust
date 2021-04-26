@@ -770,3 +770,73 @@ impl Station {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_station() -> Station {
+        Station {
+            pos: Point2::new(1.0, 1.0),
+            tiles: HashMap::new(),
+            mesh: None,
+        }
+    }
+
+    #[test]
+    fn tile_num_tiles() {
+        let s = test_station();
+        assert_eq!(0, s.num_tiles());
+    }
+
+    #[test]
+    fn add_tile() {
+        let mut s = test_station();
+        let tile = Tile::new(GridPosition::new(1, 1), TileType::Floor);
+        s.add_tile(tile);
+        assert_eq!(1, s.num_tiles());
+    }
+
+    #[test]
+    fn has_tile() {
+        let mut s = test_station();
+        let pos = GridPosition::new(1, 1);
+        let tile = Tile::new(pos, TileType::Floor);
+        s.add_tile(tile);
+        assert!(s.has_tile(pos));
+    }
+
+    #[test]
+    fn get_tile() {
+        let mut s = test_station();
+        let pos = GridPosition::new(1, 1);
+        let tile = Tile::new(pos, TileType::Floor);
+        s.add_tile(tile);
+
+        let tile2 = s.get_tile(pos).unwrap();
+        assert_eq!(pos, tile2.pos);
+        assert_eq!(TileType::Floor, tile2.kind);
+    }
+
+    #[test]
+    fn get_tile_empty() {
+        let mut s = test_station();
+        let pos = GridPosition::new(1, 1);
+        let tile = Tile::new(pos, TileType::Floor);
+        s.add_tile(tile);
+
+        let tile2 = s.get_tile(GridPosition::new(1, 2));
+        assert_eq!(None, tile2);
+    }
+
+    #[test]
+    fn remove_tile() {
+        let mut s = test_station();
+        let pos = GridPosition::new(1, 1);
+        let tile = Tile::new(pos, TileType::Floor);
+        s.add_tile(tile);
+        assert!(s.has_tile(pos));
+        s.remove_tile(pos);
+        assert!(!s.has_tile(pos));
+    }
+}

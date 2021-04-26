@@ -161,6 +161,7 @@ mod tests {
         assert!(fridge.add_item(Food::new(fridge.pos)).is_ok());
         assert_eq!(2, fridge.items.len());
     }
+
     #[test]
     fn fridge_max_items() {
         let mut fridge = Fridge::new(GridPosition::new(1, 1));
