@@ -143,3 +143,32 @@ impl Fridge {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::super::*;
+    use super::*;
+
+    #[test]
+    fn new_fridge_contains_items() {
+        let fridge = Fridge::new(GridPosition::new(1, 1));
+        assert_eq!(1, fridge.items.len());
+    }
+
+    #[test]
+    fn fridge_add_item() {
+        let mut fridge = Fridge::new(GridPosition::new(1, 1));
+        assert!(fridge.add_item(Food::new(fridge.pos)).is_ok());
+        assert_eq!(2, fridge.items.len());
+    }
+    #[test]
+    fn fridge_max_items() {
+        let mut fridge = Fridge::new(GridPosition::new(1, 1));
+        while fridge.items.len() < fridge.capacity {
+            assert!(fridge.add_item(Food::new(fridge.pos)).is_ok());
+        }
+
+        let result = fridge.add_item(Food::new(fridge.pos));
+        assert!(result.is_err());
+    }
+}
