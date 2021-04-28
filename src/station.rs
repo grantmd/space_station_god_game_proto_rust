@@ -773,15 +773,86 @@ impl Station {
 
 #[cfg(test)]
 mod tests {
-    use super::{GridPosition, Point2, Station, Tile, TileType};
+    use super::{GridPosition, Point2, Station, Tile, TileType, WallDirection};
+    use oorandom::Rand32;
     use std::collections::HashMap;
 
+    // Function to make an empty station, used in tests
     fn test_station() -> Station {
         Station {
             pos: Point2::new(1.0, 1.0),
             tiles: HashMap::new(),
             mesh: None,
         }
+    }
+
+    // Function to make a 4x4 floor station surrounded by walls, used in tests
+    fn test_station_full() -> Station {
+        let mut s = test_station();
+
+        // Make top wall
+        s.add_tile(Tile::new(
+            GridPosition::new(0, 0),
+            TileType::Wall(WallDirection::ExteriorCornerTopLeft),
+        ));
+        s.add_tile(Tile::new(
+            GridPosition::new(1, 0),
+            TileType::Wall(WallDirection::ExteriorTop),
+        ));
+        s.add_tile(Tile::new(
+            GridPosition::new(2, 0),
+            TileType::Wall(WallDirection::ExteriorTop),
+        ));
+        s.add_tile(Tile::new(
+            GridPosition::new(3, 0),
+            TileType::Wall(WallDirection::ExteriorCornerTopRight),
+        ));
+
+        // Make bottom wall
+        s.add_tile(Tile::new(
+            GridPosition::new(0, 3),
+            TileType::Wall(WallDirection::ExteriorCornerBottomLeft),
+        ));
+        s.add_tile(Tile::new(
+            GridPosition::new(1, 3),
+            TileType::Wall(WallDirection::ExteriorBottom),
+        ));
+        s.add_tile(Tile::new(
+            GridPosition::new(2, 3),
+            TileType::Wall(WallDirection::ExteriorBottom),
+        ));
+        s.add_tile(Tile::new(
+            GridPosition::new(3, 3),
+            TileType::Wall(WallDirection::ExteriorCornerBottomRight),
+        ));
+
+        // Left wall
+        s.add_tile(Tile::new(
+            GridPosition::new(0, 1),
+            TileType::Wall(WallDirection::ExteriorLeft),
+        ));
+        s.add_tile(Tile::new(
+            GridPosition::new(0, 2),
+            TileType::Wall(WallDirection::ExteriorLeft),
+        ));
+
+        // Right wall
+        s.add_tile(Tile::new(
+            GridPosition::new(3, 1),
+            TileType::Wall(WallDirection::ExteriorRight),
+        ));
+        s.add_tile(Tile::new(
+            GridPosition::new(3, 2),
+            TileType::Wall(WallDirection::ExteriorRight),
+        ));
+
+        // Floors
+        s.add_tile(Tile::new(GridPosition::new(1, 1), TileType::Floor));
+        s.add_tile(Tile::new(GridPosition::new(1, 2), TileType::Floor));
+        s.add_tile(Tile::new(GridPosition::new(2, 1), TileType::Floor));
+        s.add_tile(Tile::new(GridPosition::new(2, 2), TileType::Floor));
+
+        s
     }
 
     #[test]
@@ -839,5 +910,42 @@ mod tests {
         assert!(s.has_tile(pos));
         s.remove_tile(pos);
         assert!(!s.has_tile(pos));
+    }
+
+    #[test]
+    fn get_random_tile() {
+        let s = test_station_full();
+
+        let mut seed: [u8; 8] = [0; 8];
+        getrandom::getrandom(&mut seed[..]).expect("Could not create RNG seed");
+        let mut rng = Rand32::new(u64::from_ne_bytes(seed));
+
+        let floor_tile = s.get_random_tile(TileType::Floor, &mut rng).unwrap();
+        assert_eq!(floor_tile.kind, TileType::Floor, "Finds a floor tile");
+
+        let wall_tile1 = s
+            .get_random_tile(TileType::Wall(WallDirection::ExteriorTop), &mut rng)
+            .unwrap();
+        assert_eq!(
+            wall_tile1.kind,
+            TileType::Wall(WallDirection::ExteriorTop),
+            "Finds an exterior top wall tile"
+        );
+
+        let wall_tile2 = s
+            .get_random_tile(
+                TileType::Wall(WallDirection::ExteriorCornerBottomRight),
+                &mut rng,
+            )
+            .unwrap();
+        assert_eq!(
+            wall_tile2.kind,
+            TileType::Wall(WallDirection::ExteriorCornerBottomRight),
+            "Finds the bottom-right extior wall"
+        );
+
+        let door_tile =
+            s.get_random_tile(TileType::Door(WallDirection::InteriorVertical), &mut rng);
+        assert_eq!(door_tile, None, "Does not find any doors");
     }
 }
