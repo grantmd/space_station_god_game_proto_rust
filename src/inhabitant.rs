@@ -154,13 +154,17 @@ impl Inhabitant {
                 self.dest.unwrap(),
                 station.get_tile_from_world(self.dest.unwrap()).unwrap(),
             );
+            // TODO: All this position unit translation is annoying. Cleanup?
             let path = station.path_to(
-                station.get_tile_from_world(self.pos).unwrap(),
-                station.get_tile_from_world(self.dest.unwrap()).unwrap(),
+                station.get_tile_from_world(self.pos).unwrap().pos,
+                station.get_tile_from_world(self.dest.unwrap()).unwrap().pos,
             );
             println!("Path: {:?}", path);
             if path.len() > 0 {
-                self.next_waypoint = path[0].to_world_position(station);
+                self.next_waypoint = station
+                    .get_tile(path[0])
+                    .unwrap()
+                    .to_world_position(station);
                 self.move_elapsed = 0.0;
             } else {
                 self.dest = None;

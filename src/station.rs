@@ -330,13 +330,13 @@ impl Station {
         neighbors
     }
 
-    // From a tile in the station, generate a list of reachable non-wall tiles via breadth-first search
-    // Keys are reached tiles, values are where we came from to get there
-    fn search<'a>(
-        &'a self,
-        start: &'a Tile,
-        target: Option<&Tile>,
-    ) -> HashMap<&'a Tile, Option<&Tile>> {
+    // From a tile in the station, generate a list of reachable non-wall tile positions via breadth-first search
+    // Keys are reached tile positions, values are where we came from to get there
+    fn search(
+        &self,
+        start: GridPosition,
+        target: Option<GridPosition>,
+    ) -> HashMap<GridPosition, Option<GridPosition>> {
         let mut frontier = Vec::new();
         frontier.push(start);
 
@@ -350,14 +350,14 @@ impl Station {
                 break;
             }
 
-            for (_pos, next) in self.get_neighbors(current.pos) {
-                if !came_from.contains_key(next) {
+            for (_pos, next) in self.get_neighbors(current) {
+                if !came_from.contains_key(&next.pos) {
                     match next.kind {
                         TileType::Wall(_) => {}
                         _ => {
                             // TODO: Locked doors
-                            frontier.push(next);
-                            came_from.insert(next, Some(current));
+                            frontier.push(next.pos);
+                            came_from.insert(next.pos, Some(current));
                         }
                     }
                 }
@@ -369,7 +369,8 @@ impl Station {
 
     // Given a start and an end, generate a path that doesn't include walls
     // TODO: This infinite loops if there's no path
-    pub fn path_to<'a>(&'a self, start: &Tile, target: &'a Tile) -> Vec<&Tile> {
+    // TODO: This needs to be able to path outside of the station somehow
+    pub fn path_to(&self, start: GridPosition, target: GridPosition) -> Vec<GridPosition> {
         // Start at the end and work backwards
         let mut current = target;
         let mut path = Vec::new();
@@ -378,7 +379,7 @@ impl Station {
         let mut count = 0;
         while current != start {
             path.push(current);
-            if let Some(next) = reachable[current] {
+            if let Some(next) = reachable[&current] {
                 current = next;
             }
 
@@ -941,7 +942,7 @@ mod tests {
         assert_eq!(
             wall_tile2.kind,
             TileType::Wall(WallDirection::ExteriorCornerBottomRight),
-            "Finds the bottom-right extior wall"
+            "Finds the bottom-right exterior wall"
         );
 
         let door_tile =
@@ -994,9 +995,9 @@ mod tests {
     #[test]
     fn search() {
         let s = test_station_full();
-        let start = s.get_tile(GridPosition::new(1, 1)).unwrap();
-        let search = s.search(&start, None);
+        let start = GridPosition::new(1, 1);
+        let search = s.search(start, None);
         assert_eq!(search.len(), 4, "We can reach 3 tiles plus ourselves");
-        assert_eq!(search[start], None, "Source of start tile is none");
+        assert_eq!(search[&start], None, "Source of start tile is none");
     }
 }
