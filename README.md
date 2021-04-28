@@ -5,6 +5,8 @@
 
 This is a loose game/simulation idea I've had in my head for a while. I've tried to start it multiple times in various languages and engines, but now that I've found Rust and [ggez](https://ggez.rs/) this is the farthest I've gotten. I'm still continuing to learn Rust, and certainly open to suggestions of ways to improve what I'm doing here.
 
+![Screen Shot 2021-04-28 at 11 31 55 AM](https://user-images.githubusercontent.com/119141/116455380-d702da00-a815-11eb-85ce-2f363ce37436.png)
+
 ## Music
 * https://www.bensound.com/royalty-free-music/track/new-dawn
 * https://opengameart.org/content/space-station-tileset
