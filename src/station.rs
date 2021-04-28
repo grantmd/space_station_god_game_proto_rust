@@ -773,7 +773,8 @@ impl Station {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{GridPosition, Point2, Station, Tile, TileType};
+    use std::collections::HashMap;
 
     fn test_station() -> Station {
         Station {

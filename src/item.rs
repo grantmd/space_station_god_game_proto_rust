@@ -146,8 +146,8 @@ impl Fridge {
 
 #[cfg(test)]
 mod tests {
-    use super::super::*;
-    use super::*;
+    use super::{Food, Fridge};
+    use crate::station::GridPosition;
 
     #[test]
     fn new_fridge_contains_items() {
