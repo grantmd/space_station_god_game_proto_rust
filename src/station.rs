@@ -991,4 +991,12 @@ mod tests {
             "Neighbor to the below-right is a floor"
         );
     }
+    #[test]
+    fn search() {
+        let s = test_station_full();
+        let start = s.get_tile(GridPosition::new(1, 1)).unwrap();
+        let search = s.search(&start, None);
+        assert_eq!(search.len(), 4, "We can reach 3 tiles plus ourselves");
+        assert_eq!(search[start], None, "Source of start tile is none");
+    }
 }
