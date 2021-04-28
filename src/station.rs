@@ -94,7 +94,7 @@ pub enum WallDirection {
 }
 
 impl Tile {
-    fn new(pos: GridPosition, kind: TileType) -> Tile {
+    pub fn new(pos: GridPosition, kind: TileType) -> Tile {
         Tile {
             pos: pos,
             kind: kind,

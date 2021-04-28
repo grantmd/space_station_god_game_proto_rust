@@ -62,7 +62,7 @@ impl Inhabitant {
 
     // Whether we can move to a type of tile
     // Doesn't check whether we can _get_ there, but only if we can be there
-    pub fn can_move_to(&mut self, tile: Option<&Tile>) -> bool {
+    pub fn can_move_to(&self, tile: Option<&Tile>) -> bool {
         match self.kind {
             // Ghosts can go anywhere, lol
             InhabitantType::Ghost => true,
@@ -196,5 +196,52 @@ impl Inhabitant {
     pub fn die(&mut self) {
         // TODO: What if already a ghost!?
         self.kind = InhabitantType::Ghost;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Inhabitant, InhabitantType, Point2};
+    use crate::station::{GridPosition, Tile, TileType, WallDirection};
+
+    #[test]
+    fn inhabitant_can_move_to() {
+        let inhabitant = Inhabitant::new(Point2::new(1.0, 1.0), InhabitantType::Engineer);
+
+        let floor_tile = Tile::new(GridPosition::new(1, 1), TileType::Floor);
+        let wall_tile = Tile::new(GridPosition::new(1, 2), TileType::Wall(WallDirection::Full));
+        let door_tile = Tile::new(GridPosition::new(1, 3), TileType::Door(WallDirection::Full));
+
+        assert!(
+            inhabitant.can_move_to(Some(&floor_tile)),
+            "Inhabitants can move to floors"
+        );
+        assert!(
+            inhabitant.can_move_to(Some(&door_tile)),
+            "Inhabitants can move to doors"
+        );
+        assert!(
+            !inhabitant.can_move_to(Some(&wall_tile)),
+            "Inhabitants cannot move to walls"
+        );
+        assert!(
+            !inhabitant.can_move_to(None),
+            "Inhabitants cannot move to empty tiles"
+        );
+
+        let ghost = Inhabitant::new(Point2::new(1.0, 2.0), InhabitantType::Ghost);
+        assert!(
+            ghost.can_move_to(Some(&floor_tile)),
+            "Ghosts can move to floors"
+        );
+        assert!(
+            ghost.can_move_to(Some(&door_tile)),
+            "Ghosts can move to doors"
+        );
+        assert!(
+            ghost.can_move_to(Some(&wall_tile)),
+            "Ghosts can move to walls"
+        );
+        assert!(ghost.can_move_to(None), "Ghosts can move to empty tiles");
     }
 }
