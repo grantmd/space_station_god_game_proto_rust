@@ -12,8 +12,6 @@ use music::Music;
 use starfield::Starfield;
 use station::{GridPosition, Station, TileType};
 
-use ggez;
-use glam;
 use oorandom::Rand32;
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
@@ -69,7 +67,7 @@ impl SpaceStationGodGame {
 
         // Create game state and return it
         let mut game = SpaceStationGodGame {
-            rng: rng,
+            rng,
             is_fullscreen: false, // TODO: Is it possible to know this on startup from context?
             is_paused: true,
             camera: Camera {
@@ -77,7 +75,7 @@ impl SpaceStationGodGame {
                 zoom: Point2::one(),
             },
             starfield: Starfield::new(ctx, &mut rng),
-            station: station,
+            station,
             inhabitants: Vec::with_capacity(1),
             music: Music::new(ctx),
         };

@@ -46,12 +46,12 @@ pub enum InhabitantType {
 impl Inhabitant {
     pub fn new(pos: Point2, kind: InhabitantType) -> Inhabitant {
         Inhabitant {
-            pos: pos,
+            pos,
             source: pos,
             next_waypoint: pos,
             dest: None,
             move_elapsed: 0.0,
-            kind: kind,
+            kind,
             health: 100,
             hunger: 0,
             thirst: 0,
@@ -160,7 +160,7 @@ impl Inhabitant {
                 station.get_tile_from_world(self.dest.unwrap()).unwrap().pos,
             );
             println!("Path: {:?}", path);
-            if path.len() > 0 {
+            if !path.is_empty() {
                 self.next_waypoint = station
                     .get_tile(path[0])
                     .unwrap()
@@ -192,7 +192,7 @@ impl Inhabitant {
 
     pub fn take_damage(&mut self, amount: u8) {
         self.health -= amount;
-        if self.health <= 0 {
+        if self.health == 0 {
             self.die();
         }
     }

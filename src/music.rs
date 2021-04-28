@@ -50,7 +50,7 @@ impl Music {
     }
 }
 
-fn choose_music(paths: &Vec<PathBuf>) -> &Path {
+fn choose_music(paths: &[PathBuf]) -> &Path {
     let mut rng = rand::thread_rng();
     paths.choose(&mut rng).unwrap()
 }

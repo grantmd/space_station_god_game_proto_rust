@@ -65,10 +65,7 @@ impl Item for Food {
 
 impl Food {
     pub fn new(pos: super::GridPosition) -> Food {
-        Food {
-            pos: pos,
-            energy: 10,
-        }
+        Food { pos, energy: 10 }
     }
 }
 
@@ -123,7 +120,7 @@ impl Item for Fridge {
 impl Fridge {
     pub fn new(pos: super::GridPosition) -> Fridge {
         let mut fridge = Fridge {
-            pos: pos,
+            pos,
             capacity: 10,
             items: Vec::with_capacity(10),
         };
@@ -135,7 +132,7 @@ impl Fridge {
 
     pub fn add_item(&mut self, item: Food) -> GameResult<()> {
         if self.items.len() >= self.capacity {
-            return Err(GameError::CustomError(format!("Fridge is at capacity")));
+            return Err(GameError::CustomError("Fridge is at capacity".to_string()));
         }
 
         self.items.push(item);

@@ -96,8 +96,8 @@ pub enum WallDirection {
 impl Tile {
     pub fn new(pos: GridPosition, kind: TileType) -> Tile {
         Tile {
-            pos: pos,
-            kind: kind,
+            pos,
+            kind,
             items: Vec::new(),
         }
     }
@@ -131,7 +131,7 @@ impl Station {
         rng: &mut Rand32,
     ) -> Station {
         let mut s = Station {
-            pos: pos,
+            pos,
             tiles: HashMap::with_capacity(width * height),
             mesh: None,
         };
@@ -165,11 +165,9 @@ impl Station {
                         if neighbor_count < 2 {
                             self.remove_tile(pos);
                         }
-                    } else {
-                        if neighbor_count == 3 {
-                            let tile = Tile::new(pos, TileType::Floor);
-                            self.add_tile(tile);
-                        }
+                    } else if neighbor_count == 3 {
+                        let tile = Tile::new(pos, TileType::Floor);
+                        self.add_tile(tile);
                     }
                 }
             }
@@ -191,11 +189,11 @@ impl Station {
                         // If the neighbor doesn't have a floor, make it a wall
                         let neighbor_pos = GridPosition::new(pos.x + x, pos.y + y);
                         if !self.has_tile(neighbor_pos) {
-                            // Decide on the type of wall
-                            if let Some(wall_direction) = self.get_wall_direction(*pos) {
-                                // Add it
-                                to_place.insert(neighbor_pos, TileType::Wall(wall_direction));
-                            }
+                            // Decide on the type of wall and add it
+                            to_place.insert(
+                                neighbor_pos,
+                                TileType::Wall(self.get_wall_direction(*pos)),
+                            );
                         }
                     }
                 }
@@ -219,7 +217,7 @@ impl Station {
 
     // For a given position, get the best wall direction based on neighbors
     // Used for station generation
-    fn get_wall_direction(&self, pos: GridPosition) -> Option<WallDirection> {
+    fn get_wall_direction(&self, pos: GridPosition) -> WallDirection {
         let neighbors = self.get_neighbors(pos);
 
         let mut direction = WallDirection::Full;
@@ -246,7 +244,7 @@ impl Station {
         }
 
         direction = WallDirection::Full; // Temporary override while I figure this function out
-        Some(direction)
+        direction
     }
 
     // Adds a tile to the station. Trusts the tile's position
@@ -283,7 +281,7 @@ impl Station {
             }
         }
 
-        if options.len() == 0 {
+        if options.is_empty() {
             return None;
         }
 
@@ -295,7 +293,7 @@ impl Station {
     // TODO: position should be a Point2 once ggez updates it
     pub fn get_tile_from_screen(&self, pos: Point2, camera: &crate::Camera) -> Option<&Tile> {
         // This is just world coordinates with camera translation
-        return self.get_tile_from_world(pos);
+        self.get_tile_from_world(pos)
     }
 
     pub fn get_tile_from_world(&self, pos: Point2) -> Option<&Tile> {
@@ -337,8 +335,7 @@ impl Station {
         start: GridPosition,
         target: Option<GridPosition>,
     ) -> HashMap<GridPosition, Option<GridPosition>> {
-        let mut frontier = Vec::new();
-        frontier.push(start);
+        let mut frontier = vec![start];
 
         let mut came_from = HashMap::new();
         came_from.insert(start, None);

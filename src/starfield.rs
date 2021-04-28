@@ -3,8 +3,6 @@ use ggez::{graphics, Context, GameResult};
 
 use oorandom::Rand32;
 
-use num;
-
 type Point2 = glam::Vec2;
 
 #[derive(Clone, PartialEq, Debug)]
@@ -22,7 +20,7 @@ impl Starfield {
             mesh: None,
         };
 
-        s.generate_stars(rng, screen_width, screen_height).unwrap();
+        s.generate_stars(rng, screen_width, screen_height);
         s.generate_mesh(ctx).unwrap();
 
         s
@@ -57,18 +55,12 @@ impl Starfield {
         screen_width: f32,
         screen_height: f32,
     ) {
-        self.generate_stars(rng, screen_width, screen_height)
-            .unwrap();
+        self.generate_stars(rng, screen_width, screen_height);
         self.generate_mesh(ctx).unwrap();
     }
 
     // Create stars scaled to screen size
-    fn generate_stars(
-        &mut self,
-        rng: &mut Rand32,
-        screen_width: f32,
-        screen_height: f32,
-    ) -> GameResult<()> {
+    fn generate_stars(&mut self, rng: &mut Rand32, screen_width: f32, screen_height: f32) {
         let num_stars = (screen_width * screen_height / 1000.0) as usize;
         self.stars.clear();
 
@@ -80,12 +72,10 @@ impl Starfield {
 
             self.stars.push(Star {
                 pos: Point2::new(x, y),
-                size: size,
+                size,
                 color: random_color(rng),
             })
         }
-
-        Ok(())
     }
 
     fn generate_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
