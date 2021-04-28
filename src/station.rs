@@ -294,9 +294,9 @@ impl Station {
     }
 
     pub fn get_tile_from_world(&self, pos: Point2) -> Option<&Tile> {
-        // Translate the screen position into a grid position
-        let screen_pos = pos - (Point2::one() * crate::TILE_WIDTH / 2.0); // Move up and to the left by half a tile on screen
-        let mut translated = (screen_pos / crate::TILE_WIDTH) - (self.pos / crate::TILE_WIDTH); // Move from screen to grid by dividing by tile width
+        // Translate the world position into a grid position
+        let screen_pos = pos - (Point2::one() * crate::TILE_WIDTH / 2.0); // Move up and to the left by half a tile
+        let mut translated = (screen_pos / crate::TILE_WIDTH) - (self.pos / crate::TILE_WIDTH); // Move from world to grid by dividing by tile width
         translated = translated.ceil(); // Snap to grid
         let grid_pos = GridPosition::new(translated.x as i32, translated.y as i32); // Convert types
 
