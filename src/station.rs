@@ -269,6 +269,11 @@ impl Station {
         self.tiles.get(&pos)
     }
 
+    // Removes a tile
+    pub fn remove_tile(&mut self, pos: GridPosition) {
+        self.tiles.remove(&pos);
+    }
+
     // Get a random tile within the station
     pub fn get_random_tile(&self, kind: TileType, rng: &mut Rand32) -> Option<&Tile> {
         let mut options = Vec::with_capacity(self.num_tiles());
@@ -323,11 +328,6 @@ impl Station {
         }
 
         neighbors
-    }
-
-    // Removes a tile
-    pub fn remove_tile(&mut self, pos: GridPosition) {
-        self.tiles.remove(&pos);
     }
 
     // From a tile in the station, generate a list of reachable non-wall tiles via breadth-first search
