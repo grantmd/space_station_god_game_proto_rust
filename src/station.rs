@@ -948,4 +948,47 @@ mod tests {
             s.get_random_tile(TileType::Door(WallDirection::InteriorVertical), &mut rng);
         assert_eq!(door_tile, None, "Does not find any doors");
     }
+
+    #[test]
+    fn get_neighbors() {
+        let s = test_station_full();
+
+        // Test neighbors of the top-left corner
+        let neighbors1 = s.get_neighbors(GridPosition::new(0, 0));
+        assert_eq!(neighbors1.len(), 3, "Has three neighbors");
+        assert_eq!(
+            neighbors1[&(0, 1)].kind,
+            TileType::Wall(WallDirection::ExteriorLeft),
+            "Neighbor below is an exterior left wall"
+        );
+        assert_eq!(
+            neighbors1[&(1, 0)].kind,
+            TileType::Wall(WallDirection::ExteriorTop),
+            "Neighbor to the right is an exterior top wall"
+        );
+        assert_eq!(
+            neighbors1[&(1, 1)].kind,
+            TileType::Floor,
+            "Neighbor to the below-right is a floor"
+        );
+
+        // Test neighbors in the middle-ish
+        let neighbors2 = s.get_neighbors(GridPosition::new(1, 1));
+        assert_eq!(neighbors2.len(), 8, "Has eight neighbors");
+        assert_eq!(
+            neighbors2[&(-1, -1)].kind,
+            TileType::Wall(WallDirection::ExteriorCornerTopLeft),
+            "Neighbor to the upper-left is an exterior corner"
+        );
+        assert_eq!(
+            neighbors2[&(-1, 1)].kind,
+            TileType::Wall(WallDirection::ExteriorLeft),
+            "Neighbor to the lower-left is an exterior left wall"
+        );
+        assert_eq!(
+            neighbors2[&(1, 1)].kind,
+            TileType::Floor,
+            "Neighbor to the below-right is a floor"
+        );
+    }
 }
