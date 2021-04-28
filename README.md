@@ -7,7 +7,7 @@ This is a loose game/simulation idea I've had in my head for a while. I've tried
 
 ![Screen Shot 2021-04-28 at 11 31 55 AM](https://user-images.githubusercontent.com/119141/116455380-d702da00-a815-11eb-85ce-2f363ce37436.png)
 
-## Music
+## Music and Other Assets
 * https://www.bensound.com/royalty-free-music/track/new-dawn
 * https://opengameart.org/content/space-station-tileset
 * https://www.fontspace.com/moonhouse-font-f18420
