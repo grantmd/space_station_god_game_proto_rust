@@ -996,5 +996,12 @@ mod tests {
         let search = s.search(start, None);
         assert_eq!(search.len(), 4, "We can reach 3 tiles plus ourselves");
         assert_eq!(search[&start], None, "Source of start tile is none");
+
+        let target = GridPosition::new(2, 2);
+        assert_eq!(
+            search[&target],
+            Some(start),
+            "Source of target tile is start"
+        );
     }
 }
