@@ -1,5 +1,5 @@
 use crate::item::*;
-use crate::station::{Station, Tile, TileType};
+use crate::station::{GridPosition, Station, Tile, TileType};
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
 use ggez::{graphics, timer, Context, GameResult};
@@ -15,12 +15,13 @@ type Point2 = glam::Vec2;
 // An Inhabitant of the Station
 #[derive(Debug)]
 pub struct Inhabitant {
-    // These are all world positions (since they can go outside the station)
+    // These are world positions (since they can go outside the station)
     pub pos: Point2,          // Current position
-    source: Point2,           // Pathfinding source position
-    next_waypoint: Point2,    // Pathfinding next waypoint to move to
     pub dest: Option<Point2>, // Pathfinding destination to reach
 
+    // Pathfinding status
+    path: Vec<GridPosition>,
+    current_waypoint: usize,
     move_elapsed: f64, // Seconds we've been moving from source to dest
 
     kind: InhabitantType,
@@ -47,9 +48,9 @@ impl Inhabitant {
     pub fn new(pos: Point2, kind: InhabitantType) -> Inhabitant {
         Inhabitant {
             pos,
-            source: pos,
-            next_waypoint: pos,
             dest: None,
+            path: Vec::new(),
+            current_waypoint: 0,
             move_elapsed: 0.0,
             kind,
             health: 100,
@@ -105,7 +106,7 @@ impl Inhabitant {
 
                 if self.can_move_to(tile) {
                     let dest = tile.unwrap().to_world_position(station);
-                    self.set_destination(dest);
+                    self.set_destination(&station, dest);
                 }
             }
         }
@@ -131,12 +132,23 @@ impl Inhabitant {
         // TODO: Highlight our destination and maybe path if we have one
     }
 
-    pub fn set_destination(&mut self, dest: Point2) {
+    pub fn set_destination(&mut self, station: &Station, dest: Point2) {
         if dest != self.pos {
-            self.move_elapsed = 0.0;
-            self.source = self.pos;
-            self.next_waypoint = self.pos;
-            self.dest = Some(dest);
+            println!("Pathing from {} to {}", self.pos, dest);
+            // TODO: All this position unit translation is annoying. Cleanup?
+            let path = station.path_to(
+                station.get_tile_from_world(self.pos).unwrap().pos,
+                station.get_tile_from_world(dest).unwrap().pos,
+            );
+
+            if !path.is_empty() {
+                self.move_elapsed = 0.0;
+                self.path = path;
+                self.current_waypoint = 0;
+                self.dest = Some(dest);
+            } else {
+                println!("No path");
+            }
         }
     }
 
@@ -146,34 +158,26 @@ impl Inhabitant {
         }
 
         // Keep going until we get there
-        if self.pos == self.next_waypoint {
-            // TODO: All this position unit translation is annoying. Cleanup?
-            let path = station.path_to(
-                station.get_tile_from_world(self.pos).unwrap().pos,
-                station.get_tile_from_world(self.dest.unwrap()).unwrap().pos,
-            );
-            if !path.is_empty() {
-                self.next_waypoint = station
-                    .get_tile(path[0])
-                    .unwrap()
-                    .to_world_position(station);
-                self.move_elapsed = 0.0;
-            } else {
-                self.dest = None;
-                return;
-            }
+        let next_waypoint = station
+            .get_tile(self.path[self.current_waypoint])
+            .unwrap()
+            .to_world_position(station);
+        if self.pos == next_waypoint {
+            self.current_waypoint += 1;
+            self.move_elapsed = 0.0;
         }
         self.move_elapsed += timer::duration_to_f64(dt);
 
         // The ease functions want mint types
         let source: mint::Point2<f32> = self.pos.into();
-        let next: mint::Point2<f32> = self.next_waypoint.into();
+        let next: mint::Point2<f32> = next_waypoint.into();
 
         // Ease in over 3 seconds per square
         self.pos = ease(EaseInOut, source, next, self.move_elapsed / 3.0).into();
 
         // We there?
-        if Some(self.pos) == self.dest {
+        if self.pos == self.dest.unwrap() {
+            println!("Arrived at {}", self.pos);
             self.dest = None;
         }
     }
