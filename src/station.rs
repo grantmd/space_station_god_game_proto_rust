@@ -1004,4 +1004,14 @@ mod tests {
             "Source of target tile is start"
         );
     }
+
+    #[test]
+    fn path_to() {
+        let s = test_station_full();
+        let start = GridPosition::new(1, 1);
+        let target = GridPosition::new(2, 2);
+
+        let path = s.path_to(start, target);
+        assert_eq!(path.len(), 1, "Can path to the target in 1 move");
+    }
 }
