@@ -166,7 +166,7 @@ impl Inhabitant {
         self.move_elapsed += timer::duration_to_f64(dt);
 
         // The ease functions want mint types
-        let source: mint::Point2<f32> = self.source.into();
+        let source: mint::Point2<f32> = self.pos.into();
         let next: mint::Point2<f32> = self.next_waypoint.into();
 
         // Ease in over 3 seconds per square
