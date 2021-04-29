@@ -147,19 +147,11 @@ impl Inhabitant {
 
         // Keep going until we get there
         if self.pos == self.next_waypoint {
-            println!(
-                "Pathing from {} ({:?}) to {} ({:?})",
-                self.pos,
-                station.get_tile_from_world(self.pos).unwrap(),
-                self.dest.unwrap(),
-                station.get_tile_from_world(self.dest.unwrap()).unwrap(),
-            );
             // TODO: All this position unit translation is annoying. Cleanup?
             let path = station.path_to(
                 station.get_tile_from_world(self.pos).unwrap().pos,
                 station.get_tile_from_world(self.dest.unwrap()).unwrap().pos,
             );
-            println!("Path: {:?}", path);
             if !path.is_empty() {
                 self.next_waypoint = station
                     .get_tile(path[0])
