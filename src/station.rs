@@ -372,7 +372,7 @@ impl Station {
         let mut current = target;
         let mut path = Vec::new();
 
-        let reachable = self.search(target, Some(start));
+        let reachable = self.search(start, Some(target));
         let mut count = 0;
         while current != start {
             path.push(current);
