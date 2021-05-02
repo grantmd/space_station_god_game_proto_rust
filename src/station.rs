@@ -4,7 +4,9 @@ use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
 
 use oorandom::Rand32;
-use std::collections::HashMap;
+
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap};
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
@@ -26,6 +28,23 @@ impl GridPosition {
     pub fn new(x: i32, y: i32) -> Self {
         GridPosition { x, y }
     }
+
+    // Manhattan distance on a square grid
+    pub fn distance(&self, other: GridPosition) -> i32 {
+        (self.x - other.x).abs() + (self.y - other.y).abs()
+    }
+}
+
+impl Ord for GridPosition {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.x.cmp(&self.x).then_with(|| self.y.cmp(&other.y))
+    }
+}
+
+impl PartialOrd for GridPosition {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }
 
 // Convenient creation of a GridPosition from a tuple
@@ -38,6 +57,30 @@ impl From<(i32, i32)> for GridPosition {
 impl fmt::Display for GridPosition {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y)
+    }
+}
+
+// A struct used to construct pathfinding movements
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+struct Movement {
+    cost: usize,
+    pos: GridPosition,
+}
+
+// Compare movements by lowest-cost first, then positions as tie-breakers
+impl Ord for Movement {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other
+            .cost
+            .cmp(&self.cost)
+            .then_with(|| self.pos.cmp(&other.pos))
+    }
+}
+
+// `PartialOrd` needs to be implemented as well.
+impl PartialOrd for Movement {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 
@@ -307,54 +350,75 @@ impl Station {
         self.get_tile(grid_pos)
     }
 
-    // Get the neighbors of a tile
+    // Get the neighbors of a tile, ignoring diagonal directions, because we don't move that way
     pub fn get_neighbors(&self, pos: GridPosition) -> HashMap<(i32, i32), &Tile> {
-        let mut neighbors = HashMap::with_capacity(8);
+        let mut neighbors = HashMap::with_capacity(4);
 
-        for x in -1..2 {
-            for y in -1..2 {
-                // Don't consider ourselves
-                if x == 0 && y == 0 {
-                    continue;
-                }
+        let x = pos.x;
+        let y = pos.y;
 
-                // Check if there is a tile there, and add it if so
-                if let Some(tile) = self.get_tile(GridPosition::new(pos.x + x, pos.y + y)) {
-                    neighbors.insert((x, y), tile);
-                }
+        // E W N S
+        let mut dirs = vec![
+            GridPosition::new(x + 1, y),
+            GridPosition::new(x - 1, y),
+            GridPosition::new(x, y - 1),
+            GridPosition::new(x, y + 1),
+        ];
+        // see "Ugly paths" section for an explanation: https://www.redblobgames.com/pathfinding/a-star/implementation.html#troubleshooting-ugly-path
+        if (x + y) % 2 == 0 {
+            dirs.reverse(); // S N W E
+        }
+
+        for dir in dirs {
+            // Check if there is a tile there, and add it if so
+            if let Some(tile) = self.get_tile(dir) {
+                neighbors.insert((dir.x, dir.y), tile);
             }
         }
 
         neighbors
     }
 
-    // From a tile in the station, generate a list of reachable non-wall tile positions via breadth-first search
+    // From a tile in the station, generate a list of reachable non-wall tile positions to the target
     // Keys are reached tile positions, values are where we came from to get there
+    // Costs are taken into account and in the future could route around tough doors or whatever
+    // This is called "Dijkstra’s Algorithm (or Uniform Cost Search)" apparently
     fn search(
         &self,
         start: GridPosition,
-        target: Option<GridPosition>,
+        target: GridPosition,
     ) -> HashMap<GridPosition, Option<GridPosition>> {
-        let mut frontier = vec![start];
+        let mut frontier = BinaryHeap::new();
+        frontier.push(Movement {
+            cost: 0,
+            pos: start,
+        });
 
         let mut came_from = HashMap::new();
         came_from.insert(start, None);
+        let mut cost_so_far = HashMap::new();
+        cost_so_far.insert(start, 0);
 
         while !frontier.is_empty() {
             let current = frontier.pop().unwrap();
 
-            if Some(current) == target {
+            if current.pos == target {
                 break;
             }
 
-            for (_pos, next) in self.get_neighbors(current) {
-                if !came_from.contains_key(&next.pos) {
+            for (_pos, next) in self.get_neighbors(current.pos) {
+                let new_cost = cost_so_far.get(&current.pos).unwrap_or(&0)
+                    + self.movement_cost(&current.pos, next);
+                if !cost_so_far.contains_key(&next.pos) || new_cost < cost_so_far[&next.pos] {
+                    cost_so_far.insert(next.pos, new_cost);
                     match next.kind {
                         TileType::Wall(_) => {}
                         _ => {
-                            // TODO: Locked doors
-                            frontier.push(next.pos);
-                            came_from.insert(next.pos, Some(current));
+                            frontier.push(Movement {
+                                cost: new_cost,
+                                pos: next.pos,
+                            });
+                            came_from.insert(next.pos, Some(current.pos));
                         }
                     }
                 }
@@ -362,6 +426,15 @@ impl Station {
         }
 
         came_from
+    }
+
+    // Compute the cost of moving from a position to a tile. Lower is better
+    // I'd like to use floating point values here, but that's problematic for
+    // sorting in the binary heap. So instead we'll just multiply everything by 1,000
+    fn movement_cost(&self, current: &GridPosition, next: &Tile) -> usize {
+        // TODO: Locked doors
+        // Cost is distance between the grid positions
+        (current.distance(next.pos) * 1000) as usize
     }
 
     // Given a start and an end, generate a path that doesn't include walls
@@ -372,12 +445,12 @@ impl Station {
         let mut current = target;
         let mut path = Vec::new();
 
-        let reachable = self.search(start, Some(target));
+        let reachable = self.search(start, target);
         let mut count = 0;
         while current != start {
             path.push(current);
-            if let Some(next) = reachable[&current] {
-                current = next;
+            if let Some(next) = reachable.get(&current).unwrap_or(&None) {
+                current = *next;
             }
 
             count += 1;
@@ -953,7 +1026,7 @@ mod tests {
 
         // Test neighbors of the top-left corner
         let neighbors1 = s.get_neighbors(GridPosition::new(0, 0));
-        assert_eq!(neighbors1.len(), 3, "Has three neighbors");
+        assert_eq!(neighbors1.len(), 2, "Has two neighbors");
         assert_eq!(
             neighbors1[&(0, 1)].kind,
             TileType::Wall(WallDirection::ExteriorLeft),
@@ -964,54 +1037,57 @@ mod tests {
             TileType::Wall(WallDirection::ExteriorTop),
             "Neighbor to the right is an exterior top wall"
         );
-        assert_eq!(
-            neighbors1[&(1, 1)].kind,
-            TileType::Floor,
-            "Neighbor to the below-right is a floor"
-        );
 
         // Test neighbors in the middle-ish
         let neighbors2 = s.get_neighbors(GridPosition::new(1, 1));
-        assert_eq!(neighbors2.len(), 8, "Has eight neighbors");
+        assert_eq!(neighbors2.len(), 4, "Has four neighbors");
         assert_eq!(
-            neighbors2[&(-1, -1)].kind,
-            TileType::Wall(WallDirection::ExteriorCornerTopLeft),
-            "Neighbor to the upper-left is an exterior corner"
+            neighbors2[&(1, 0)].kind,
+            TileType::Wall(WallDirection::ExteriorTop),
+            "Upper neighbor is an exterior top wall"
         );
         assert_eq!(
-            neighbors2[&(-1, 1)].kind,
-            TileType::Wall(WallDirection::ExteriorLeft),
-            "Neighbor to the lower-left is an exterior left wall"
-        );
-        assert_eq!(
-            neighbors2[&(1, 1)].kind,
+            neighbors2[&(2, 1)].kind,
             TileType::Floor,
-            "Neighbor to the below-right is a floor"
+            "Right neighbor is a floor"
+        );
+        assert_eq!(
+            neighbors2[&(1, 2)].kind,
+            TileType::Floor,
+            "Below neighbor is a floor"
+        );
+        assert_eq!(
+            neighbors2[&(0, 1)].kind,
+            TileType::Wall(WallDirection::ExteriorLeft),
+            "Left neighbor is an exterior left wall"
         );
     }
     #[test]
     fn search() {
         let s = test_station_full();
         let start = GridPosition::new(1, 1);
-        let search = s.search(start, None);
-        assert_eq!(search.len(), 4, "We can reach 3 tiles plus ourselves");
-        assert_eq!(search[&start], None, "Source of start tile is none");
-
         let target = GridPosition::new(2, 2);
-        assert_eq!(
+        let search = s.search(start, target);
+
+        assert_eq!(search.len(), 4, "We can reach 3 tiles plus ourselves");
+        assert_ne!(
             search[&target],
             Some(start),
-            "Source of target tile is start"
+            "Source of target tile is not start (because that would be a diagonal move)"
         );
     }
 
     #[test]
     fn path_to() {
-        let s = test_station_full();
+        let mut s = test_station_full();
         let start = GridPosition::new(1, 1);
         let target = GridPosition::new(2, 2);
 
         let path = s.path_to(start, target);
-        assert_eq!(path.len(), 1, "Can path to the target in 1 move");
+        assert_eq!(path.len(), 2, "Can path to the target in 2 moves");
+
+        s.add_tile(Tile::new(target, TileType::Wall(WallDirection::Full)));
+        let path = s.path_to(start, target);
+        assert_eq!(path.len(), 0, "Cannnot path to a wall");
     }
 }
