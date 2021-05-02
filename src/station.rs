@@ -409,7 +409,7 @@ impl Station {
             for (_pos, next) in self.get_neighbors(current.pos) {
                 let new_cost = cost_so_far.get(&current.pos).unwrap_or(&0)
                     + self.movement_cost(&current.pos, next);
-                if !cost_so_far.contains_key(&next.pos) || new_cost < cost_so_far[&next.pos] {
+                if new_cost < *cost_so_far.get(&next.pos).unwrap_or(&usize::MAX) {
                     cost_so_far.insert(next.pos, new_cost);
                     match next.kind {
                         TileType::Wall(_) => {}
