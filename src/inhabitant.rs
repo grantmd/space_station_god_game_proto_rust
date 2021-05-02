@@ -187,8 +187,28 @@ impl Inhabitant {
         }
     }
 
+    pub fn add_hunger(&mut self, value: u8) {
+        self.hunger += value;
+        if self.hunger >= 100 {
+            self.hunger = 100;
+            self.take_damage(1);
+        }
+    }
+
+    pub fn add_thirst(&mut self, value: u8) {
+        self.thirst += value;
+        if self.thirst >= 100 {
+            self.thirst = 100;
+            self.take_damage(1);
+        }
+    }
+
     pub fn eat(&mut self, item: &Food) {
         self.hunger -= item.energy;
+    }
+
+    pub fn drink(&mut self, item: &Drink) {
+        self.thirst -= item.hydration;
     }
 
     pub fn take_damage(&mut self, amount: u8) {

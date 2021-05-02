@@ -27,7 +27,7 @@ pub struct Food {
 
 impl Item for Food {
     fn get_name(&self) -> String {
-        format!("Yummy yummy food. Restores {} energy", self.energy)
+        format!("Yummy yummy food. Restores {} hunger", self.energy)
     }
 
     fn draw(
@@ -138,6 +138,59 @@ impl Fridge {
         self.items.push(item);
 
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct Drink {
+    pub hydration: u8,
+    pos: super::GridPosition,
+}
+
+impl Item for Drink {
+    fn get_name(&self) -> String {
+        format!(
+            "A thirst-quenching beverage. Restores {} thirst",
+            self.hydration
+        )
+    }
+
+    fn draw(
+        &self,
+        ctx: &mut Context,
+        station_pos: Point2,
+        camera: &crate::Camera,
+    ) -> GameResult<()> {
+        let pos = Point2::new(
+            (crate::TILE_WIDTH * self.pos.x as f32) - (crate::TILE_WIDTH / 2.0),
+            (crate::TILE_WIDTH * self.pos.y as f32) - (crate::TILE_WIDTH / 2.0),
+        );
+        let mesh = Mesh::new_circle(
+            ctx,
+            DrawMode::fill(),
+            pos,
+            crate::TILE_WIDTH / 2.0 - 10.0,
+            0.1,
+            Color::new(1.0, 1.0, 0.0, 1.0),
+        )?;
+        graphics::draw(
+            ctx,
+            &mesh,
+            DrawParam::default()
+                .dest(station_pos)
+                .offset(camera.pos)
+                .scale(camera.zoom),
+        )
+    }
+
+    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+        Ok(())
+    }
+}
+
+impl Drink {
+    pub fn new(pos: super::GridPosition) -> Drink {
+        Drink { pos, hydration: 10 }
     }
 }
 
