@@ -439,7 +439,7 @@ impl Station {
 
     // Calculate the heuristic value between two grid positions, to be used for pathfinding
     fn movement_heuristic(&self, a: GridPosition, b: GridPosition) -> u32 {
-        ((a.x - b.x).abs() + (a.y - b.y).abs()) as u32
+        (((a.x - b.x).abs() + (a.y - b.y).abs()) * 1000) as u32
     }
 
     // Given a start and an end, generate a path that doesn't include walls
