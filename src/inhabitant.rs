@@ -115,13 +115,18 @@ impl Inhabitant {
     }
 
     pub fn draw(&mut self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
+        let color = match self.kind {
+            InhabitantType::Ghost => Color::new(0.8, 0.8, 0.8, 0.8),
+            _ => Color::WHITE,
+        };
+
         let mesh = Mesh::new_circle(
             ctx,
             DrawMode::fill(),
             self.pos,
             crate::TILE_WIDTH / 2.0 - 10.0,
             0.1,
-            Color::WHITE,
+            color,
         )?;
         graphics::draw(
             ctx,
