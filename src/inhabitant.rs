@@ -172,8 +172,8 @@ impl Inhabitant {
         let source: mint::Point2<f32> = self.pos.into();
         let next: mint::Point2<f32> = next_waypoint.into();
 
-        // Ease in over 3 seconds per square
-        self.pos = ease(EaseInOut, source, next, self.move_elapsed / 3.0).into();
+        // Ease in over 2 seconds per square
+        self.pos = ease(EaseInOut, source, next, self.move_elapsed / 2.0).into();
 
         // We there?
         if self.pos == self.dest.unwrap() {
