@@ -170,6 +170,10 @@ impl Inhabitant {
         if self.pos == next_waypoint {
             self.current_waypoint += 1;
             self.move_elapsed = 0.0;
+
+            // Moving takes work!
+            self.add_hunger(1);
+            self.add_thirst(1);
         }
         self.move_elapsed += timer::duration_to_f64(dt);
 
@@ -188,32 +192,47 @@ impl Inhabitant {
     }
 
     pub fn add_hunger(&mut self, value: u8) {
+        if self.kind == InhabitantType::Ghost {
+            return;
+        }
+
         self.hunger += value;
         if self.hunger >= 100 {
             self.hunger = 100;
             self.take_damage(1);
+            println!("Starving! Taking damage.");
         }
     }
 
     pub fn add_thirst(&mut self, value: u8) {
+        if self.kind == InhabitantType::Ghost {
+            return;
+        }
+
         self.thirst += value;
         if self.thirst >= 100 {
             self.thirst = 100;
             self.take_damage(1);
+            println!("Parched! Taking damage.");
         }
     }
 
     pub fn eat(&mut self, item: &Food) {
-        self.hunger -= item.energy;
+        self.hunger = self.hunger.saturating_sub(item.energy);
     }
 
     pub fn drink(&mut self, item: &Drink) {
-        self.thirst -= item.hydration;
+        self.thirst = self.thirst.saturating_sub(item.hydration);
     }
 
     pub fn take_damage(&mut self, amount: u8) {
-        self.health -= amount;
+        if self.kind == InhabitantType::Ghost {
+            return;
+        }
+
+        self.health = self.health.saturating_sub(amount);
         if self.health == 0 {
+            println!("I die. I am dead.");
             self.die();
         }
     }
