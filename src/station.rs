@@ -425,6 +425,11 @@ impl Station {
             }
         }
 
+        // If the frontier is empty, that means we searched and searched but couldn't find the target
+        if frontier.is_empty() {
+            return HashMap::new();
+        }
+
         came_from
     }
 
@@ -443,28 +448,27 @@ impl Station {
     }
 
     // Given a start and an end, generate a path that doesn't include walls
-    // TODO: This infinite loops if there's no path
     // TODO: This needs to be able to path outside of the station somehow
     pub fn path_to(&self, start: GridPosition, target: GridPosition) -> Vec<GridPosition> {
         // Start at the end and work backwards
         let mut current = target;
         let mut path = Vec::new();
 
+        // Get list of reachable positions from start to end, return early if no path
         let reachable = self.search(start, target);
-        let mut count = 0;
+        if reachable.is_empty() {
+            return Vec::new();
+        }
+
+        // Follow the reachable list back to the start
         while current != start {
             path.push(current);
             if let Some(next) = reachable.get(&current).unwrap_or(&None) {
                 current = *next;
             }
-
-            count += 1;
-            if count > 10000 {
-                // TODO: Return an error instead
-                return Vec::new();
-            }
         }
 
+        // Reverse the path to make it from start to end
         path.reverse();
         path
     }
