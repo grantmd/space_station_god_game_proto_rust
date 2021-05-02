@@ -382,7 +382,7 @@ impl Station {
     // From a tile in the station, generate a list of reachable non-wall tile positions to the target
     // Keys are reached tile positions, values are where we came from to get there
     // Costs are taken into account and in the future could route around tough doors or whatever
-    // This is called "Dijkstra’s Algorithm (or Uniform Cost Search)" apparently
+    // This is A*
     fn search(
         &self,
         start: GridPosition,
@@ -415,7 +415,7 @@ impl Station {
                         TileType::Wall(_) => {}
                         _ => {
                             frontier.push(Movement {
-                                cost: new_cost,
+                                cost: new_cost + self.movement_heuristic(next.pos, target) as usize,
                                 pos: next.pos,
                             });
                             came_from.insert(next.pos, Some(current.pos));
@@ -435,6 +435,11 @@ impl Station {
         // TODO: Locked doors
         // Cost is distance between the grid positions
         (current.distance(next.pos) * 1000) as usize
+    }
+
+    // Calculate the heuristic value between two grid positions, to be used for pathfinding
+    fn movement_heuristic(&self, a: GridPosition, b: GridPosition) -> u32 {
+        ((a.x - b.x).abs() + (a.y - b.y).abs()) as u32
     }
 
     // Given a start and an end, generate a path that doesn't include walls
