@@ -132,9 +132,30 @@ impl Inhabitant {
             ctx,
             &mesh,
             DrawParam::default().offset(camera.pos).scale(camera.zoom),
-        )
+        )?;
 
         // TODO: Highlight our destination and maybe path if we have one
+        if let Some(dest) = self.dest {
+            let tile_rect = graphics::Rect::new(
+                dest.x - (crate::TILE_WIDTH / 2.0) + 1.0,
+                dest.y - (crate::TILE_WIDTH / 2.0) + 1.0,
+                crate::TILE_WIDTH - 2.0,
+                crate::TILE_WIDTH - 2.0,
+            );
+            let mesh = Mesh::new_rectangle(
+                ctx,
+                DrawMode::stroke(1.0),
+                tile_rect,
+                Color::new(1.0, 1.0, 0.0, 1.0),
+            )?;
+            graphics::draw(
+                ctx,
+                &mesh,
+                DrawParam::default().offset(camera.pos).scale(camera.zoom),
+            )?;
+        }
+
+        Ok(())
     }
 
     pub fn set_destination(&mut self, station: &Station, dest: Point2) {
