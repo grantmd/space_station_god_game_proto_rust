@@ -158,14 +158,17 @@ impl EventHandler for SpaceStationGodGame {
         {
             let world_pos = selected_tile.to_world_position(&self.station);
             mouse_display.add(format!(
-                "\nTile: Grid ({}, {}), World ({},{}), {:?}\n{:?}",
+                "\nTile: Grid ({}, {}), World ({},{}), {:?}",
                 selected_tile.pos.x,
                 selected_tile.pos.y,
                 world_pos.x,
                 world_pos.y,
-                selected_tile.kind,
-                selected_tile.items
+                selected_tile.kind
             ));
+
+            if selected_tile.items.len() > 0 {
+                mouse_display.add(format!("\n{:?}", selected_tile.items));
+            }
 
             let tile_rect = graphics::Rect::new(
                 (crate::TILE_WIDTH * selected_tile.pos.x as f32) - (crate::TILE_WIDTH / 2.0),
