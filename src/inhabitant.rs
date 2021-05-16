@@ -6,6 +6,7 @@ use ggez::{graphics, timer, Context, GameResult};
 
 use keyframe::{ease, functions::EaseInOut};
 use oorandom::Rand32;
+use uuid::Uuid;
 
 use std::time;
 
@@ -31,6 +32,8 @@ pub struct Inhabitant {
     age: time::Duration,
 
     items: Vec<Box<dyn Item>>,
+
+    id: uuid::Uuid,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -47,6 +50,7 @@ pub enum InhabitantType {
 impl Inhabitant {
     pub fn new(pos: Point2, kind: InhabitantType) -> Inhabitant {
         Inhabitant {
+            id: Uuid::new_v4(),
             pos,
             dest: None,
             path: Vec::new(),

@@ -1,6 +1,8 @@
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
 use ggez::{graphics, Context, GameError, GameResult};
 
+use uuid::Uuid;
+
 use core::fmt::Debug;
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
@@ -23,6 +25,7 @@ impl Debug for dyn Item {
 pub struct Food {
     pub energy: u8,
     pos: super::GridPosition,
+    id: uuid::Uuid,
 }
 
 impl Item for Food {
@@ -65,7 +68,11 @@ impl Item for Food {
 
 impl Food {
     pub fn new(pos: super::GridPosition) -> Food {
-        Food { pos, energy: 10 }
+        Food {
+            id: Uuid::new_v4(),
+            pos,
+            energy: 10,
+        }
     }
 }
 
@@ -74,6 +81,7 @@ pub struct Fridge {
     items: Vec<Food>,
     capacity: usize,
     pos: super::GridPosition,
+    id: uuid::Uuid,
 }
 
 impl Item for Fridge {
@@ -120,6 +128,7 @@ impl Item for Fridge {
 impl Fridge {
     pub fn new(pos: super::GridPosition) -> Fridge {
         let mut fridge = Fridge {
+            id: Uuid::new_v4(),
             pos,
             capacity: 10,
             items: Vec::with_capacity(10),
@@ -145,6 +154,7 @@ impl Fridge {
 pub struct Drink {
     pub hydration: u8,
     pos: super::GridPosition,
+    id: uuid::Uuid,
 }
 
 impl Item for Drink {
@@ -190,7 +200,11 @@ impl Item for Drink {
 
 impl Drink {
     pub fn new(pos: super::GridPosition) -> Drink {
-        Drink { pos, hydration: 10 }
+        Drink {
+            id: Uuid::new_v4(),
+            pos,
+            hydration: 10,
+        }
     }
 }
 
