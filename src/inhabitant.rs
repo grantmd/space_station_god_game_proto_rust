@@ -8,7 +8,7 @@ use keyframe::{ease, functions::EaseInOut};
 use oorandom::Rand32;
 use uuid::Uuid;
 
-use std::time;
+use std::{fmt, time};
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;
@@ -45,6 +45,21 @@ pub enum InhabitantType {
     Miner,
     Cook,
     Ghost,
+}
+
+impl fmt::Display for Inhabitant {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "[{} ({:?}, {}), Health: {}/100, Hunger: {}, Thirst: {}]",
+            self.id,
+            self.kind,
+            self.age.as_secs(),
+            self.health,
+            self.hunger,
+            self.thirst
+        )
+    }
 }
 
 impl Inhabitant {
@@ -164,7 +179,7 @@ impl Inhabitant {
 
     pub fn set_destination(&mut self, station: &Station, dest: Point2) {
         if dest != self.pos {
-            println!("Pathing from {} to {}", self.pos, dest);
+            println!("{} Pathing from {} to {}", self, self.pos, dest);
             // TODO: All this position unit translation is annoying. Cleanup?
             let path = station.path_to(
                 station.get_tile_from_world(self.pos).unwrap().pos,
@@ -211,7 +226,7 @@ impl Inhabitant {
 
         // We there?
         if self.pos == self.dest.unwrap() {
-            println!("Arrived at {}", self.pos);
+            println!("{} Arrived at {}", self, self.pos);
             self.dest = None;
         }
     }
@@ -225,7 +240,7 @@ impl Inhabitant {
         if self.hunger >= 100 {
             self.hunger = 100;
             self.take_damage(1);
-            println!("Starving! Taking damage.");
+            println!("{} Starving! Taking damage.", self);
         }
     }
 
@@ -238,7 +253,7 @@ impl Inhabitant {
         if self.thirst >= 100 {
             self.thirst = 100;
             self.take_damage(1);
-            println!("Parched! Taking damage.");
+            println!("{} Parched! Taking damage.", self);
         }
     }
 
@@ -257,7 +272,7 @@ impl Inhabitant {
 
         self.health = self.health.saturating_sub(amount);
         if self.health == 0 {
-            println!("I die. I am dead.");
+            println!("{} I die. I am dead.", self);
             self.die();
         }
     }

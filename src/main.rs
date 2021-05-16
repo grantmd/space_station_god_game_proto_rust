@@ -19,8 +19,7 @@ use ggez::graphics::{Color, DrawMode, DrawParam, Font, PxScale, Text, TextFragme
 use ggez::input::mouse;
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 
-use std::env;
-use std::path;
+use std::{env, path};
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;
