@@ -51,7 +51,7 @@ impl fmt::Display for Inhabitant {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "[{} ({:?}, {}), Health: {}/100, Hunger: {}, Thirst: {}]",
+            "[{} ({:?}, {}s), Health: {}, Hunger: {}, Thirst: {}]",
             self.id,
             self.kind,
             self.age.as_secs(),
