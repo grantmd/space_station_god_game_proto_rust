@@ -192,7 +192,7 @@ impl Inhabitant {
                 self.current_waypoint = 0;
                 self.dest = Some(dest);
             } else {
-                println!("No path");
+                println!("{} No path", self);
             }
         }
     }
