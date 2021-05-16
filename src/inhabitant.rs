@@ -276,6 +276,24 @@ impl Inhabitant {
         // TODO: What if already a ghost!?
         self.kind = InhabitantType::Ghost;
     }
+
+    fn wants_food(&self) -> f32 {
+        if self.kind == InhabitantType::Ghost {
+            return 0.0;
+        }
+
+        // Linear to hunger
+        self.hunger as f32 / 100.0
+    }
+
+    fn wants_drink(&self) -> f32 {
+        if self.kind == InhabitantType::Ghost {
+            return 0.0;
+        }
+
+        // Linear to thirst
+        self.thirst as f32 / 100.0
+    }
 }
 
 #[cfg(test)]
@@ -322,5 +340,43 @@ mod tests {
             "Ghosts can move to walls"
         );
         assert!(ghost.can_move_to(None), "Ghosts can move to empty tiles");
+    }
+
+    #[test]
+    fn inhabitant_wants_food() {
+        let mut inhabitant = Inhabitant::new(Point2::new(1.0, 1.0), InhabitantType::Engineer);
+        assert_eq!(
+            0.0,
+            inhabitant.wants_food(),
+            "New inhabitants don't want food"
+        );
+
+        inhabitant.hunger = 50;
+        assert_eq!(0.5, inhabitant.wants_food(), "Partly hungry");
+
+        inhabitant.hunger = 100;
+        assert_eq!(1.0, inhabitant.wants_food(), "Starving");
+
+        inhabitant.kind = InhabitantType::Ghost;
+        assert_eq!(0.0, inhabitant.wants_food(), "Ghosts aren't hungry");
+    }
+
+    #[test]
+    fn inhabitant_wants_drink() {
+        let mut inhabitant = Inhabitant::new(Point2::new(1.0, 1.0), InhabitantType::Engineer);
+        assert_eq!(
+            0.0,
+            inhabitant.wants_drink(),
+            "New inhabitants don't want drink"
+        );
+
+        inhabitant.thirst = 50;
+        assert_eq!(0.5, inhabitant.wants_drink(), "Partly thirsty");
+
+        inhabitant.thirst = 100;
+        assert_eq!(1.0, inhabitant.wants_drink(), "Parched");
+
+        inhabitant.kind = InhabitantType::Ghost;
+        assert_eq!(0.0, inhabitant.wants_drink(), "Ghosts aren't thirsty");
     }
 }
