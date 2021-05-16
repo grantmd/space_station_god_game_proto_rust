@@ -110,11 +110,6 @@ impl Inhabitant {
         // Look, we're growing!
         self.age += dt;
 
-        // Take damage when starving
-        if self.hunger >= 100 {
-            self.take_damage(1);
-        }
-
         // Move
         match self.dest {
             Some(_) => {
