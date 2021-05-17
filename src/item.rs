@@ -17,6 +17,7 @@ pub enum ItemType {
 
 // An item is the base of objects that live inside the station on tiles and inhabitants can interact
 pub trait Item {
+    fn get_id(&self) -> Uuid;
     fn get_name(&self) -> String;
     fn draw(&self, ctx: &mut Context, pos: Point2, camera: &crate::Camera) -> GameResult<()>;
     fn update(&mut self, ctx: &mut Context) -> GameResult<()>;
@@ -26,7 +27,13 @@ pub trait Item {
 
 impl fmt::Debug for dyn Item {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Item: {}", self.get_name())
+        write!(
+            f,
+            "[{} ({:?})] {}",
+            self.get_id(),
+            self.get_type(),
+            self.get_name()
+        )
     }
 }
 
@@ -39,6 +46,10 @@ pub struct Food {
 }
 
 impl Item for Food {
+    fn get_id(&self) -> Uuid {
+        self.id
+    }
+
     fn get_type(&self) -> ItemType {
         ItemType::Food
     }
@@ -104,6 +115,10 @@ pub struct Fridge {
 }
 
 impl Item for Fridge {
+    fn get_id(&self) -> Uuid {
+        self.id
+    }
+
     fn get_type(&self) -> ItemType {
         ItemType::Container
     }
@@ -186,6 +201,10 @@ pub struct Drink {
 }
 
 impl Item for Drink {
+    fn get_id(&self) -> Uuid {
+        self.id
+    }
+
     fn get_type(&self) -> ItemType {
         ItemType::Drink
     }
