@@ -3,20 +3,29 @@ use ggez::{graphics, Context, GameError, GameResult};
 
 use uuid::Uuid;
 
-use core::fmt::Debug;
+use core::fmt;
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+pub enum ItemType {
+    Food,
+    Drink,
+    Container,
+}
 
 // An item is the base of objects that live inside the station on tiles and inhabitants can interact
 pub trait Item {
     fn get_name(&self) -> String;
     fn draw(&self, ctx: &mut Context, pos: Point2, camera: &crate::Camera) -> GameResult<()>;
     fn update(&mut self, ctx: &mut Context) -> GameResult<()>;
+    fn get_type(&self) -> ItemType;
+    fn get_items(&self) -> &Vec<Box<dyn Item>>;
 }
 
-impl Debug for dyn Item {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl fmt::Debug for dyn Item {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Item: {}", self.get_name())
     }
 }
@@ -26,9 +35,14 @@ pub struct Food {
     pub energy: u8,
     pos: super::GridPosition,
     id: uuid::Uuid,
+    items: Vec<Box<dyn Item>>,
 }
 
 impl Item for Food {
+    fn get_type(&self) -> ItemType {
+        ItemType::Food
+    }
+
     fn get_name(&self) -> String {
         format!("Yummy yummy food. Restores {} hunger", self.energy)
     }
@@ -64,6 +78,10 @@ impl Item for Food {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         Ok(())
     }
+
+    fn get_items(&self) -> &Vec<Box<dyn Item>> {
+        &self.items
+    }
 }
 
 impl Food {
@@ -72,19 +90,24 @@ impl Food {
             id: Uuid::new_v4(),
             pos,
             energy: 10,
+            items: Vec::new(),
         }
     }
 }
 
 #[derive(Debug)]
 pub struct Fridge {
-    items: Vec<Food>,
+    items: Vec<Box<dyn Item>>,
     capacity: usize,
     pos: super::GridPosition,
     id: uuid::Uuid,
 }
 
 impl Item for Fridge {
+    fn get_type(&self) -> ItemType {
+        ItemType::Container
+    }
+
     fn get_name(&self) -> String {
         format!("Food storage. Has {} items.", self.items.len())
     }
@@ -123,6 +146,10 @@ impl Item for Fridge {
 
         Ok(())
     }
+
+    fn get_items(&self) -> &Vec<Box<dyn Item>> {
+        &self.items
+    }
 }
 
 impl Fridge {
@@ -144,7 +171,7 @@ impl Fridge {
             return Err(GameError::CustomError("Fridge is at capacity".to_string()));
         }
 
-        self.items.push(item);
+        self.items.push(Box::new(item));
 
         Ok(())
     }
@@ -155,9 +182,14 @@ pub struct Drink {
     pub hydration: u8,
     pos: super::GridPosition,
     id: uuid::Uuid,
+    items: Vec<Box<dyn Item>>,
 }
 
 impl Item for Drink {
+    fn get_type(&self) -> ItemType {
+        ItemType::Drink
+    }
+
     fn get_name(&self) -> String {
         format!(
             "A thirst-quenching beverage. Restores {} thirst",
@@ -196,6 +228,10 @@ impl Item for Drink {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         Ok(())
     }
+
+    fn get_items(&self) -> &Vec<Box<dyn Item>> {
+        &self.items
+    }
 }
 
 impl Drink {
@@ -204,6 +240,7 @@ impl Drink {
             id: Uuid::new_v4(),
             pos,
             hydration: 10,
+            items: Vec::new(),
         }
     }
 }

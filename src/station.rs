@@ -310,6 +310,11 @@ impl Station {
         self.tiles.get(&pos)
     }
 
+    // Get tile at a grid position, if any
+    pub fn get_tile_mut(&mut self, pos: GridPosition) -> Option<&mut Tile> {
+        self.tiles.get_mut(&pos)
+    }
+
     // Removes a tile
     pub fn remove_tile(&mut self, pos: GridPosition) {
         self.tiles.remove(&pos);
@@ -471,6 +476,31 @@ impl Station {
         // Reverse the path to make it from start to end
         path.reverse();
         path
+    }
+
+    // Returns grid positions of tiles containing the desired item
+    pub fn find_item(&self, kind: ItemType) -> Vec<&GridPosition> {
+        let mut found = Vec::new();
+        for (pos, tile) in self.tiles.iter() {
+            for item in tile.items.iter() {
+                // Is this what we're looking for?
+                if item.get_type() == kind {
+                    found.push(pos);
+                }
+
+                // If this is a container, we need to iterate inside
+                if item.get_type() == ItemType::Container {
+                    for subitem in item.get_items().iter() {
+                        // Is this what we're looking for?
+                        if subitem.get_type() == kind {
+                            found.push(pos);
+                        }
+                    }
+                }
+            }
+        }
+
+        found
     }
 
     // Update callback on the station
@@ -854,6 +884,7 @@ impl Station {
 #[cfg(test)]
 mod tests {
     use super::{GridPosition, Point2, Station, Tile, TileType, WallDirection};
+    use crate::item::{Food, ItemType};
     use oorandom::Rand32;
     use std::collections::HashMap;
 
@@ -1098,5 +1129,16 @@ mod tests {
         s.add_tile(Tile::new(target, TileType::Wall(WallDirection::Full)));
         let path = s.path_to(start, target);
         assert_eq!(path.len(), 0, "Cannnot path to a wall");
+    }
+
+    #[test]
+    fn find_item() {
+        let mut s = test_station_full();
+        let pos = GridPosition::new(1, 1);
+        let tile = s.get_tile_mut(pos).unwrap();
+        tile.add_item(Food::new(pos));
+
+        let found = s.find_item(ItemType::Food);
+        assert_eq!(1, found.len(), "found one food type");
     }
 }
