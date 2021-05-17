@@ -884,7 +884,7 @@ impl Station {
 #[cfg(test)]
 mod tests {
     use super::{GridPosition, Point2, Station, Tile, TileType, WallDirection};
-    use crate::item::{Food, ItemType};
+    use crate::item::{Food, Fridge, ItemType};
     use oorandom::Rand32;
     use std::collections::HashMap;
 
@@ -1140,5 +1140,20 @@ mod tests {
 
         let found = s.find_item(ItemType::Food);
         assert_eq!(1, found.len(), "found one food type");
+
+        let pos = GridPosition::new(1, 2);
+        let tile = s.get_tile_mut(pos).unwrap();
+        let fridge = Fridge::new(pos);
+        tile.add_item(fridge);
+
+        let found = s.find_item(ItemType::Container);
+        assert_eq!(1, found.len(), "found one container type");
+        let found = s.find_item(ItemType::Food);
+        println!("{:?}", found);
+        assert_eq!(
+            2,
+            found.len(),
+            "found another food type (the fridge comes with food)"
+        );
     }
 }
