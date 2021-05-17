@@ -479,6 +479,7 @@ impl Station {
     }
 
     // Returns grid positions of tiles containing the desired item
+    // TODO: Take a starting position and return items closest first
     pub fn find_item(&self, kind: ItemType) -> Vec<&GridPosition> {
         let mut found = Vec::new();
         for (pos, tile) in self.tiles.iter() {
