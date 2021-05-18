@@ -50,6 +50,7 @@ pub struct Inhabitant {
 pub enum InhabitantType {
     Pilot,
     Engineer,
+    Scientist,
     Medic,
     Soldier,
     Miner,
