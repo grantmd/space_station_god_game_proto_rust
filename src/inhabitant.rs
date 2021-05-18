@@ -13,8 +13,16 @@ use std::{fmt, time};
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;
 
+#[derive(Copy, Clone, PartialEq, Debug)]
+enum Behavior {
+    Wander,
+    Search(ItemType),
+    Eat,
+    Drink,
+    Work,
+}
+
 // An Inhabitant of the Station
-#[derive(Debug)]
 pub struct Inhabitant {
     // These are world positions (since they can go outside the station)
     pub pos: Point2,          // Current position
@@ -24,6 +32,8 @@ pub struct Inhabitant {
     path: Vec<GridPosition>,
     current_waypoint: usize,
     move_elapsed: f64, // Seconds we've been moving from source to dest
+
+    behaviors: Vec<Behavior>,
 
     kind: InhabitantType,
     health: u8,
@@ -51,10 +61,11 @@ impl fmt::Display for Inhabitant {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "[{} ({:?}, {}s), Health: {}, Hunger: {}, Thirst: {}]",
+            "[{} ({:?}, {}s), Behavior: {:?}, Health: {}, Hunger: {}, Thirst: {}]",
             self.id,
             self.kind,
             self.age.as_secs(),
+            self.behaviors.last(),
             self.health,
             self.hunger,
             self.thirst
@@ -77,6 +88,7 @@ impl Inhabitant {
             thirst: 0,
             age: time::Duration::from_micros(0),
             items: Vec::new(),
+            behaviors: Vec::with_capacity(7),
         }
     }
 
@@ -110,17 +122,78 @@ impl Inhabitant {
         // Look, we're growing!
         self.age += dt;
 
-        // Move
-        match self.dest {
-            Some(_) => {
-                self.keep_moving(dt, station);
+        // Where are we?
+        let current_tile = station.get_tile_from_world(self.pos).unwrap();
+
+        // Perform next behavior
+        let next = self.behaviors.last();
+        match next {
+            Some(Behavior::Wander) => {
+                // Move
+                match self.dest {
+                    Some(_) => {
+                        self.keep_moving(dt, station);
+                    }
+                    None => {
+                        let tile = station.get_random_tile(TileType::Floor, rng);
+
+                        if self.can_move_to(tile) {
+                            let dest = tile.unwrap().to_world_position(station);
+                            self.set_destination(&station, dest);
+                        }
+                    }
+                }
+            }
+            Some(Behavior::Eat) => {
+                if self.has_item(ItemType::Food) {
+                    // If we have food on our person, eat it
+                    println!("{} Eating from inventory", self);
+                    self.eat(&Food::new(current_tile.pos)); // TODO: Actually consume the food from inventory
+                    self.behaviors.pop();
+                } else if current_tile.has_item(ItemType::Food) {
+                    // If there's food here on this tile, eat it
+                    println!("{} Eating from tile", self);
+                    self.eat(&Food::new(current_tile.pos)); // TODO: Actually consume the food from the tile
+                    self.behaviors.pop();
+                } else {
+                    // Otherwise, search for it
+                    println!("{} Searching for food", self);
+                    self.behaviors.push(Behavior::Search(ItemType::Food));
+                }
+            }
+            Some(Behavior::Drink) => {}
+            Some(Behavior::Search(item_type)) => match self.dest {
+                Some(_) => {
+                    self.keep_moving(dt, station);
+                }
+                None => {
+                    let mut best_path: Vec<GridPosition> = Vec::new();
+                    let found = station.find_item(*item_type);
+                    for pos in found.iter() {
+                        let path = station.path_to(current_tile.pos, **pos);
+                        if best_path.is_empty() || path.len() < best_path.len() {
+                            best_path = path;
+                        }
+                    }
+
+                    if !best_path.is_empty() {
+                        let dest = best_path.pop().unwrap();
+                        self.set_destination(
+                            station,
+                            station.get_tile(dest).unwrap().to_world_position(station),
+                        );
+                    }
+                }
+            },
+            Some(Behavior::Work) => {
+                // TODO
             }
             None => {
-                let tile = station.get_random_tile(TileType::Floor, rng);
-
-                if self.can_move_to(tile) {
-                    let dest = tile.unwrap().to_world_position(station);
-                    self.set_destination(&station, dest);
+                // Decide what to do
+                if self.wants_food() >= 0.5 {
+                    self.behaviors.push(Behavior::Eat);
+                } else {
+                    self.behaviors.push(Behavior::Wander);
                 }
             }
         }
@@ -208,7 +281,7 @@ impl Inhabitant {
 
             // Moving takes work!
             self.add_hunger(1);
-            self.add_thirst(1);
+            //self.add_thirst(1);
         }
         self.move_elapsed += timer::duration_to_f64(dt);
 
@@ -223,6 +296,7 @@ impl Inhabitant {
         if self.pos == self.dest.unwrap() {
             println!("{} Arrived at {}", self, self.pos);
             self.dest = None;
+            self.behaviors.pop(); // TODO: Is it safe to assume that arriving somewhere means the current behavior is "done"?
         }
     }
 
@@ -293,6 +367,19 @@ impl Inhabitant {
 
         // Linear to thirst
         self.thirst as f32 / 100.0
+    }
+
+    // Do we have an item of this type on us?
+    fn has_item(&self, item_type: ItemType) -> bool {
+        for item in self.items.iter() {
+            if item.get_type() == item_type {
+                return true;
+            }
+        }
+
+        // TODO: Search inside containers?
+
+        false
     }
 }
 

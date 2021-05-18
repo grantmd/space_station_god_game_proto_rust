@@ -145,10 +145,33 @@ impl Tile {
         }
     }
 
+    // Add an item to the tile
     pub fn add_item<T: Item + 'static>(&mut self, item: T) {
         self.items.push(Box::new(item));
     }
 
+    // Do we have an item of this type on us?
+    pub fn has_item(&self, item_type: ItemType) -> bool {
+        for item in self.items.iter() {
+            if item.get_type() == item_type {
+                return true;
+            }
+
+            // If this is a container, we need to iterate inside
+            if item.get_type() == ItemType::Container {
+                for subitem in item.get_items().iter() {
+                    // Is this what we're looking for?
+                    if subitem.get_type() == item_type {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        false
+    }
+
+    // Convert a tile's grid position to a "world" position, based on where the station is
     pub fn to_world_position(&self, station: &Station) -> Point2 {
         Point2::new(
             station.pos.x + (self.pos.x as f32 * crate::TILE_WIDTH),
