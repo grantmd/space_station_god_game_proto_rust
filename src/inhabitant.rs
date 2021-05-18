@@ -162,7 +162,23 @@ impl Inhabitant {
                     self.behaviors.push(Behavior::Search(ItemType::Food));
                 }
             }
-            Some(Behavior::Drink) => {}
+            Some(Behavior::Drink) => {
+                if self.has_item(ItemType::Drink) {
+                    // If we have drink on our person, drink it
+                    println!("{} Drinking from inventory", self);
+                    self.drink(&Drink::new(current_tile.pos)); // TODO: Actually consume the drink from inventory
+                    self.behaviors.pop();
+                } else if current_tile.has_item(ItemType::Drink) {
+                    // If there's drink here on this tile, drink it
+                    println!("{} Drinking from tile", self);
+                    self.drink(&Drink::new(current_tile.pos)); // TODO: Actually consume the drink from the tile
+                    self.behaviors.pop();
+                } else {
+                    // Otherwise, search for it
+                    println!("{} Searching for drink", self);
+                    self.behaviors.push(Behavior::Search(ItemType::Drink));
+                }
+            }
             Some(Behavior::Search(item_type)) => match self.dest {
                 Some(_) => {
                     self.keep_moving(dt, station);
