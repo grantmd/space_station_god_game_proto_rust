@@ -152,9 +152,17 @@ impl Tile {
 
     // Do we have an item of this type on us?
     pub fn has_item(&self, item_type: ItemType) -> bool {
+        if let Some(_) = self.get_item(item_type) {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn get_item(&self, item_type: ItemType) -> Option<&Box<dyn Item>> {
         for item in self.items.iter() {
             if item.get_type() == item_type {
-                return true;
+                return Some(item);
             }
 
             // If this is a container, we need to iterate inside
@@ -162,13 +170,18 @@ impl Tile {
                 for subitem in item.get_items().iter() {
                     // Is this what we're looking for?
                     if subitem.get_type() == item_type {
-                        return true;
+                        return Some(item);
                     }
                 }
             }
         }
 
-        false
+        None
+    }
+
+    // Given an item uuid, removes it from the tile
+    pub fn remove_item(&mut self, id: uuid::Uuid) {
+        self.items.retain(|item| item.get_id() == id)
     }
 
     // Convert a tile's grid position to a "world" position, based on where the station is

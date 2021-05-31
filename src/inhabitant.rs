@@ -398,6 +398,11 @@ impl Inhabitant {
 
         false
     }
+
+    // Given an item uuid, removes it from our inventory
+    pub fn remove_item(&mut self, id: uuid::Uuid) {
+        self.items.retain(|item| item.get_id() == id)
+    }
 }
 
 #[cfg(test)]

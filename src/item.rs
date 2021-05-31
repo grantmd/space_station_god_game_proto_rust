@@ -190,6 +190,11 @@ impl Fridge {
 
         Ok(())
     }
+
+    // Given an item uuid, removes it from the fridge
+    pub fn remove_item(&mut self, id: uuid::Uuid) {
+        self.items.retain(|item| item.get_id() == id)
+    }
 }
 
 #[derive(Debug)]
@@ -267,6 +272,7 @@ impl Drink {
 #[cfg(test)]
 mod tests {
     use super::{Food, Fridge};
+    use crate::item::Item;
     use crate::station::GridPosition;
 
     #[test]
@@ -291,5 +297,17 @@ mod tests {
 
         let result = fridge.add_item(Food::new(fridge.pos));
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn fridge_remove_item() {
+        let mut fridge = Fridge::new(GridPosition::new(1, 1));
+        let food = Food::new(fridge.pos);
+        let id = food.get_id();
+        assert!(fridge.add_item(food).is_ok());
+        assert_eq!(2, fridge.items.len());
+
+        fridge.remove_item(id);
+        assert_eq!(1, fridge.items.len());
     }
 }
