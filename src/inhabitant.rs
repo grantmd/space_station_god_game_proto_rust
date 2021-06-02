@@ -41,7 +41,7 @@ pub struct Inhabitant {
     thirst: u8,
     age: time::Duration,
 
-    items: Vec<Box<dyn Item>>,
+    items: Vec<Item>,
 
     id: uuid::Uuid,
 }
@@ -149,12 +149,18 @@ impl Inhabitant {
                 if self.has_item(ItemType::Food) {
                     // If we have food on our person, eat it
                     println!("{} Eating from inventory", self);
-                    self.eat(&Food::new(current_tile.pos)); // TODO: Actually consume the food from inventory
+                    self.eat(&Item::new(
+                        current_tile.pos,
+                        ItemType::Food(FoodType::EnergyBar),
+                    )); // TODO: Actually consume the food from inventory
                     self.behaviors.pop();
                 } else if current_tile.has_item(ItemType::Food) {
                     // If there's food here on this tile, eat it
                     println!("{} Eating from tile", self);
-                    self.eat(&Food::new(current_tile.pos)); // TODO: Actually consume the food from the tile
+                    self.eat(&Item::new(
+                        current_tile.pos,
+                        ItemType::Food(FoodType::EnergyBar),
+                    )); // TODO: Actually consume the food from the tile
                     self.behaviors.pop();
                 } else {
                     // Otherwise, search for it
@@ -166,12 +172,18 @@ impl Inhabitant {
                 if self.has_item(ItemType::Drink) {
                     // If we have drink on our person, drink it
                     println!("{} Drinking from inventory", self);
-                    self.drink(&Drink::new(current_tile.pos)); // TODO: Actually consume the drink from inventory
+                    self.drink(&Item::new(
+                        current_tile.pos,
+                        ItemType::Drink(DrinkType::Water),
+                    )); // TODO: Actually consume the drink from inventory
                     self.behaviors.pop();
                 } else if current_tile.has_item(ItemType::Drink) {
                     // If there's drink here on this tile, drink it
                     println!("{} Drinking from tile", self);
-                    self.drink(&Drink::new(current_tile.pos)); // TODO: Actually consume the drink from the tile
+                    self.drink(&Item::new(
+                        current_tile.pos,
+                        ItemType::Drink(DrinkType::Water),
+                    )); // TODO: Actually consume the drink from the tile
                     self.behaviors.pop();
                 } else {
                     // Otherwise, search for it
@@ -343,12 +355,14 @@ impl Inhabitant {
         }
     }
 
-    pub fn eat(&mut self, item: &Food) {
-        self.hunger = self.hunger.saturating_sub(item.energy);
+    pub fn eat(&mut self, item: &Item) {
+        // TODO: Test actually edible?
+        self.hunger = self.hunger.saturating_sub(item.get_energy());
     }
 
-    pub fn drink(&mut self, item: &Drink) {
-        self.thirst = self.thirst.saturating_sub(item.hydration);
+    pub fn drink(&mut self, item: &Item) {
+        // TODO: Test actually drinkable?
+        self.thirst = self.thirst.saturating_sub(item.get_hydration());
     }
 
     pub fn take_damage(&mut self, amount: u8) {
