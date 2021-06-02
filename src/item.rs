@@ -49,18 +49,34 @@ impl fmt::Debug for Item {
 
 impl Item {
     pub fn new(pos: super::GridPosition, kind: ItemType) -> Item {
+        // Containers have a capacity, other stuff doesn't
         let capacity = match kind {
             ItemType::Container(_) => 10,
             _ => 0,
         };
 
-        Item {
+        // Create the item itself
+        let mut i = Item {
             id: Uuid::new_v4(),
             kind: kind,
             pos,
             items: Vec::with_capacity(capacity),
             capacity,
+        };
+
+        // Come item types modify after creation
+        match kind {
+            ItemType::Container(ContainerType::Fridge) => {
+                i.add_item(Item::new(pos, ItemType::Food(FoodType::EnergyBar)))
+                    .unwrap();
+                i.add_item(Item::new(pos, ItemType::Drink(DrinkType::Water)))
+                    .unwrap();
+            }
+            _ => (),
         }
+
+        // Return it
+        i
     }
 
     pub fn get_id(&self) -> Uuid {
@@ -154,7 +170,7 @@ impl Item {
     }
     // Given an item uuid, removes it from the fridge
     pub fn remove_item(&mut self, id: uuid::Uuid) {
-        self.items.retain(|item| item.id == id)
+        self.items.retain(|item| item.id != id)
     }
 
     pub fn get_energy(&self) -> u8 {
@@ -188,24 +204,24 @@ mod tests {
             GridPosition::new(1, 1),
             ItemType::Container(ContainerType::Fridge),
         );
-        assert_eq!(1, fridge.items.len());
+        assert_eq!(2, fridge.items.len()); // Fridges come with two things
     }
 
     #[test]
     fn fridge_add_item() {
-        let fridge = Item::new(
+        let mut fridge = Item::new(
             GridPosition::new(1, 1),
             ItemType::Container(ContainerType::Fridge),
         );
         assert!(fridge
             .add_item(Item::new(fridge.pos, ItemType::Food(FoodType::EnergyBar)))
             .is_ok());
-        assert_eq!(1, fridge.items.len());
+        assert_eq!(3, fridge.items.len()); // Fridges come with 2 things, so now we have 3
     }
 
     #[test]
     fn fridge_max_items() {
-        let fridge = Item::new(
+        let mut fridge = Item::new(
             GridPosition::new(1, 1),
             ItemType::Container(ContainerType::Fridge),
         );
@@ -221,16 +237,16 @@ mod tests {
 
     #[test]
     fn fridge_remove_item() {
-        let fridge = Item::new(
+        let mut fridge = Item::new(
             GridPosition::new(1, 1),
             ItemType::Container(ContainerType::Fridge),
         );
         let food = Item::new(fridge.pos, ItemType::Food(FoodType::EnergyBar));
         let id = food.get_id();
         assert!(fridge.add_item(food).is_ok());
-        assert_eq!(1, fridge.items.len());
+        assert_eq!(3, fridge.items.len()); // Fridges come with 2 things, so now we have 3
 
         fridge.remove_item(id);
-        assert_eq!(0, fridge.items.len());
+        assert_eq!(2, fridge.items.len()); // We should be back to the original two things
     }
 }

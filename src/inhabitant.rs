@@ -13,10 +13,10 @@ use std::{fmt, time};
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 enum Behavior {
     Wander,
-    Search(ItemType),
+    Search(Vec<ItemType>),
     Eat,
     Drink,
     Work,
@@ -146,7 +146,7 @@ impl Inhabitant {
                 }
             }
             Some(Behavior::Eat) => {
-                if self.has_item(ItemType::Food) {
+                if self.has_item(vec![ItemType::Food(FoodType::EnergyBar)]) {
                     // If we have food on our person, eat it
                     println!("{} Eating from inventory", self);
                     self.eat(&Item::new(
@@ -154,7 +154,7 @@ impl Inhabitant {
                         ItemType::Food(FoodType::EnergyBar),
                     )); // TODO: Actually consume the food from inventory
                     self.behaviors.pop();
-                } else if current_tile.has_item(ItemType::Food) {
+                } else if current_tile.has_item(vec![ItemType::Food(FoodType::EnergyBar)]) {
                     // If there's food here on this tile, eat it
                     println!("{} Eating from tile", self);
                     self.eat(&Item::new(
@@ -165,11 +165,15 @@ impl Inhabitant {
                 } else {
                     // Otherwise, search for it
                     println!("{} Searching for food", self);
-                    self.behaviors.push(Behavior::Search(ItemType::Food));
+                    self.behaviors
+                        .push(Behavior::Search(vec![ItemType::Food(FoodType::EnergyBar)]));
                 }
             }
             Some(Behavior::Drink) => {
-                if self.has_item(ItemType::Drink) {
+                if self.has_item(vec![
+                    ItemType::Drink(DrinkType::Water),
+                    ItemType::Drink(DrinkType::Coffee),
+                ]) {
                     // If we have drink on our person, drink it
                     println!("{} Drinking from inventory", self);
                     self.drink(&Item::new(
@@ -177,7 +181,10 @@ impl Inhabitant {
                         ItemType::Drink(DrinkType::Water),
                     )); // TODO: Actually consume the drink from inventory
                     self.behaviors.pop();
-                } else if current_tile.has_item(ItemType::Drink) {
+                } else if current_tile.has_item(vec![
+                    ItemType::Drink(DrinkType::Water),
+                    ItemType::Drink(DrinkType::Coffee),
+                ]) {
                     // If there's drink here on this tile, drink it
                     println!("{} Drinking from tile", self);
                     self.drink(&Item::new(
@@ -188,16 +195,19 @@ impl Inhabitant {
                 } else {
                     // Otherwise, search for it
                     println!("{} Searching for drink", self);
-                    self.behaviors.push(Behavior::Search(ItemType::Drink));
+                    self.behaviors.push(Behavior::Search(vec![
+                        ItemType::Drink(DrinkType::Water),
+                        ItemType::Drink(DrinkType::Coffee),
+                    ]));
                 }
             }
-            Some(Behavior::Search(item_type)) => match self.dest {
+            Some(Behavior::Search(item_types)) => match self.dest {
                 Some(_) => {
                     self.keep_moving(dt, station);
                 }
                 None => {
                     let mut best_path: Vec<GridPosition> = Vec::new();
-                    let found = station.find_item(*item_type);
+                    let found = station.find_items(item_types.to_vec());
                     for pos in found.iter() {
                         let path = station.path_to(current_tile.pos, **pos);
                         if best_path.is_empty() || path.len() < best_path.len() {
@@ -401,21 +411,32 @@ impl Inhabitant {
     }
 
     // Do we have an item of this type on us?
-    fn has_item(&self, item_type: ItemType) -> bool {
+    fn has_item(&self, item_types: Vec<ItemType>) -> bool {
         for item in self.items.iter() {
-            if item.get_type() == item_type {
+            if item_types.contains(&item.get_type()) {
                 return true;
             }
-        }
 
-        // TODO: Search inside containers?
+            // If this is a container, we need to iterate inside
+            match item.get_type() {
+                ItemType::Container(_) => {
+                    for subitem in item.get_items().iter() {
+                        // Is this what we're looking for?
+                        if item_types.contains(&subitem.get_type()) {
+                            return true;
+                        }
+                    }
+                }
+                _ => (),
+            }
+        }
 
         false
     }
 
     // Given an item uuid, removes it from our inventory
     pub fn remove_item(&mut self, id: uuid::Uuid) {
-        self.items.retain(|item| item.get_id() == id)
+        self.items.retain(|item| item.get_id() != id)
     }
 }
 
