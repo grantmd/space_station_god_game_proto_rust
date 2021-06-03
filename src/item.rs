@@ -21,6 +21,7 @@ pub enum ItemType {
 #[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
 pub enum FoodType {
     EnergyBar,
+    MealReadyToEat, // Because MRE is not a valid Enum name
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
@@ -205,6 +206,7 @@ impl Item {
         match self.kind {
             ItemType::Food(food_type) => match food_type {
                 FoodType::EnergyBar => 10,
+                FoodType::MealReadyToEat => 50,
             },
             _ => 0,
         }
