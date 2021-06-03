@@ -12,13 +12,15 @@ use music::Music;
 use starfield::Starfield;
 use station::{GridPosition, Station, TileType};
 
+use chrono::{DateTime, Local};
 use oorandom::Rand32;
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::graphics::{Color, DrawMode, DrawParam, Font, PxScale, Text, TextFragment};
 use ggez::input::mouse;
-use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
+use ggez::{conf, filesystem, graphics, timer, Context, ContextBuilder, GameResult};
 
+use std::io::{Read, Write};
 use std::{env, path};
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
@@ -79,6 +81,10 @@ impl SpaceStationGodGame {
             music: Music::new(ctx),
         };
 
+        // Do we have any saved games?
+        let saves = game.list_saves(ctx)?;
+        println!("Saves: {:#?}", saves);
+
         // Put some people in it
         let tile = game
             .station
@@ -105,9 +111,40 @@ impl SpaceStationGodGame {
         Ok(game)
     }
 
+    // Add an inhabitant to the game
     fn add_inhabitant(&mut self, pos: Point2, kind: InhabitantType) {
-        println!("Putting inhabitant at {}", pos);
+        println!("Putting {:?} inhabitant at {}", kind, pos);
         self.inhabitants.push(Inhabitant::new(pos, kind));
+    }
+
+    // Save the game state to a file, overwriting if it exists
+    fn save(&self, ctx: &mut Context, name: String) -> GameResult<()> {
+        // Make sure the directory exists
+        filesystem::create_dir(ctx, path::Path::new("/saves")).unwrap();
+
+        // Write the game state out
+        let filename = format!("/saves/{}.txt", name);
+        println!("Saving game to {}", filename);
+        let test_file = path::Path::new(&filename);
+        let bytes = b"test";
+        {
+            let mut file = filesystem::create(ctx, test_file)?;
+            file.write_all(bytes)?;
+        }
+
+        // Guess it worked
+        Ok(())
+    }
+
+    // Load the game state from a file
+    fn load(&self, ctx: &mut Context) -> GameResult<()> {
+        Ok(())
+    }
+
+    // List saved games
+    fn list_saves(&self, ctx: &mut Context) -> GameResult<Vec<path::PathBuf>> {
+        let dir_contents: Vec<path::PathBuf> = filesystem::read_dir(ctx, "/saves")?.collect();
+        Ok(dir_contents)
     }
 }
 
@@ -375,6 +412,13 @@ impl EventHandler for SpaceStationGodGame {
             KeyCode::C => {
                 self.camera.pos = Point2::zero();
                 self.camera.zoom = Point2::one();
+            }
+
+            // Save the game
+            KeyCode::S => {
+                let now: DateTime<Local> = Local::now();
+                self.save(ctx, now.format("%Y-%m-%d %H-%M-%S.%f").to_string())
+                    .unwrap();
             }
 
             // Everything else does nothing
