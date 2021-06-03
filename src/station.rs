@@ -87,9 +87,9 @@ impl PartialOrd for Movement {
 // A Tile object, which the Station is made of
 #[derive(Debug)]
 pub struct Tile {
-    pub pos: GridPosition,         // x,y position of the tile within the station
-    pub kind: TileType,            // what type of square the tile is
-    pub items: Vec<Box<dyn Item>>, // Items that are present on/in the tile
+    pub pos: GridPosition, // x,y position of the tile within the station
+    pub kind: TileType,    // what type of square the tile is
+    pub items: Vec<Item>,  // Items that are present on/in the tile
 }
 
 // Tiles are equal if they are in the same spot
@@ -146,33 +146,36 @@ impl Tile {
     }
 
     // Add an item to the tile
-    pub fn add_item<T: Item + 'static>(&mut self, item: T) {
-        self.items.push(Box::new(item));
+    pub fn add_item(&mut self, item: Item) {
+        self.items.push(item);
     }
 
     // Do we have an item of this type on us?
-    pub fn has_item(&self, item_type: ItemType) -> bool {
-        if let Some(_) = self.get_item(item_type) {
+    pub fn has_item(&self, item_types: Vec<ItemType>) -> bool {
+        if let Some(_) = self.get_item(item_types) {
             return true;
         }
 
         false
     }
 
-    pub fn get_item(&self, item_type: ItemType) -> Option<&Box<dyn Item>> {
+    pub fn get_item(&self, item_types: Vec<ItemType>) -> Option<&Item> {
         for item in self.items.iter() {
-            if item.get_type() == item_type {
+            if item_types.contains(&item.get_type()) {
                 return Some(item);
             }
 
             // If this is a container, we need to iterate inside
-            if item.get_type() == ItemType::Container {
-                for subitem in item.get_items().iter() {
-                    // Is this what we're looking for?
-                    if subitem.get_type() == item_type {
-                        return Some(item);
+            match item.get_type() {
+                ItemType::Container(_) => {
+                    for subitem in item.get_items().iter() {
+                        // Is this what we're looking for?
+                        if item_types.contains(&subitem.get_type()) {
+                            return Some(item);
+                        }
                     }
                 }
+                _ => (),
             }
         }
 
@@ -181,7 +184,7 @@ impl Tile {
 
     // Given an item uuid, removes it from the tile
     pub fn remove_item(&mut self, id: uuid::Uuid) {
-        self.items.retain(|item| item.get_id() == id)
+        self.items.retain(|item| item.get_id() != id)
     }
 
     // Convert a tile's grid position to a "world" position, based on where the station is
@@ -288,7 +291,10 @@ impl Station {
         for (_pos, tile) in self.tiles.iter_mut() {
             if tile.kind == TileType::Floor {
                 println!("Placing fridge at {:#?}", tile);
-                tile.add_item(Fridge::new(tile.pos));
+                tile.add_item(Item::new(
+                    tile.pos,
+                    ItemType::Container(ContainerType::Fridge),
+                ));
                 break;
             }
         }
@@ -514,25 +520,28 @@ impl Station {
         path
     }
 
-    // Returns grid positions of tiles containing the desired item
+    // Returns grid positions of tiles containing the desired items
     // TODO: Take a starting position and return items closest first
-    pub fn find_item(&self, kind: ItemType) -> Vec<&GridPosition> {
+    pub fn find_items(&self, kinds: Vec<ItemType>) -> Vec<&GridPosition> {
         let mut found = Vec::new();
         for (pos, tile) in self.tiles.iter() {
             for item in tile.items.iter() {
                 // Is this what we're looking for?
-                if item.get_type() == kind {
+                if kinds.contains(&item.get_type()) {
                     found.push(pos);
                 }
 
                 // If this is a container, we need to iterate inside
-                if item.get_type() == ItemType::Container {
-                    for subitem in item.get_items().iter() {
-                        // Is this what we're looking for?
-                        if subitem.get_type() == kind {
-                            found.push(pos);
+                match item.get_type() {
+                    ItemType::Container(_) => {
+                        for subitem in item.get_items().iter() {
+                            // Is this what we're looking for?
+                            if kinds.contains(&subitem.get_type()) {
+                                found.push(pos);
+                            }
                         }
                     }
+                    _ => (),
                 }
             }
         }
@@ -921,7 +930,7 @@ impl Station {
 #[cfg(test)]
 mod tests {
     use super::{GridPosition, Point2, Station, Tile, TileType, WallDirection};
-    use crate::item::{Food, Fridge, ItemType};
+    use crate::item::{ContainerType, FoodType, Item, ItemType};
     use oorandom::Rand32;
     use std::collections::HashMap;
 
@@ -1169,23 +1178,23 @@ mod tests {
     }
 
     #[test]
-    fn find_item() {
+    fn find_items() {
         let mut s = test_station_full();
         let pos = GridPosition::new(1, 1);
         let tile = s.get_tile_mut(pos).unwrap();
-        tile.add_item(Food::new(pos));
+        tile.add_item(Item::new(pos, ItemType::Food(FoodType::EnergyBar)));
 
-        let found = s.find_item(ItemType::Food);
+        let found = s.find_items(vec![ItemType::Food(FoodType::EnergyBar)]);
         assert_eq!(1, found.len(), "found one food type");
 
         let pos = GridPosition::new(1, 2);
         let tile = s.get_tile_mut(pos).unwrap();
-        let fridge = Fridge::new(pos);
+        let fridge = Item::new(pos, ItemType::Container(ContainerType::Fridge));
         tile.add_item(fridge);
 
-        let found = s.find_item(ItemType::Container);
+        let found = s.find_items(vec![ItemType::Container(ContainerType::Fridge)]);
         assert_eq!(1, found.len(), "found one container type");
-        let found = s.find_item(ItemType::Food);
+        let found = s.find_items(vec![ItemType::Food(FoodType::EnergyBar)]);
         println!("{:?}", found);
         assert_eq!(
             2,

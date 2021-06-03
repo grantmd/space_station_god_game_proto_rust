@@ -3,6 +3,9 @@ use ggez::{graphics, Context, GameError, GameResult};
 
 use uuid::Uuid;
 
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
+
 use core::fmt;
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
@@ -10,124 +13,119 @@ type Point2 = glam::Vec2;
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum ItemType {
-    Food,
-    Drink,
-    Container,
+    Food(FoodType),
+    Drink(DrinkType),
+    Container(ContainerType),
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
+pub enum FoodType {
+    EnergyBar,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
+pub enum DrinkType {
+    Water,
+    Coffee,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
+pub enum ContainerType {
+    Fridge,
+    Locker,
+}
+
+// Helper functions to return all possible subtypes of a given item type
+pub fn get_food_types() -> Vec<ItemType> {
+    let mut types = vec![];
+    for kind in FoodType::iter() {
+        types.push(ItemType::Food(kind));
+    }
+    types
+}
+
+pub fn get_drink_types() -> Vec<ItemType> {
+    let mut types = vec![];
+    for kind in DrinkType::iter() {
+        types.push(ItemType::Drink(kind));
+    }
+    types
+}
+
+pub fn get_container_types() -> Vec<ItemType> {
+    let mut types = vec![];
+    for kind in ContainerType::iter() {
+        types.push(ItemType::Container(kind));
+    }
+    types
 }
 
 // An item is the base of objects that live inside the station on tiles and inhabitants can interact
-pub trait Item {
-    fn get_id(&self) -> Uuid;
-    fn get_name(&self) -> String;
-    fn draw(&self, ctx: &mut Context, pos: Point2, camera: &crate::Camera) -> GameResult<()>;
-    fn update(&mut self, ctx: &mut Context) -> GameResult<()>;
-    fn get_type(&self) -> ItemType;
-    fn get_items(&self) -> &Vec<Box<dyn Item>>;
+pub struct Item {
+    id: uuid::Uuid,
+    kind: ItemType,
+    pub pos: super::GridPosition,
+    items: Vec<Item>,
+    capacity: usize,
 }
 
-impl fmt::Debug for dyn Item {
+impl fmt::Debug for Item {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "[{} ({:?})] {}",
-            self.get_id(),
-            self.get_type(),
-            self.get_name()
-        )
+        write!(f, "[{} ({:?})] {}", self.id, self.kind, self.get_name())
     }
 }
 
-#[derive(Debug)]
-pub struct Food {
-    pub energy: u8,
-    pos: super::GridPosition,
-    id: uuid::Uuid,
-    items: Vec<Box<dyn Item>>,
-}
+impl Item {
+    pub fn new(pos: super::GridPosition, kind: ItemType) -> Item {
+        // Containers have a capacity, other stuff doesn't
+        let capacity = match kind {
+            ItemType::Container(_) => 10,
+            _ => 0,
+        };
 
-impl Item for Food {
-    fn get_id(&self) -> Uuid {
+        // Create the item itself
+        let mut i = Item {
+            id: Uuid::new_v4(),
+            kind: kind,
+            pos,
+            items: Vec::with_capacity(capacity),
+            capacity,
+        };
+
+        // Come item types modify after creation
+        match kind {
+            ItemType::Container(ContainerType::Fridge) => {
+                i.add_item(Item::new(pos, ItemType::Food(FoodType::EnergyBar)))
+                    .unwrap();
+                i.add_item(Item::new(pos, ItemType::Drink(DrinkType::Water)))
+                    .unwrap();
+            }
+            _ => (),
+        }
+
+        // Return it
+        i
+    }
+
+    pub fn get_id(&self) -> Uuid {
         self.id
     }
 
-    fn get_type(&self) -> ItemType {
-        ItemType::Food
-    }
-
-    fn get_name(&self) -> String {
-        format!("Yummy yummy food. Restores {} hunger", self.energy)
-    }
-
-    fn draw(
-        &self,
-        ctx: &mut Context,
-        station_pos: Point2,
-        camera: &crate::Camera,
-    ) -> GameResult<()> {
-        let pos = Point2::new(
-            (crate::TILE_WIDTH * self.pos.x as f32) - (crate::TILE_WIDTH / 2.0),
-            (crate::TILE_WIDTH * self.pos.y as f32) - (crate::TILE_WIDTH / 2.0),
-        );
-        let mesh = Mesh::new_circle(
-            ctx,
-            DrawMode::fill(),
-            pos,
-            crate::TILE_WIDTH / 2.0 - 10.0,
-            0.1,
-            Color::new(1.0, 1.0, 0.0, 1.0),
-        )?;
-        graphics::draw(
-            ctx,
-            &mesh,
-            DrawParam::default()
-                .dest(station_pos)
-                .offset(camera.pos)
-                .scale(camera.zoom),
-        )
-    }
-
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        Ok(())
-    }
-
-    fn get_items(&self) -> &Vec<Box<dyn Item>> {
-        &self.items
-    }
-}
-
-impl Food {
-    pub fn new(pos: super::GridPosition) -> Food {
-        Food {
-            id: Uuid::new_v4(),
-            pos,
-            energy: 10,
-            items: Vec::new(),
+    pub fn get_name(&self) -> String {
+        match self.kind {
+            ItemType::Food(food_type) => {
+                format!("Yummy yummy food. Restores {} hunger", 10)
+            }
+            ItemType::Drink(drink_type) => {
+                format!("A thirst-quenching beverage. Restores {} thirst", 10)
+            }
+            ItemType::Container(container_type) => {
+                format!("Storage container. Has {} items.", self.items.len())
+            }
         }
     }
-}
 
-#[derive(Debug)]
-pub struct Fridge {
-    items: Vec<Box<dyn Item>>,
-    capacity: usize,
-    pos: super::GridPosition,
-    id: uuid::Uuid,
-}
-
-impl Item for Fridge {
-    fn get_id(&self) -> Uuid {
-        self.id
-    }
-
-    fn get_type(&self) -> ItemType {
-        ItemType::Container
-    }
-
-    fn get_name(&self) -> String {
-        format!("Food storage. Has {} items.", self.items.len())
-    }
-
-    fn draw(
+    pub fn draw(
         &self,
         ctx: &mut Context,
         station_pos: Point2,
@@ -137,12 +135,30 @@ impl Item for Fridge {
             (crate::TILE_WIDTH * self.pos.x as f32) - (crate::TILE_WIDTH / 2.0),
             (crate::TILE_WIDTH * self.pos.y as f32) - (crate::TILE_WIDTH / 2.0),
         );
-        let mesh = Mesh::new_rectangle(
-            ctx,
-            DrawMode::fill(),
-            graphics::Rect::new(pos.x + 10.0, pos.y + 10.0, 10.0, 10.0),
-            Color::new(0.5, 0.5, 0.5, 1.0),
-        )?;
+        let mesh = match self.kind {
+            ItemType::Food(_) => Mesh::new_circle(
+                ctx,
+                DrawMode::fill(),
+                pos,
+                crate::TILE_WIDTH / 2.0 - 10.0,
+                0.1,
+                Color::new(1.0, 1.0, 0.0, 1.0),
+            )?,
+            ItemType::Drink(_) => Mesh::new_circle(
+                ctx,
+                DrawMode::fill(),
+                pos,
+                crate::TILE_WIDTH / 2.0 - 10.0,
+                0.1,
+                Color::new(1.0, 1.0, 0.0, 1.0),
+            )?,
+            ItemType::Container(_) => Mesh::new_rectangle(
+                ctx,
+                DrawMode::fill(),
+                graphics::Rect::new(pos.x + 10.0, pos.y + 10.0, 10.0, 10.0),
+                Color::new(0.5, 0.5, 0.5, 1.0),
+            )?,
+        };
         graphics::draw(
             ctx,
             &mesh,
@@ -153,7 +169,7 @@ impl Item for Fridge {
         )
     }
 
-    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+    pub fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
         // Update all the contents
         for item in self.items.iter_mut() {
             item.update(ctx)?;
@@ -162,152 +178,103 @@ impl Item for Fridge {
         Ok(())
     }
 
-    fn get_items(&self) -> &Vec<Box<dyn Item>> {
+    pub fn get_type(&self) -> ItemType {
+        self.kind
+    }
+
+    pub fn get_items(&self) -> &Vec<Item> {
         &self.items
     }
-}
-
-impl Fridge {
-    pub fn new(pos: super::GridPosition) -> Fridge {
-        let mut fridge = Fridge {
-            id: Uuid::new_v4(),
-            pos,
-            capacity: 10,
-            items: Vec::with_capacity(10),
-        };
-
-        fridge.add_item(Food::new(pos)).unwrap();
-
-        fridge
-    }
-
-    pub fn add_item(&mut self, item: Food) -> GameResult<()> {
+    pub fn add_item(&mut self, item: Item) -> GameResult<()> {
         if self.items.len() >= self.capacity {
-            return Err(GameError::CustomError("Fridge is at capacity".to_string()));
+            return Err(GameError::CustomError(
+                "Container is at capacity".to_string(),
+            ));
         }
 
-        self.items.push(Box::new(item));
+        self.items.push(item);
 
         Ok(())
     }
-
     // Given an item uuid, removes it from the fridge
     pub fn remove_item(&mut self, id: uuid::Uuid) {
-        self.items.retain(|item| item.get_id() == id)
-    }
-}
-
-#[derive(Debug)]
-pub struct Drink {
-    pub hydration: u8,
-    pos: super::GridPosition,
-    id: uuid::Uuid,
-    items: Vec<Box<dyn Item>>,
-}
-
-impl Item for Drink {
-    fn get_id(&self) -> Uuid {
-        self.id
+        self.items.retain(|item| item.id != id)
     }
 
-    fn get_type(&self) -> ItemType {
-        ItemType::Drink
+    pub fn get_energy(&self) -> u8 {
+        match self.kind {
+            ItemType::Food(food_type) => match food_type {
+                FoodType::EnergyBar => 10,
+            },
+            _ => 0,
+        }
     }
 
-    fn get_name(&self) -> String {
-        format!(
-            "A thirst-quenching beverage. Restores {} thirst",
-            self.hydration
-        )
-    }
-
-    fn draw(
-        &self,
-        ctx: &mut Context,
-        station_pos: Point2,
-        camera: &crate::Camera,
-    ) -> GameResult<()> {
-        let pos = Point2::new(
-            (crate::TILE_WIDTH * self.pos.x as f32) - (crate::TILE_WIDTH / 2.0),
-            (crate::TILE_WIDTH * self.pos.y as f32) - (crate::TILE_WIDTH / 2.0),
-        );
-        let mesh = Mesh::new_circle(
-            ctx,
-            DrawMode::fill(),
-            pos,
-            crate::TILE_WIDTH / 2.0 - 10.0,
-            0.1,
-            Color::new(1.0, 1.0, 0.0, 1.0),
-        )?;
-        graphics::draw(
-            ctx,
-            &mesh,
-            DrawParam::default()
-                .dest(station_pos)
-                .offset(camera.pos)
-                .scale(camera.zoom),
-        )
-    }
-
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        Ok(())
-    }
-
-    fn get_items(&self) -> &Vec<Box<dyn Item>> {
-        &self.items
-    }
-}
-
-impl Drink {
-    pub fn new(pos: super::GridPosition) -> Drink {
-        Drink {
-            id: Uuid::new_v4(),
-            pos,
-            hydration: 10,
-            items: Vec::new(),
+    pub fn get_hydration(&self) -> u8 {
+        match self.kind {
+            ItemType::Drink(drink_type) => match drink_type {
+                DrinkType::Water => 10,
+                DrinkType::Coffee => 8,
+            },
+            _ => 0,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Food, Fridge};
-    use crate::item::Item;
+    use super::{ContainerType, FoodType, Item, ItemType};
     use crate::station::GridPosition;
 
     #[test]
     fn new_fridge_contains_items() {
-        let fridge = Fridge::new(GridPosition::new(1, 1));
-        assert_eq!(1, fridge.items.len());
+        let fridge = Item::new(
+            GridPosition::new(1, 1),
+            ItemType::Container(ContainerType::Fridge),
+        );
+        assert_eq!(2, fridge.items.len()); // Fridges come with two things
     }
 
     #[test]
     fn fridge_add_item() {
-        let mut fridge = Fridge::new(GridPosition::new(1, 1));
-        assert!(fridge.add_item(Food::new(fridge.pos)).is_ok());
-        assert_eq!(2, fridge.items.len());
+        let mut fridge = Item::new(
+            GridPosition::new(1, 1),
+            ItemType::Container(ContainerType::Fridge),
+        );
+        assert!(fridge
+            .add_item(Item::new(fridge.pos, ItemType::Food(FoodType::EnergyBar)))
+            .is_ok());
+        assert_eq!(3, fridge.items.len()); // Fridges come with 2 things, so now we have 3
     }
 
     #[test]
     fn fridge_max_items() {
-        let mut fridge = Fridge::new(GridPosition::new(1, 1));
+        let mut fridge = Item::new(
+            GridPosition::new(1, 1),
+            ItemType::Container(ContainerType::Fridge),
+        );
         while fridge.items.len() < fridge.capacity {
-            assert!(fridge.add_item(Food::new(fridge.pos)).is_ok());
+            assert!(fridge
+                .add_item(Item::new(fridge.pos, ItemType::Food(FoodType::EnergyBar)))
+                .is_ok());
         }
 
-        let result = fridge.add_item(Food::new(fridge.pos));
+        let result = fridge.add_item(Item::new(fridge.pos, ItemType::Food(FoodType::EnergyBar)));
         assert!(result.is_err());
     }
 
     #[test]
     fn fridge_remove_item() {
-        let mut fridge = Fridge::new(GridPosition::new(1, 1));
-        let food = Food::new(fridge.pos);
+        let mut fridge = Item::new(
+            GridPosition::new(1, 1),
+            ItemType::Container(ContainerType::Fridge),
+        );
+        let food = Item::new(fridge.pos, ItemType::Food(FoodType::EnergyBar));
         let id = food.get_id();
         assert!(fridge.add_item(food).is_ok());
-        assert_eq!(2, fridge.items.len());
+        assert_eq!(3, fridge.items.len()); // Fridges come with 2 things, so now we have 3
 
         fridge.remove_item(id);
-        assert_eq!(1, fridge.items.len());
+        assert_eq!(2, fridge.items.len()); // We should be back to the original two things
     }
 }

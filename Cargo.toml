@@ -17,6 +17,8 @@ rand = "0.8.3"
 num = "0.3.1"
 mint = "0.5.6"
 uuid = { version = "0.8", features = ["serde", "v4"] }
+strum = "0.21"
+strum_macros = "0.21"
 
 # https://github.com/ggez/ggez/blob/master/docs/FAQ.md#imagesound-loading-and-font-rendering-is-slow
 [profile.dev]
