@@ -229,6 +229,8 @@ impl Inhabitant {
                 // Decide what to do
                 if self.wants_food() >= 0.5 {
                     self.behaviors.push(Behavior::Eat);
+                } else if self.wants_drink() >= 0.5 {
+                    self.behaviors.push(Behavior::Drink);
                 } else {
                     self.behaviors.push(Behavior::Wander);
                 }
