@@ -208,6 +208,10 @@ impl Item {
                 FoodType::EnergyBar => 10,
                 FoodType::MealReadyToEat => 50,
             },
+            ItemType::Drink(drink_type) => match drink_type {
+                DrinkType::Coffee => 3,
+                DrinkType::Water => 0,
+            },
             _ => 0,
         }
     }
