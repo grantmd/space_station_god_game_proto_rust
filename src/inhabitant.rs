@@ -88,7 +88,10 @@ impl Inhabitant {
             hunger: 0,
             thirst: 0,
             age: time::Duration::from_micros(0),
-            items: Vec::new(),
+            items: vec![
+                Item::new(GridPosition::new(0, 0), ItemType::Food(FoodType::EnergyBar)),
+                Item::new(GridPosition::new(1, 0), ItemType::Drink(DrinkType::Water)),
+            ],
             behaviors: Vec::with_capacity(7),
         }
     }

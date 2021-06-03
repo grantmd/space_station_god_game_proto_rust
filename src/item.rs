@@ -1,3 +1,5 @@
+use crate::station::GridPosition;
+
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
 use ggez::{graphics, Context, GameError, GameResult};
 
@@ -93,13 +95,60 @@ impl Item {
             capacity,
         };
 
-        // Come item types modify after creation
+        // Some item types modify after creation
         match kind {
+            // Fill the fridge with energy bars and water
             ItemType::Container(ContainerType::Fridge) => {
-                i.add_item(Item::new(pos, ItemType::Food(FoodType::EnergyBar)))
-                    .unwrap();
-                i.add_item(Item::new(pos, ItemType::Drink(DrinkType::Water)))
-                    .unwrap();
+                i.add_item(Item::new(
+                    GridPosition::new(0, 0),
+                    ItemType::Food(FoodType::EnergyBar),
+                ))
+                .unwrap();
+                i.add_item(Item::new(
+                    GridPosition::new(1, 0),
+                    ItemType::Drink(DrinkType::Water),
+                ))
+                .unwrap();
+                i.add_item(Item::new(
+                    GridPosition::new(2, 0),
+                    ItemType::Food(FoodType::EnergyBar),
+                ))
+                .unwrap();
+                i.add_item(Item::new(
+                    GridPosition::new(3, 0),
+                    ItemType::Drink(DrinkType::Water),
+                ))
+                .unwrap();
+                i.add_item(Item::new(
+                    GridPosition::new(4, 0),
+                    ItemType::Food(FoodType::EnergyBar),
+                ))
+                .unwrap();
+                i.add_item(Item::new(
+                    GridPosition::new(5, 0),
+                    ItemType::Drink(DrinkType::Water),
+                ))
+                .unwrap();
+                i.add_item(Item::new(
+                    GridPosition::new(6, 0),
+                    ItemType::Food(FoodType::EnergyBar),
+                ))
+                .unwrap();
+                i.add_item(Item::new(
+                    GridPosition::new(7, 0),
+                    ItemType::Drink(DrinkType::Water),
+                ))
+                .unwrap();
+                i.add_item(Item::new(
+                    GridPosition::new(8, 0),
+                    ItemType::Food(FoodType::EnergyBar),
+                ))
+                .unwrap();
+                i.add_item(Item::new(
+                    GridPosition::new(9, 0),
+                    ItemType::Drink(DrinkType::Water),
+                ))
+                .unwrap();
             }
             _ => (),
         }
@@ -115,10 +164,13 @@ impl Item {
     pub fn get_name(&self) -> String {
         match self.kind {
             ItemType::Food(food_type) => {
-                format!("Yummy yummy food. Restores {} hunger", 10)
+                format!("Yummy yummy food. Restores {} hunger", self.get_energy())
             }
             ItemType::Drink(drink_type) => {
-                format!("A thirst-quenching beverage. Restores {} thirst", 10)
+                format!(
+                    "A thirst-quenching beverage. Restores {} thirst",
+                    self.get_hydration()
+                )
             }
             ItemType::Container(container_type) => {
                 format!("Storage container. Has {} items.", self.items.len())
