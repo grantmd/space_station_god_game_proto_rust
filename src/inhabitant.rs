@@ -146,7 +146,7 @@ impl Inhabitant {
                 }
             }
             Some(Behavior::Eat) => {
-                if self.has_item(vec![ItemType::Food(FoodType::EnergyBar)]) {
+                if self.has_item(get_food_types()) {
                     // If we have food on our person, eat it
                     println!("{} Eating from inventory", self);
                     self.eat(&Item::new(
@@ -154,7 +154,7 @@ impl Inhabitant {
                         ItemType::Food(FoodType::EnergyBar),
                     )); // TODO: Actually consume the food from inventory
                     self.behaviors.pop();
-                } else if current_tile.has_item(vec![ItemType::Food(FoodType::EnergyBar)]) {
+                } else if current_tile.has_item(get_food_types()) {
                     // If there's food here on this tile, eat it
                     println!("{} Eating from tile", self);
                     self.eat(&Item::new(
@@ -165,15 +165,11 @@ impl Inhabitant {
                 } else {
                     // Otherwise, search for it
                     println!("{} Searching for food", self);
-                    self.behaviors
-                        .push(Behavior::Search(vec![ItemType::Food(FoodType::EnergyBar)]));
+                    self.behaviors.push(Behavior::Search(get_food_types()));
                 }
             }
             Some(Behavior::Drink) => {
-                if self.has_item(vec![
-                    ItemType::Drink(DrinkType::Water),
-                    ItemType::Drink(DrinkType::Coffee),
-                ]) {
+                if self.has_item(get_drink_types()) {
                     // If we have drink on our person, drink it
                     println!("{} Drinking from inventory", self);
                     self.drink(&Item::new(
@@ -181,10 +177,7 @@ impl Inhabitant {
                         ItemType::Drink(DrinkType::Water),
                     )); // TODO: Actually consume the drink from inventory
                     self.behaviors.pop();
-                } else if current_tile.has_item(vec![
-                    ItemType::Drink(DrinkType::Water),
-                    ItemType::Drink(DrinkType::Coffee),
-                ]) {
+                } else if current_tile.has_item(get_drink_types()) {
                     // If there's drink here on this tile, drink it
                     println!("{} Drinking from tile", self);
                     self.drink(&Item::new(
@@ -195,10 +188,7 @@ impl Inhabitant {
                 } else {
                     // Otherwise, search for it
                     println!("{} Searching for drink", self);
-                    self.behaviors.push(Behavior::Search(vec![
-                        ItemType::Drink(DrinkType::Water),
-                        ItemType::Drink(DrinkType::Coffee),
-                    ]));
+                    self.behaviors.push(Behavior::Search(get_drink_types()));
                 }
             }
             Some(Behavior::Search(item_types)) => match self.dest {

@@ -3,6 +3,9 @@ use ggez::{graphics, Context, GameError, GameResult};
 
 use uuid::Uuid;
 
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
+
 use core::fmt;
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
@@ -15,21 +18,46 @@ pub enum ItemType {
     Container(ContainerType),
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
 pub enum FoodType {
     EnergyBar,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
 pub enum DrinkType {
     Water,
     Coffee,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
 pub enum ContainerType {
     Fridge,
     Locker,
+}
+
+// Helper functions to return all possible subtypes of a given item type
+pub fn get_food_types() -> Vec<ItemType> {
+    let mut types = vec![];
+    for kind in FoodType::iter() {
+        types.push(ItemType::Food(kind));
+    }
+    types
+}
+
+pub fn get_drink_types() -> Vec<ItemType> {
+    let mut types = vec![];
+    for kind in DrinkType::iter() {
+        types.push(ItemType::Drink(kind));
+    }
+    types
+}
+
+pub fn get_container_types() -> Vec<ItemType> {
+    let mut types = vec![];
+    for kind in ContainerType::iter() {
+        types.push(ItemType::Container(kind));
+    }
+    types
 }
 
 // An item is the base of objects that live inside the station on tiles and inhabitants can interact
