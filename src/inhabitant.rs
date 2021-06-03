@@ -76,6 +76,14 @@ impl fmt::Display for Inhabitant {
 
 impl Inhabitant {
     pub fn new(pos: Point2, kind: InhabitantType) -> Inhabitant {
+        let items = match kind {
+            InhabitantType::Ghost => vec![],
+            _ => vec![
+                Item::new(GridPosition::new(0, 0), ItemType::Food(FoodType::EnergyBar)),
+                Item::new(GridPosition::new(1, 0), ItemType::Drink(DrinkType::Water)),
+            ],
+        };
+
         Inhabitant {
             id: Uuid::new_v4(),
             pos,
@@ -88,10 +96,7 @@ impl Inhabitant {
             hunger: 0,
             thirst: 0,
             age: time::Duration::from_micros(0),
-            items: vec![
-                Item::new(GridPosition::new(0, 0), ItemType::Food(FoodType::EnergyBar)),
-                Item::new(GridPosition::new(1, 0), ItemType::Drink(DrinkType::Water)),
-            ],
+            items: items,
             behaviors: Vec::with_capacity(7),
         }
     }
