@@ -163,18 +163,34 @@ impl Item {
 
     pub fn get_name(&self) -> String {
         match self.kind {
-            ItemType::Food(food_type) => {
-                format!("Yummy yummy food. Restores {} hunger", self.get_energy())
-            }
-            ItemType::Drink(drink_type) => {
-                format!(
-                    "A thirst-quenching beverage. Restores {} thirst",
+            ItemType::Food(food_type) => match food_type {
+                FoodType::EnergyBar => format!(
+                    "Your basic energy bar. Restores {} hunger",
+                    self.get_energy()
+                ),
+                FoodType::MealReadyToEat => {
+                    format!("An entire MRE. Restores {} hunger", self.get_energy())
+                }
+            },
+            ItemType::Drink(drink_type) => match drink_type {
+                DrinkType::Water => format!(
+                    "Your standard bottle of water. Restores {} thirst",
                     self.get_hydration()
-                )
-            }
-            ItemType::Container(container_type) => {
-                format!("Storage container. Has {} items.", self.items.len())
-            }
+                ),
+                DrinkType::Coffee => format!(
+                    "A cup of \"fresh\"-brewed coffed. Restores {} thirst and {} energy",
+                    self.get_hydration(),
+                    self.get_energy()
+                ),
+            },
+            ItemType::Container(container_type) => match container_type {
+                ContainerType::Fridge => {
+                    format!("Keeps food and drink cold. Has {} items.", self.items.len())
+                }
+                ContainerType::Locker => {
+                    format!("Storage container. Has {} items.", self.items.len())
+                }
+            },
         }
     }
 
