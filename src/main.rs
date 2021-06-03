@@ -85,17 +85,20 @@ impl SpaceStationGodGame {
             .get_random_tile(TileType::Floor, &mut game.rng)
             .unwrap();
         let pos = tile.to_world_position(&game.station);
-        let crew = vec![
-            InhabitantType::Pilot,
-            InhabitantType::Engineer,
-            InhabitantType::Scientist,
-            InhabitantType::Medic,
-            InhabitantType::Soldier,
-            InhabitantType::Miner,
-            InhabitantType::Cook,
-        ];
-        for inhabitant_type in crew.iter() {
-            game.add_inhabitant(pos, *inhabitant_type);
+        let num_crew = 3;
+        for _ in 0..num_crew {
+            // TODO: Got to be a better way to do this
+            let inhabitant_type = match rng.rand_range(0..6) {
+                0 => InhabitantType::Pilot,
+                1 => InhabitantType::Engineer,
+                2 => InhabitantType::Scientist,
+                3 => InhabitantType::Medic,
+                4 => InhabitantType::Soldier,
+                5 => InhabitantType::Miner,
+                6 => InhabitantType::Cook,
+                _ => panic!("Invalid inhabitant type chosen"),
+            };
+            game.add_inhabitant(pos, inhabitant_type);
         }
 
         // Return the initial game state
