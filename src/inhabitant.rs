@@ -310,7 +310,7 @@ impl Inhabitant {
 
             // Moving takes work!
             self.add_hunger(1);
-            //self.add_thirst(1);
+            self.add_thirst(1);
         }
         self.move_elapsed += timer::duration_to_f64(dt);
 
