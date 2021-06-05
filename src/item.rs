@@ -3,6 +3,7 @@ use crate::station::GridPosition;
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
 use ggez::{graphics, Context, GameError, GameResult};
 
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use strum::IntoEnumIterator;
@@ -13,26 +14,26 @@ use core::fmt;
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ItemType {
     Food(FoodType),
     Drink(DrinkType),
     Container(ContainerType),
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter, Serialize, Deserialize)]
 pub enum FoodType {
     EnergyBar,
     MealReadyToEat, // Because MRE is not a valid Enum name
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter, Serialize, Deserialize)]
 pub enum DrinkType {
     Water,
     Coffee,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, EnumIter, Serialize, Deserialize)]
 pub enum ContainerType {
     Fridge,
     Locker,
@@ -64,6 +65,7 @@ pub fn get_container_types() -> Vec<ItemType> {
 }
 
 // An item is the base of objects that live inside the station on tiles and inhabitants can interact
+#[derive(Serialize, Deserialize)]
 pub struct Item {
     id: uuid::Uuid,
     kind: ItemType,

@@ -4,6 +4,7 @@ use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
 use ggez::{graphics, Context, GameResult};
 
 use oorandom::Rand32;
+use serde::{Deserialize, Serialize};
 
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
@@ -17,7 +18,7 @@ const WALL_COLOR: Color = Color::new(0.3, 0.3, 0.3, 1.0);
 const BORDER_COLOR: Color = Color::BLACK;
 
 // A position on a grid
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
 pub struct GridPosition {
     pub x: i32,
     pub y: i32,
@@ -85,7 +86,7 @@ impl PartialOrd for Movement {
 }
 
 // A Tile object, which the Station is made of
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Tile {
     pub pos: GridPosition, // x,y position of the tile within the station
     pub kind: TileType,    // what type of square the tile is
@@ -107,7 +108,7 @@ impl Hash for Tile {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum TileType {
     Floor,
     Wall(WallDirection),
@@ -116,7 +117,7 @@ pub enum TileType {
 
 // Walls have lots of different possible directions, which indicate how they are drawn
 // Directions like "top-left" indicate that in a square walled room, this is the top-left corner
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum WallDirection {
     InteriorVertical,
     InteriorHorizontal,
@@ -197,9 +198,11 @@ impl Tile {
 }
 
 // A type for the Station itself
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Station {
     pub pos: Point2, // The position of the station (upper-left, basically), in world coordinates
     tiles: HashMap<GridPosition, Tile>, // All the Tiles that make up the station
+    #[serde(skip)]
     mesh: Option<Mesh>, // A cache of the mesh making up the station structure
 }
 

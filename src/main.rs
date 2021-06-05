@@ -14,6 +14,8 @@ use station::{GridPosition, Station, TileType};
 
 use chrono::{DateTime, Local};
 use oorandom::Rand32;
+use serde::ser::{SerializeStruct, Serializer};
+use serde::{Deserialize, Serialize};
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::graphics::{Color, DrawMode, DrawParam, Font, PxScale, Text, TextFragment};
@@ -40,6 +42,7 @@ struct SpaceStationGodGame {
     music: Music,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Camera {
     pos: Point2,
     zoom: Point2,
@@ -93,6 +96,7 @@ impl SpaceStationGodGame {
         let pos = tile.to_world_position(&game.station);
         let num_crew = 3;
         for _ in 0..num_crew {
+            // TODO: Don't repeat
             // TODO: Got to be a better way to do this
             let inhabitant_type = match rng.rand_range(0..6) {
                 0 => InhabitantType::Pilot,
@@ -123,14 +127,11 @@ impl SpaceStationGodGame {
         filesystem::create_dir(ctx, path::Path::new("/saves")).unwrap();
 
         // Write the game state out
-        let filename = format!("/saves/{}.txt", name);
+        let filename = format!("/saves/{}.cbor", name);
         println!("Saving game to {}", filename);
         let test_file = path::Path::new(&filename);
-        let bytes = b"test";
-        {
-            let mut file = filesystem::create(ctx, test_file)?;
-            file.write_all(bytes)?;
-        }
+        let file = filesystem::create(ctx, test_file)?;
+        serde_cbor::to_writer(file, &self).unwrap();
 
         // Guess it worked
         Ok(())
@@ -441,6 +442,21 @@ impl EventHandler for SpaceStationGodGame {
         self.starfield
             .resize_event(ctx, &mut self.rng, width, height);
         println!("Resized screen to {}, {}", width, height);
+    }
+}
+
+impl Serialize for SpaceStationGodGame {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // 4 is the number of fields from the struct we care about
+        let mut state = serializer.serialize_struct("SpaceStationGodGame", 4)?;
+        state.serialize_field("camera", &self.camera)?;
+        state.serialize_field("station", &self.station)?;
+        state.serialize_field("inhabitants", &self.inhabitants)?;
+        state.serialize_field("rng", &self.rng.state())?;
+        state.end()
     }
 }
 

@@ -6,6 +6,7 @@ use ggez::{graphics, timer, Context, GameResult};
 
 use keyframe::{ease, functions::EaseInOut};
 use oorandom::Rand32;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use std::{fmt, time};
@@ -13,7 +14,7 @@ use std::{fmt, time};
 // Alias some types to making reading/writing code easier and also in case math libraries change again
 type Point2 = glam::Vec2;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 enum Behavior {
     Wander,
     Search(Vec<ItemType>),
@@ -23,6 +24,7 @@ enum Behavior {
 }
 
 // An Inhabitant of the Station
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Inhabitant {
     // These are world positions (since they can go outside the station)
     pub pos: Point2,          // Current position
@@ -46,7 +48,7 @@ pub struct Inhabitant {
     id: uuid::Uuid,
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum InhabitantType {
     Pilot,
     Engineer,
