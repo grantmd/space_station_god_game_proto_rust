@@ -65,7 +65,7 @@ pub fn get_container_types() -> Vec<ItemType> {
 }
 
 // An item is the base of objects that live inside the station on tiles and inhabitants can interact
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Item {
     id: uuid::Uuid,
     kind: ItemType,

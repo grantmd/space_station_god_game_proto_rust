@@ -24,7 +24,7 @@ enum Behavior {
 }
 
 // An Inhabitant of the Station
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Inhabitant {
     // These are world positions (since they can go outside the station)
     pub pos: Point2,          // Current position

@@ -86,7 +86,7 @@ impl PartialOrd for Movement {
 }
 
 // A Tile object, which the Station is made of
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Tile {
     pub pos: GridPosition, // x,y position of the tile within the station
     pub kind: TileType,    // what type of square the tile is
@@ -198,7 +198,7 @@ impl Tile {
 }
 
 // A type for the Station itself
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Station {
     pub pos: Point2, // The position of the station (upper-left, basically), in world coordinates
     tiles: HashMap<GridPosition, Tile>, // All the Tiles that make up the station
@@ -590,7 +590,7 @@ impl Station {
     }
 
     // Create a mesh from our state
-    fn build_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
+    pub fn build_mesh(&mut self, ctx: &mut Context) -> GameResult<()> {
         let mb = &mut MeshBuilder::new();
         for (index, tile) in &self.tiles {
             let tile_rect = graphics::Rect::new(

@@ -22,7 +22,6 @@ use ggez::graphics::{Color, DrawMode, DrawParam, Font, PxScale, Text, TextFragme
 use ggez::input::mouse;
 use ggez::{conf, filesystem, graphics, timer, Context, ContextBuilder, GameResult};
 
-use std::io::{Read, Write};
 use std::{env, path};
 
 // Alias some types to making reading/writing code easier and also in case math libraries change again
@@ -42,7 +41,7 @@ struct SpaceStationGodGame {
     music: Music,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 pub struct Camera {
     pos: Point2,
     zoom: Point2,
@@ -126,19 +125,41 @@ impl SpaceStationGodGame {
         // Make sure the directory exists
         filesystem::create_dir(ctx, path::Path::new("/saves")).unwrap();
 
+        // Create the save game object
+        let state = SavedGame {
+            rng_state: self.rng.state(),
+            camera: self.camera,
+            inhabitants: self.inhabitants.clone(),
+            station: self.station.clone(),
+        };
+
         // Write the game state out
         let filename = format!("/saves/{}.cbor", name);
         println!("Saving game to {}", filename);
         let test_file = path::Path::new(&filename);
         let file = filesystem::create(ctx, test_file)?;
-        serde_cbor::to_writer(file, &self).unwrap();
+        serde_cbor::to_writer(file, &state).unwrap();
 
         // Guess it worked
         Ok(())
     }
 
     // Load the game state from a file
-    fn load(&self, ctx: &mut Context) -> GameResult<()> {
+    fn load(&mut self, ctx: &mut Context, filename: &path::PathBuf) -> GameResult<()> {
+        // Load the file
+        let file = filesystem::open(ctx, path::Path::new(filename)).unwrap();
+        let save: SavedGame = serde_cbor::from_reader(file).unwrap();
+
+        // Copy the data over
+        self.rng = oorandom::Rand32::from_state(save.rng_state);
+        self.camera = save.camera;
+        self.inhabitants = save.inhabitants;
+        self.station = save.station;
+
+        // Rebuild all the meshes
+        self.station.build_mesh(ctx)?;
+
+        // Guess it worked
         Ok(())
     }
 
@@ -422,6 +443,14 @@ impl EventHandler for SpaceStationGodGame {
                     .unwrap();
             }
 
+            // Load a save
+            KeyCode::L => {
+                let saves = self.list_saves(ctx).unwrap();
+                if let Some(filename) = saves.last() {
+                    self.load(ctx, &filename).unwrap();
+                }
+            }
+
             // Everything else does nothing
             _ => (),
         }
@@ -445,19 +474,13 @@ impl EventHandler for SpaceStationGodGame {
     }
 }
 
-impl Serialize for SpaceStationGodGame {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        // 4 is the number of fields from the struct we care about
-        let mut state = serializer.serialize_struct("SpaceStationGodGame", 4)?;
-        state.serialize_field("camera", &self.camera)?;
-        state.serialize_field("station", &self.station)?;
-        state.serialize_field("inhabitants", &self.inhabitants)?;
-        state.serialize_field("rng", &self.rng.state())?;
-        state.end()
-    }
+// Save game serialize/deserialize object
+#[derive(Serialize, Deserialize)]
+struct SavedGame {
+    rng_state: (u64, u64),
+    camera: Camera,
+    station: Station,
+    inhabitants: Vec<Inhabitant>,
 }
 
 // Entrypoint
