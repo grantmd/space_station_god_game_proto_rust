@@ -1198,7 +1198,6 @@ mod tests {
         let found = s.find_items(vec![ItemType::Container(ContainerType::Fridge)]);
         assert_eq!(1, found.len(), "found one container type");
         let found = s.find_items(vec![ItemType::Food(FoodType::EnergyBar)]);
-        println!("{:?}", found);
         assert_eq!(
             6,
             found.len(),
