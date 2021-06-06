@@ -308,7 +308,7 @@ mod tests {
             GridPosition::new(1, 1),
             ItemType::Container(ContainerType::Fridge),
         );
-        assert_eq!(2, fridge.items.len()); // Fridges come with two things
+        assert_eq!(fridge.capacity, fridge.items.len()); // Fridges come full
     }
 
     #[test]
@@ -317,10 +317,11 @@ mod tests {
             GridPosition::new(1, 1),
             ItemType::Container(ContainerType::Fridge),
         );
+        fridge.items.clear(); // Empty the fridge
         assert!(fridge
             .add_item(Item::new(fridge.pos, ItemType::Food(FoodType::EnergyBar)))
             .is_ok());
-        assert_eq!(3, fridge.items.len()); // Fridges come with 2 things, so now we have 3
+        assert_eq!(1, fridge.items.len());
     }
 
     #[test]
@@ -345,12 +346,9 @@ mod tests {
             GridPosition::new(1, 1),
             ItemType::Container(ContainerType::Fridge),
         );
-        let food = Item::new(fridge.pos, ItemType::Food(FoodType::EnergyBar));
-        let id = food.get_id();
-        assert!(fridge.add_item(food).is_ok());
-        assert_eq!(3, fridge.items.len()); // Fridges come with 2 things, so now we have 3
 
+        let id = fridge.get_items().last().unwrap().get_id();
         fridge.remove_item(id);
-        assert_eq!(2, fridge.items.len()); // We should be back to the original two things
+        assert_eq!(9, fridge.items.len()); // Fridges come full, so we should be down one item
     }
 }

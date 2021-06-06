@@ -1200,7 +1200,7 @@ mod tests {
         let found = s.find_items(vec![ItemType::Food(FoodType::EnergyBar)]);
         println!("{:?}", found);
         assert_eq!(
-            2,
+            6,
             found.len(),
             "found another food type (the fridge comes with food)"
         );

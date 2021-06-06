@@ -14,7 +14,6 @@ use station::{GridPosition, Station, TileType};
 
 use chrono::{DateTime, Local};
 use oorandom::Rand32;
-use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
