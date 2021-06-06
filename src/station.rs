@@ -385,7 +385,7 @@ impl Station {
     // Get a tile at a screen position, if any
     // TODO: position should be a Point2 once ggez updates it
     pub fn get_tile_from_screen(&self, pos: Point2, camera: &crate::Camera) -> Option<&Tile> {
-        // This is just world coordinates with camera translation
+        // TODO: This is just world coordinates with camera translation
         self.get_tile_from_world(pos)
     }
 

@@ -159,6 +159,8 @@ impl Item {
         i
     }
 
+    // Get the ID of an object. Used instead of making the property public
+    // because we don't want other modules to be able to set it
     pub fn get_id(&self) -> Uuid {
         self.id
     }
