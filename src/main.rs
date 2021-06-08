@@ -4,9 +4,11 @@
 mod inhabitant;
 mod item;
 mod music;
+mod scenes;
 mod starfield;
 mod station;
 
+use crate::scenes::*;
 use crate::station::gridposition::*;
 use crate::station::station::*;
 use crate::station::tile::*;
@@ -40,6 +42,7 @@ struct SpaceStationGodGame {
     station: Station,
     inhabitants: Vec<Inhabitant>,
     music: Music,
+    scenes: Vec<Box<dyn scene::Scene>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy)]
@@ -82,7 +85,11 @@ impl SpaceStationGodGame {
             station,
             inhabitants: Vec::with_capacity(1),
             music: Music::new(ctx),
+            scenes: Vec::with_capacity(5),
         };
+
+        // Add the initial scene
+        game.scenes.push(Box::new(scenes::title::Title {}));
 
         // Do we have any saved games?
         let saves = game.list_saves(ctx)?;
@@ -202,6 +209,11 @@ impl EventHandler for SpaceStationGodGame {
             for inhabitant in &mut self.inhabitants {
                 inhabitant.update(ctx, &self.station, &mut self.rng)?;
             }
+        }
+
+        // Update all scenes
+        for scene in self.scenes.iter_mut() {
+            scene.update(ctx)?;
         }
 
         // Done processing
@@ -357,6 +369,11 @@ impl EventHandler for SpaceStationGodGame {
             None,
             graphics::FilterMode::Linear,
         )?;
+
+        // Draw all scenes
+        for scene in self.scenes.iter_mut() {
+            scene.draw(ctx)?;
+        }
 
         // Actually draw everything to the screen
         graphics::present(ctx)?;
