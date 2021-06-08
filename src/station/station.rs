@@ -1,3 +1,6 @@
+use super::gridposition::*;
+use super::pathfinding::*;
+use super::tile::*;
 use crate::item::*;
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
@@ -6,196 +9,13 @@ use ggez::{graphics, Context, GameResult};
 use oorandom::Rand32;
 use serde::{Deserialize, Serialize};
 
-use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
-use std::fmt;
-use std::hash::{Hash, Hasher};
 
 type Point2 = glam::Vec2;
 
 const FLOOR_COLOR: Color = Color::new(0.1, 0.1, 0.1, 1.0);
 const WALL_COLOR: Color = Color::new(0.3, 0.3, 0.3, 1.0);
 const BORDER_COLOR: Color = Color::BLACK;
-
-// A position on a grid
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
-pub struct GridPosition {
-    pub x: i32,
-    pub y: i32,
-}
-
-impl GridPosition {
-    // We make a standard helper function so that we can create a new `GridPosition` more easily.
-    pub fn new(x: i32, y: i32) -> Self {
-        GridPosition { x, y }
-    }
-
-    // Manhattan distance on a square grid
-    pub fn distance(&self, other: GridPosition) -> i32 {
-        (self.x - other.x).abs() + (self.y - other.y).abs()
-    }
-}
-
-impl Ord for GridPosition {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other.x.cmp(&self.x).then_with(|| self.y.cmp(&other.y))
-    }
-}
-
-impl PartialOrd for GridPosition {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-// Convenient creation of a GridPosition from a tuple
-impl From<(i32, i32)> for GridPosition {
-    fn from(pos: (i32, i32)) -> Self {
-        GridPosition { x: pos.0, y: pos.1 }
-    }
-}
-
-impl fmt::Display for GridPosition {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({}, {})", self.x, self.y)
-    }
-}
-
-// A struct used to construct pathfinding movements
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
-struct Movement {
-    cost: usize,
-    pos: GridPosition,
-}
-
-// Compare movements by lowest-cost first, then positions as tie-breakers
-impl Ord for Movement {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other
-            .cost
-            .cmp(&self.cost)
-            .then_with(|| self.pos.cmp(&other.pos))
-    }
-}
-
-// `PartialOrd` needs to be implemented as well.
-impl PartialOrd for Movement {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-// A Tile object, which the Station is made of
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Tile {
-    pub pos: GridPosition, // x,y position of the tile within the station
-    pub kind: TileType,    // what type of square the tile is
-    pub items: Vec<Item>,  // Items that are present on/in the tile
-}
-
-// Tiles are equal if they are in the same spot
-impl PartialEq for Tile {
-    fn eq(&self, other: &Self) -> bool {
-        self.pos == other.pos
-    }
-}
-
-impl Eq for Tile {}
-
-impl Hash for Tile {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.pos.hash(state);
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
-pub enum TileType {
-    Floor,
-    Wall(WallDirection),
-    Door(WallDirection),
-}
-
-// Walls have lots of different possible directions, which indicate how they are drawn
-// Directions like "top-left" indicate that in a square walled room, this is the top-left corner
-#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
-pub enum WallDirection {
-    InteriorVertical,
-    InteriorHorizontal,
-    InteriorCross,
-    InteriorCornerTopLeft,
-    InteriorCornerTopRight,
-    InteriorCornerBottomLeft,
-    InteriorCornerBottomRight,
-    ExteriorTop,
-    ExteriorBottom,
-    ExteriorLeft,
-    ExteriorRight,
-    ExteriorCornerTopLeft,
-    ExteriorCornerTopRight,
-    ExteriorCornerBottomLeft,
-    ExteriorCornerBottomRight,
-    Full,
-}
-
-impl Tile {
-    pub fn new(pos: GridPosition, kind: TileType) -> Tile {
-        Tile {
-            pos,
-            kind,
-            items: Vec::new(),
-        }
-    }
-
-    // Add an item to the tile
-    pub fn add_item(&mut self, item: Item) {
-        self.items.push(item);
-    }
-
-    // Do we have an item of this type on us?
-    pub fn has_item(&self, item_types: Vec<ItemType>) -> bool {
-        if let Some(_) = self.get_item(item_types) {
-            return true;
-        }
-
-        false
-    }
-
-    pub fn get_item(&self, item_types: Vec<ItemType>) -> Option<&Item> {
-        for item in self.items.iter() {
-            if item_types.contains(&item.get_type()) {
-                return Some(item);
-            }
-
-            // If this is a container, we need to iterate inside
-            match item.get_type() {
-                ItemType::Container(_) => {
-                    for subitem in item.get_items().iter() {
-                        // Is this what we're looking for?
-                        if item_types.contains(&subitem.get_type()) {
-                            return Some(item);
-                        }
-                    }
-                }
-                _ => (),
-            }
-        }
-
-        None
-    }
-
-    // Given an item uuid, removes it from the tile
-    pub fn remove_item(&mut self, id: uuid::Uuid) {
-        self.items.retain(|item| item.get_id() != id)
-    }
-
-    // Convert a tile's grid position to a "world" position, based on where the station is
-    pub fn to_world_position(&self, station: &Station) -> Point2 {
-        Point2::new(
-            station.pos.x + (self.pos.x as f32 * crate::TILE_WIDTH),
-            station.pos.y + (self.pos.y as f32 * crate::TILE_WIDTH),
-        )
-    }
-}
 
 // A type for the Station itself
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -1151,6 +971,7 @@ mod tests {
             "Left neighbor is an exterior left wall"
         );
     }
+
     #[test]
     fn search() {
         let s = test_station_full();

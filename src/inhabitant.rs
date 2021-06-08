@@ -1,5 +1,7 @@
 use crate::item::*;
-use crate::station::{GridPosition, Station, Tile, TileType};
+use crate::station::gridposition::*;
+use crate::station::station::*;
+use crate::station::tile::*;
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
 use ggez::{graphics, timer, Context, GameResult};
@@ -445,7 +447,8 @@ impl Inhabitant {
 #[cfg(test)]
 mod tests {
     use super::{Inhabitant, InhabitantType, Point2};
-    use crate::station::{GridPosition, Tile, TileType, WallDirection};
+    use crate::station::gridposition::*;
+    use crate::station::tile::*;
 
     #[test]
     fn inhabitant_can_move_to() {

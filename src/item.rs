@@ -1,4 +1,4 @@
-use crate::station::GridPosition;
+use crate::station::gridposition::*;
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
 use ggez::{graphics, Context, GameError, GameResult};
@@ -269,7 +269,8 @@ impl Item {
 
         Ok(())
     }
-    // Given an item uuid, removes it from the fridge
+
+    // Given an item uuid, removes it from the container
     pub fn remove_item(&mut self, id: uuid::Uuid) {
         self.items.retain(|item| item.id != id)
     }
@@ -302,7 +303,7 @@ impl Item {
 #[cfg(test)]
 mod tests {
     use super::{ContainerType, FoodType, Item, ItemType};
-    use crate::station::GridPosition;
+    use crate::station::gridposition::*;
 
     #[test]
     fn new_fridge_contains_items() {

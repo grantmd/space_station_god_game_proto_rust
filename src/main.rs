@@ -7,10 +7,12 @@ mod music;
 mod starfield;
 mod station;
 
+use crate::station::gridposition::*;
+use crate::station::station::*;
+use crate::station::tile::*;
 use inhabitant::{Inhabitant, InhabitantType};
 use music::Music;
 use starfield::Starfield;
-use station::{GridPosition, Station, TileType};
 
 use chrono::{DateTime, Local};
 use oorandom::Rand32;
