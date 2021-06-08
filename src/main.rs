@@ -95,22 +95,26 @@ impl SpaceStationGodGame {
         let num_crew = 3;
         for _ in 0..num_crew {
             // TODO: Don't repeat
-            // TODO: Got to be a better way to do this
-            let inhabitant_type = match rng.rand_range(0..6) {
-                0 => InhabitantType::Pilot,
-                1 => InhabitantType::Engineer,
-                2 => InhabitantType::Scientist,
-                3 => InhabitantType::Medic,
-                4 => InhabitantType::Soldier,
-                5 => InhabitantType::Miner,
-                6 => InhabitantType::Cook,
-                _ => panic!("Invalid inhabitant type chosen"),
-            };
+            let inhabitant_type = game.get_random_inhabitant_type();
             game.add_inhabitant(pos, inhabitant_type);
         }
 
         // Return the initial game state
         Ok(game)
+    }
+
+    fn get_random_inhabitant_type(&mut self) -> InhabitantType {
+        // TODO: Got to be a better way to do this
+        match self.rng.rand_range(0..6) {
+            0 => InhabitantType::Pilot,
+            1 => InhabitantType::Engineer,
+            2 => InhabitantType::Scientist,
+            3 => InhabitantType::Medic,
+            4 => InhabitantType::Soldier,
+            5 => InhabitantType::Miner,
+            6 => InhabitantType::Cook,
+            _ => panic!("Invalid inhabitant type chosen"),
+        }
     }
 
     // Add an inhabitant to the game
@@ -411,10 +415,8 @@ impl EventHandler for SpaceStationGodGame {
                     .get_random_tile(TileType::Floor, &mut self.rng)
                     .unwrap();
                 let pos = tile.to_world_position(&self.station);
-                self.add_inhabitant(
-                    pos,
-                    InhabitantType::Engineer, // TODO: Random
-                );
+                let inhabitant_type = self.get_random_inhabitant_type();
+                self.add_inhabitant(pos, inhabitant_type);
             }
 
             // Camera movement from arrow keys
