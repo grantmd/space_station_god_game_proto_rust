@@ -385,7 +385,7 @@ impl Station {
     }
 
     // Draw callback
-    pub fn draw(&mut self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
+    pub fn draw(&self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
         // Draw the pre-calculated station mesh
         match &self.mesh {
             Some(mesh) => graphics::draw(

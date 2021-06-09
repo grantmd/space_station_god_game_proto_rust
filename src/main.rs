@@ -10,20 +10,13 @@ mod station;
 
 use crate::scenes::*;
 use crate::station::gridposition::*;
-use crate::station::station::*;
-use crate::station::tile::*;
-use inhabitant::{Inhabitant, InhabitantType};
 use music::Music;
 use starfield::Starfield;
 
-use chrono::{DateTime, Local};
-use oorandom::Rand32;
 use serde::{Deserialize, Serialize};
 
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
-use ggez::graphics::{Color, DrawMode, DrawParam, Font, PxScale, Text, TextFragment};
-use ggez::input::mouse;
-use ggez::{conf, filesystem, graphics, timer, Context, ContextBuilder, GameResult};
+use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
 
 use std::{env, path};
 
@@ -32,158 +25,45 @@ type Point2 = glam::Vec2;
 
 const TILE_WIDTH: f32 = 30.0;
 
-// Main game state object. Holds positions, scores, etc
-struct SpaceStationGodGame {
-    rng: oorandom::Rand32,
-    is_fullscreen: bool,
-    is_paused: bool,
-    camera: Camera,
-    starfield: Starfield,
-    station: Station,
-    inhabitants: Vec<Inhabitant>,
-    music: Music,
-    scenes: Vec<Box<dyn scene::Scene>>,
-}
-
 #[derive(Serialize, Deserialize, Clone, Copy)]
 pub struct Camera {
     pos: Point2,
     zoom: Point2,
 }
 
-impl SpaceStationGodGame {
+// Main game state object. Holds positions, scores, etc
+struct GameState {
+    is_fullscreen: bool,
+    starfield: Starfield,
+    music: Music,
+    scenes: Vec<Box<dyn scene::Scene>>,
+}
+
+impl GameState {
     // Load/create resources such as images here and otherwise initialize state
-    pub fn new(ctx: &mut Context) -> GameResult<SpaceStationGodGame> {
-        // Create a seeded random-number generator
-        let mut seed: [u8; 8] = [0; 8];
-        getrandom::getrandom(&mut seed[..]).expect("Could not create RNG seed");
-        let mut rng = Rand32::new(u64::from_ne_bytes(seed));
-
-        // Make a new station
-        let (screen_width, screen_height) = graphics::drawable_size(ctx);
-
-        let station_width = 21;
-        let station_height = 13;
-
-        let mut station_pos = Point2::new(screen_width / 2.0, screen_height / 2.0);
-        station_pos -= Point2::new(
-            station_width as f32 * TILE_WIDTH / 2.0,
-            station_height as f32 * TILE_WIDTH / 2.0,
-        );
-        let station = Station::new(ctx, station_pos, station_width, station_height, &mut rng);
-
+    pub fn new(ctx: &mut Context) -> GameResult<GameState> {
         // Create game state and return it
-        let mut game = SpaceStationGodGame {
-            rng,
+        let mut state = GameState {
             is_fullscreen: false, // TODO: Is it possible to know this on startup from context?
-            is_paused: true,
-            camera: Camera {
-                pos: Point2::zero(),
-                zoom: Point2::one(),
-            },
-            starfield: Starfield::new(ctx, &mut rng),
-            station,
-            inhabitants: Vec::with_capacity(1),
+            starfield: Starfield::new(ctx),
             music: Music::new(ctx),
             scenes: Vec::with_capacity(5),
         };
 
-        // Add the initial scene
-        game.scenes.push(Box::new(scenes::title::Title {}));
-
-        // Do we have any saved games?
-        let saves = game.list_saves(ctx)?;
-        println!("Saves: {:#?}", saves);
-
-        // Put some people in it
-        let tile = game
-            .station
-            .get_random_tile(TileType::Floor, &mut game.rng)
-            .unwrap();
-        let pos = tile.to_world_position(&game.station);
-        let num_crew = 3;
-        for _ in 0..num_crew {
-            // TODO: Don't repeat
-            let inhabitant_type = game.get_random_inhabitant_type();
-            game.add_inhabitant(pos, inhabitant_type);
-        }
+        // Add the initial title scene
+        state.scenes.push(Box::new(scenes::title::Title {}));
 
         // Return the initial game state
-        Ok(game)
+        Ok(state)
     }
 
-    fn get_random_inhabitant_type(&mut self) -> InhabitantType {
-        // TODO: Got to be a better way to do this
-        match self.rng.rand_range(0..6) {
-            0 => InhabitantType::Pilot,
-            1 => InhabitantType::Engineer,
-            2 => InhabitantType::Scientist,
-            3 => InhabitantType::Medic,
-            4 => InhabitantType::Soldier,
-            5 => InhabitantType::Miner,
-            6 => InhabitantType::Cook,
-            _ => panic!("Invalid inhabitant type chosen"),
-        }
-    }
-
-    // Add an inhabitant to the game
-    fn add_inhabitant(&mut self, pos: Point2, kind: InhabitantType) {
-        println!("Putting {:?} inhabitant at {}", kind, pos);
-        self.inhabitants.push(Inhabitant::new(pos, kind));
-    }
-
-    // Save the game state to a file, overwriting if it exists
-    fn save(&self, ctx: &mut Context, name: String) -> GameResult<()> {
-        // Make sure the directory exists
-        filesystem::create_dir(ctx, path::Path::new("/saves")).unwrap();
-
-        // Create the save game object
-        let state = SavedGame {
-            rng_state: self.rng.state(),
-            camera: self.camera,
-            inhabitants: self.inhabitants.clone(),
-            station: self.station.clone(),
-        };
-
-        // Write the game state out
-        let filename = format!("/saves/{}.cbor", name);
-        println!("Saving game to {}", filename);
-        let test_file = path::Path::new(&filename);
-        let file = filesystem::create(ctx, test_file)?;
-        serde_cbor::to_writer(file, &state).unwrap();
-
-        // Guess it worked
-        Ok(())
-    }
-
-    // Load the game state from a file
-    fn load(&mut self, ctx: &mut Context, filename: &path::PathBuf) -> GameResult<()> {
-        // Load the file
-        let file = filesystem::open(ctx, path::Path::new(filename)).unwrap();
-        let save: SavedGame = serde_cbor::from_reader(file).unwrap();
-
-        // Copy the data over
-        self.rng = oorandom::Rand32::from_state(save.rng_state);
-        self.camera = save.camera;
-        self.inhabitants = save.inhabitants;
-        self.station = save.station;
-
-        // Rebuild all the meshes
-        self.station.build_mesh(ctx)?;
-
-        // Guess it worked
-        Ok(())
-    }
-
-    // List saved games
-    fn list_saves(&self, ctx: &mut Context) -> GameResult<Vec<path::PathBuf>> {
-        let dir_contents: Vec<path::PathBuf> = filesystem::read_dir(ctx, "/saves")?.collect();
-        Ok(dir_contents)
+    pub fn get_current_scene(&mut self) -> Option<&mut Box<dyn scene::Scene>> {
+        self.scenes.last_mut()
     }
 }
 
 // Main event loop
-impl EventHandler for SpaceStationGodGame {
+impl EventHandler for GameState {
     // Update game state.
     // `self` is state, `ctx` provides access to hardware (input, graphics, sound, etc)
     // Returns GameResult so ggez can handle any errors
@@ -197,23 +77,10 @@ impl EventHandler for SpaceStationGodGame {
             // Always update the starfield
             self.starfield.update(ctx)?;
 
-            // Are we paused?
-            if self.is_paused {
-                continue;
+            // Update all scenes
+            for scene in self.scenes.iter_mut() {
+                scene.update(ctx)?;
             }
-
-            // Update the station
-            self.station.update(ctx)?;
-
-            // Update and move the inhabitants
-            for inhabitant in &mut self.inhabitants {
-                inhabitant.update(ctx, &self.station, &mut self.rng)?;
-            }
-        }
-
-        // Update all scenes
-        for scene in self.scenes.iter_mut() {
-            scene.update(ctx)?;
         }
 
         // Done processing
@@ -228,150 +95,8 @@ impl EventHandler for SpaceStationGodGame {
         // Starfield
         self.starfield.draw(ctx)?;
 
-        // Draw the station
-        self.station.draw(ctx, &self.camera)?;
-
-        // Draw the inhabitants
-        for inhabitant in &mut self.inhabitants {
-            inhabitant.draw(ctx, &self.camera)?;
-        }
-
-        // Draw where the mouse is
-        let mut mouse_pos = mouse::position(ctx);
-        let mut mouse_display = Text::new(format!("Mouse: ({}, {})", mouse_pos.x, mouse_pos.y));
-        if let Some(selected_tile) = self
-            .station
-            .get_tile_from_screen(Point2::new(mouse_pos.x, mouse_pos.y), &self.camera)
-        {
-            let world_pos = selected_tile.to_world_position(&self.station);
-            mouse_display.add(format!(
-                "\nTile: Grid ({}, {}), World ({},{}), {:?}",
-                selected_tile.pos.x,
-                selected_tile.pos.y,
-                world_pos.x,
-                world_pos.y,
-                selected_tile.kind
-            ));
-
-            if selected_tile.items.len() > 0 {
-                mouse_display.add(format!("\n{:?}", selected_tile.items));
-            }
-
-            let tile_rect = graphics::Rect::new(
-                (crate::TILE_WIDTH * selected_tile.pos.x as f32) - (crate::TILE_WIDTH / 2.0),
-                (crate::TILE_WIDTH * selected_tile.pos.y as f32) - (crate::TILE_WIDTH / 2.0),
-                crate::TILE_WIDTH,
-                crate::TILE_WIDTH,
-            );
-            let mesh = graphics::Mesh::new_rectangle(
-                ctx,
-                DrawMode::stroke(1.0),
-                tile_rect,
-                Color::new(1.0, 1.0, 0.0, 1.0),
-            )?;
-            graphics::draw(ctx, &mesh, DrawParam::default().dest(self.station.pos))?;
-        }
-        mouse_pos.y -= mouse_display.height(ctx);
-        graphics::queue_text(ctx, &mouse_display, mouse_pos, Some(Color::WHITE));
-
-        // If paused, grey out the screen and show that that's the case
-        if self.is_paused {
-            let (screen_width, screen_height) = graphics::drawable_size(ctx);
-            let screen_rect = graphics::Rect::new(0.0, 0.0, screen_width, screen_height);
-            let mesh = graphics::Mesh::new_rectangle(
-                ctx,
-                DrawMode::fill(),
-                screen_rect,
-                Color::new(1.0, 1.0, 1.0, 0.1),
-            )?;
-            graphics::draw(ctx, &mesh, DrawParam::default())?;
-
-            let paused_font = Font::new(ctx, "/fonts/Moonhouse-yE5M.ttf")?;
-            let paused_display = Text::new(
-                TextFragment::new("PAUSED")
-                    .font(paused_font)
-                    .scale(PxScale::from(100.0)),
-            );
-            let dims = paused_display.dimensions(ctx);
-            graphics::queue_text(
-                ctx,
-                &paused_display,
-                Point2::new(
-                    screen_width / 2.0 - dims.w / 2.0,
-                    screen_height / 2.0 - dims.h / 2.0,
-                ),
-                Some(Color::WHITE),
-            );
-        }
-
-        // Put our current FPS on top along with other info
-        let fps = timer::fps(ctx);
-        let mut height = 0.0;
-        let fps_display = Text::new(format!("FPS: {0:.1}", fps));
-        graphics::queue_text(
-            ctx,
-            &fps_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-        height += 5.0 + fps_display.height(ctx) as f32;
-        let uptime_display = Text::new(format!("Uptime: {:?}", timer::time_since_start(ctx)));
-        graphics::queue_text(
-            ctx,
-            &uptime_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-        height += 5.0 + uptime_display.height(ctx) as f32;
-        let station_display = Text::new(format!(
-            "Station Tiles: {} at {}, Selected: None",
-            self.station.num_tiles(),
-            self.station.pos
-        ));
-        graphics::queue_text(
-            ctx,
-            &station_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-        height += 5.0 + station_display.height(ctx) as f32;
-        let inhabitant_display = Text::new(format!("Inhabitants: {}", self.inhabitants.len()));
-        graphics::queue_text(
-            ctx,
-            &inhabitant_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-        height += 5.0 + inhabitant_display.height(ctx) as f32;
-        let camera_display = Text::new(format!(
-            "Camera: {} ({1:.1}x)",
-            self.camera.pos, self.camera.zoom.x
-        ));
-        graphics::queue_text(
-            ctx,
-            &camera_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-        height += 5.0 + camera_display.height(ctx) as f32;
-        let music_display = Text::new(format!("Music: {}", self.music));
-        graphics::queue_text(
-            ctx,
-            &music_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-
-        // Render all queued text
-        graphics::draw_queued_text(
-            ctx,
-            DrawParam::default(),
-            None,
-            graphics::FilterMode::Linear,
-        )?;
-
         // Draw all scenes
-        for scene in self.scenes.iter_mut() {
+        for scene in self.scenes.iter() {
             scene.draw(ctx)?;
         }
 
@@ -389,9 +114,10 @@ impl EventHandler for SpaceStationGodGame {
         &mut self,
         ctx: &mut Context,
         keycode: KeyCode,
-        _keymods: KeyMods,
-        _repeat: bool,
+        keymods: KeyMods,
+        repeat: bool,
     ) {
+        // Global overrides/shortcuts
         match keycode {
             // Quit
             KeyCode::Escape | KeyCode::Q => {
@@ -413,74 +139,21 @@ impl EventHandler for SpaceStationGodGame {
                 graphics::set_fullscreen(ctx, fullscreen_type).unwrap();
             }
 
-            // Toggle paused
-            KeyCode::Space => {
-                self.is_paused = !self.is_paused;
-                if self.is_paused {
-                    println!("Pausing");
-                } else {
-                    println!("Unpausing");
-                }
-            }
-
-            // Add a new inhabitant
-            KeyCode::N => {
-                if self.is_paused {
-                    return;
-                }
-
-                let tile = self
-                    .station
-                    .get_random_tile(TileType::Floor, &mut self.rng)
-                    .unwrap();
-                let pos = tile.to_world_position(&self.station);
-                let inhabitant_type = self.get_random_inhabitant_type();
-                self.add_inhabitant(pos, inhabitant_type);
-            }
-
-            // Camera movement from arrow keys
-            KeyCode::Up => {
-                self.camera.pos += Point2::unit_y() * 10.0;
-            }
-            KeyCode::Down => {
-                self.camera.pos -= Point2::unit_y() * 10.0;
-            }
-            KeyCode::Left => {
-                self.camera.pos += Point2::unit_x() * 10.0;
-            }
-            KeyCode::Right => {
-                self.camera.pos -= Point2::unit_x() * 10.0;
-            }
-            KeyCode::C => {
-                self.camera.pos = Point2::zero();
-                self.camera.zoom = Point2::one();
-            }
-
-            // Save the game
-            KeyCode::S => {
-                let now: DateTime<Local> = Local::now();
-                self.save(ctx, now.format("%Y-%m-%d %H-%M-%S.%f").to_string())
-                    .unwrap();
-            }
-
-            // Load a save
-            KeyCode::L => {
-                let saves = self.list_saves(ctx).unwrap();
-                if let Some(filename) = saves.last() {
-                    self.load(ctx, &filename).unwrap();
-                }
-            }
-
             // Everything else does nothing
             _ => (),
+        }
+
+        // Inform current scene
+        if let Some(scene) = self.get_current_scene() {
+            scene.key_down_event(ctx, keycode, keymods, repeat);
         }
     }
 
     // The mousewheel/trackpad was moved
-    fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, y: f32) {
-        self.camera.zoom += Point2::one() * y * 2.0; // TODO: Tweak this multiple
-        if self.camera.zoom < Point2::one() {
-            self.camera.zoom = Point2::one();
+    fn mouse_wheel_event(&mut self, ctx: &mut Context, x: f32, y: f32) {
+        // Inform current scene
+        if let Some(scene) = self.get_current_scene() {
+            scene.mouse_wheel_event(ctx, x, y);
         }
     }
 
@@ -488,19 +161,14 @@ impl EventHandler for SpaceStationGodGame {
     fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) {
         let new_rect = graphics::Rect::new(0.0, 0.0, width, height);
         graphics::set_screen_coordinates(ctx, new_rect).unwrap();
-        self.starfield
-            .resize_event(ctx, &mut self.rng, width, height);
+        self.starfield.resize_event(ctx, width, height);
         println!("Resized screen to {}, {}", width, height);
-    }
-}
 
-// Save game serialize/deserialize object
-#[derive(Serialize, Deserialize)]
-struct SavedGame {
-    rng_state: (u64, u64),
-    camera: Camera,
-    station: Station,
-    inhabitants: Vec<Inhabitant>,
+        // Inform current scene
+        if let Some(scene) = self.get_current_scene() {
+            scene.resize_event(ctx, width, height);
+        }
+    }
 }
 
 // Entrypoint
@@ -533,7 +201,7 @@ fn main() -> GameResult {
     // Create an instance of your event handler.
     // Usually, you should provide it with the Context object to
     // use when setting your game up.
-    let state = SpaceStationGodGame::new(&mut ctx)?;
+    let state = GameState::new(&mut ctx)?;
 
     // Run!
     event::run(ctx, event_loop, state)
