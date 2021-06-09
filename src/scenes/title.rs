@@ -99,7 +99,4 @@ impl Scene for Title {
     }
     fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, _y: f32) {}
     fn resize_event(&mut self, _ctx: &mut Context, _width: f32, _height: f32) {}
-
-    fn from(&self, _kind: SceneType) {}
-    fn to(&self, _kind: SceneType) {}
 }

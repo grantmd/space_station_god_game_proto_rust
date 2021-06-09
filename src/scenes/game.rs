@@ -411,9 +411,6 @@ impl Scene for Game {
     }
 
     fn resize_event(&mut self, _ctx: &mut Context, _width: f32, _height: f32) {}
-
-    fn from(&self, _kind: SceneType) {}
-    fn to(&self, _kind: SceneType) {}
 }
 
 // Save game serialize/deserialize object

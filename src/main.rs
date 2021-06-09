@@ -51,14 +51,39 @@ impl GameState {
         };
 
         // Add the initial title scene
-        state.scenes.push(Box::new(scenes::title::Title {}));
+        state.push_scene(Box::new(scenes::title::Title {}));
 
         // Return the initial game state
         Ok(state)
     }
 
+    // Return the currently-active scene
     pub fn get_current_scene(&mut self) -> Option<&mut Box<dyn scene::Scene>> {
         self.scenes.last_mut()
+    }
+
+    // Push a new scene, unless it's the currently-active one
+    pub fn push_scene(&mut self, scene: Box<dyn scene::Scene>) {
+        match self.scenes.last() {
+            Some(current_scene) => {
+                if current_scene.get_type() != scene.get_type() {
+                    self.scenes.push(scene);
+                }
+            }
+            None => {
+                self.scenes.push(scene);
+            }
+        }
+    }
+
+    // Pop the top of the scene stack
+    pub fn pop_scene(&mut self) {
+        self.scenes.pop();
+
+        // Push the default state back on
+        if self.scenes.len() == 0 {
+            self.push_scene(Box::new(scenes::title::Title {}));
+        }
     }
 }
 

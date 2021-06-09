@@ -18,12 +18,10 @@ pub trait Scene {
     );
     fn mouse_wheel_event(&mut self, ctx: &mut Context, x: f32, y: f32);
     fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32);
-
-    fn from(&self, kind: SceneType);
-    fn to(&self, kind: SceneType);
 }
 
 // The list of unique, valid scene types
+#[derive(Eq, PartialEq, Debug)]
 pub enum SceneType {
     Title,
     Game,
