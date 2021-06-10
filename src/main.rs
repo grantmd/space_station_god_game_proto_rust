@@ -59,11 +59,6 @@ impl GameState {
 
     // Return the currently-active scene
     pub fn get_current_scene(&mut self) -> Option<&mut Box<dyn scene::Scene>> {
-        // Push the default state back on if we're at the bottom of the stack
-        if self.scenes.len() == 0 {
-            self.push_scene(Box::new(scenes::title::Title {}));
-        }
-
         self.scenes.last_mut()
     }
 
@@ -83,7 +78,11 @@ impl GameState {
 
     // Pop the top of the scene stack
     pub fn pop_scene(&mut self) {
-        self.scenes.pop();
+        if let Some(last) = self.scenes.pop() {
+            if let Some(current) = self.get_current_scene() {
+                current.from_scene(last.get_type());
+            }
+        }
     }
 }
 

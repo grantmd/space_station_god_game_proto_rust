@@ -367,6 +367,16 @@ impl Scene for Game {
     fn resize_event(&mut self, _ctx: &mut Context, _width: f32, _height: f32) -> SceneAction {
         SceneAction::None
     }
+
+    fn from_scene(&mut self, kind: SceneType) {
+        match kind {
+            SceneType::Paused => {
+                println!("Unpausing really");
+                self.is_paused = false;
+            }
+            _ => (),
+        }
+    }
 }
 
 // Save game serialize/deserialize object

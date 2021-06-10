@@ -18,6 +18,8 @@ pub trait Scene {
     ) -> SceneAction;
     fn mouse_wheel_event(&mut self, ctx: &mut Context, x: f32, y: f32) -> SceneAction;
     fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) -> SceneAction;
+
+    fn from_scene(&mut self, kind: SceneType);
 }
 
 // The list of unique, valid scene types

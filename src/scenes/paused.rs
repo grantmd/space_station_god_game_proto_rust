@@ -70,4 +70,6 @@ impl Scene for Paused {
     fn resize_event(&mut self, _ctx: &mut Context, _width: f32, _height: f32) -> SceneAction {
         SceneAction::None
     }
+
+    fn from_scene(&mut self, _kind: SceneType) {}
 }
