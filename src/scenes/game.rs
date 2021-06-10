@@ -299,7 +299,6 @@ impl Scene for Game {
         match keycode {
             // Toggle paused
             KeyCode::Space if !repeat => {
-                self.is_paused = true;
                 println!("Pausing");
                 action = SceneAction::Push(Box::new(Paused {}))
             }
@@ -371,6 +370,15 @@ impl Scene for Game {
     fn from_scene(&mut self, kind: SceneType) {
         match kind {
             SceneType::Paused => self.is_paused = false,
+            SceneType::Quit => self.is_paused = false,
+            _ => (),
+        }
+    }
+
+    fn to_scene(&mut self, kind: SceneType) {
+        match kind {
+            SceneType::Paused => self.is_paused = true,
+            SceneType::Quit => self.is_paused = true,
             _ => (),
         }
     }

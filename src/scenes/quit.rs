@@ -16,7 +16,7 @@ impl Scene for Quit {
     fn draw(&self, ctx: &mut Context) -> GameResult<()> {
         let (screen_width, screen_height) = graphics::drawable_size(ctx);
         let (width, height) = (530.0, 80.0);
-        let screen_rect = graphics::Rect::new(
+        let dialog_rect = graphics::Rect::new(
             screen_width / 2.0 - width / 2.0,
             screen_height / 2.0 - height / 2.0,
             width,
@@ -25,14 +25,14 @@ impl Scene for Quit {
         let mesh = graphics::Mesh::new_rectangle(
             ctx,
             DrawMode::fill(),
-            screen_rect,
+            dialog_rect,
             Color::new(0.0, 0.0, 0.0, 1.0),
         )?;
         graphics::draw(ctx, &mesh, DrawParam::default())?;
         let mesh = graphics::Mesh::new_rectangle(
             ctx,
             DrawMode::stroke(1.0),
-            screen_rect,
+            dialog_rect,
             Color::new(1.0, 1.0, 1.0, 1.0),
         )?;
         graphics::draw(ctx, &mesh, DrawParam::default())?;
@@ -88,4 +88,5 @@ impl Scene for Quit {
     }
 
     fn from_scene(&mut self, _kind: SceneType) {}
+    fn to_scene(&mut self, _kind: SceneType) {}
 }

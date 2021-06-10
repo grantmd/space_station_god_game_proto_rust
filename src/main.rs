@@ -64,9 +64,10 @@ impl GameState {
 
     // Push a new scene, unless it's the currently-active one
     pub fn push_scene(&mut self, scene: Box<dyn scene::Scene>) {
-        match self.scenes.last() {
+        match self.scenes.last_mut() {
             Some(current_scene) => {
                 if current_scene.get_type() != scene.get_type() {
+                    current_scene.to_scene(scene.get_type());
                     self.scenes.push(scene);
                 }
             }

@@ -35,4 +35,5 @@ impl Scene for Settings {
     }
 
     fn from_scene(&mut self, _kind: SceneType) {}
+    fn to_scene(&mut self, _kind: SceneType) {}
 }

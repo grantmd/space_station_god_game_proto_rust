@@ -109,4 +109,5 @@ impl Scene for Title {
     }
 
     fn from_scene(&mut self, _kind: SceneType) {}
+    fn to_scene(&mut self, _kind: SceneType) {}
 }
