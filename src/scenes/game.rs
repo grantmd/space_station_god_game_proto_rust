@@ -370,10 +370,7 @@ impl Scene for Game {
 
     fn from_scene(&mut self, kind: SceneType) {
         match kind {
-            SceneType::Paused => {
-                println!("Unpausing really");
-                self.is_paused = false;
-            }
+            SceneType::Paused => self.is_paused = false,
             _ => (),
         }
     }
