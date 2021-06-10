@@ -1,7 +1,7 @@
 use super::scene::*;
 
 use ggez::event::{self, KeyCode, KeyMods};
-use ggez::graphics::{Color, DrawMode, DrawParam, Font, PxScale, Text, TextFragment};
+use ggez::graphics::{Color, DrawMode, DrawParam, Text};
 use ggez::{graphics, Context, GameResult};
 
 type Point2 = glam::Vec2;
