@@ -29,8 +29,10 @@ pub enum SceneType {
     Save,
     Quit,
     Settings,
+    Paused,
 }
 
+// SceneActions are returned by scene event handlers to indicate transitions to other scenes
 pub enum SceneAction {
     Pop,
     Push(Box<dyn Scene>),

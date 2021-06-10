@@ -1,3 +1,4 @@
+use super::paused::*;
 use super::scene::*;
 use crate::inhabitant::{Inhabitant, InhabitantType};
 use crate::station::station::*;
@@ -5,7 +6,7 @@ use crate::station::tile::*;
 use crate::Camera;
 
 use ggez::event::{KeyCode, KeyMods};
-use ggez::graphics::{Color, DrawMode, DrawParam, Font, PxScale, Text, TextFragment};
+use ggez::graphics::{Color, DrawMode, DrawParam, Text};
 use ggez::input::mouse;
 use ggez::{filesystem, graphics, timer, Context, GameResult};
 
@@ -49,7 +50,7 @@ impl Game {
         // Create game state and return it
         let mut game = Game {
             rng,
-            is_paused: true,
+            is_paused: false,
             camera: Camera {
                 pos: Point2::zero(),
                 zoom: Point2::one(),
@@ -201,36 +202,6 @@ impl Scene for Game {
         mouse_pos.y -= mouse_display.height(ctx);
         graphics::queue_text(ctx, &mouse_display, mouse_pos, Some(Color::WHITE));
 
-        // If paused, grey out the screen and show that that's the case
-        if self.is_paused {
-            let (screen_width, screen_height) = graphics::drawable_size(ctx);
-            let screen_rect = graphics::Rect::new(0.0, 0.0, screen_width, screen_height);
-            let mesh = graphics::Mesh::new_rectangle(
-                ctx,
-                DrawMode::fill(),
-                screen_rect,
-                Color::new(1.0, 1.0, 1.0, 0.1),
-            )?;
-            graphics::draw(ctx, &mesh, DrawParam::default())?;
-
-            let paused_font = Font::new(ctx, "/fonts/Moonhouse-yE5M.ttf")?;
-            let paused_display = Text::new(
-                TextFragment::new("PAUSED")
-                    .font(paused_font)
-                    .scale(PxScale::from(100.0)),
-            );
-            let dims = paused_display.dimensions(ctx);
-            graphics::queue_text(
-                ctx,
-                &paused_display,
-                Point2::new(
-                    screen_width / 2.0 - dims.w / 2.0,
-                    screen_height / 2.0 - dims.h / 2.0,
-                ),
-                Some(Color::WHITE),
-            );
-        }
-
         // Put our current FPS on top along with other info
         let fps = timer::fps(ctx);
         let mut height = 0.0;
@@ -323,15 +294,14 @@ impl Scene for Game {
         _keymods: KeyMods,
         repeat: bool,
     ) -> SceneAction {
+        let mut action = SceneAction::None; // The action we will end up returning
+
         match keycode {
             // Toggle paused
             KeyCode::Space if !repeat => {
-                self.is_paused = !self.is_paused;
-                if self.is_paused {
-                    println!("Pausing");
-                } else {
-                    println!("Unpausing");
-                }
+                self.is_paused = true;
+                println!("Pausing");
+                action = SceneAction::Push(Box::new(Paused {}))
             }
 
             // Add a new inhabitant
@@ -382,7 +352,7 @@ impl Scene for Game {
             _ => (),
         }
 
-        SceneAction::None
+        action
     }
 
     fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, y: f32) -> SceneAction {
