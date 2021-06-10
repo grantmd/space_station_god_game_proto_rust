@@ -59,6 +59,11 @@ impl GameState {
 
     // Return the currently-active scene
     pub fn get_current_scene(&mut self) -> Option<&mut Box<dyn scene::Scene>> {
+        // Push the default state back on if we're at the bottom of the stack
+        if self.scenes.len() == 0 {
+            self.push_scene(Box::new(scenes::title::Title {}));
+        }
+
         self.scenes.last_mut()
     }
 
@@ -79,11 +84,6 @@ impl GameState {
     // Pop the top of the scene stack
     pub fn pop_scene(&mut self) {
         self.scenes.pop();
-
-        // Push the default state back on
-        if self.scenes.len() == 0 {
-            self.push_scene(Box::new(scenes::title::Title {}));
-        }
     }
 }
 
@@ -170,7 +170,15 @@ impl EventHandler for GameState {
 
         // Inform current scene
         if let Some(scene) = self.get_current_scene() {
-            scene.key_down_event(ctx, keycode, keymods, repeat);
+            match scene.key_down_event(ctx, keycode, keymods, repeat) {
+                scene::SceneAction::None => (),
+                scene::SceneAction::Pop => self.pop_scene(),
+                scene::SceneAction::Push(scene) => self.push_scene(scene),
+                scene::SceneAction::PopAndPush(scene) => {
+                    self.pop_scene();
+                    self.push_scene(scene);
+                }
+            }
         }
     }
 
@@ -178,7 +186,15 @@ impl EventHandler for GameState {
     fn mouse_wheel_event(&mut self, ctx: &mut Context, x: f32, y: f32) {
         // Inform current scene
         if let Some(scene) = self.get_current_scene() {
-            scene.mouse_wheel_event(ctx, x, y);
+            match scene.mouse_wheel_event(ctx, x, y) {
+                scene::SceneAction::None => (),
+                scene::SceneAction::Pop => self.pop_scene(),
+                scene::SceneAction::Push(scene) => self.push_scene(scene),
+                scene::SceneAction::PopAndPush(scene) => {
+                    self.pop_scene();
+                    self.push_scene(scene);
+                }
+            }
         }
     }
 
@@ -189,9 +205,17 @@ impl EventHandler for GameState {
         self.starfield.resize_event(ctx, width, height);
         println!("Resized screen to {}, {}", width, height);
 
-        // Inform current scene
+        // Inform current scene and handle actions
         if let Some(scene) = self.get_current_scene() {
-            scene.resize_event(ctx, width, height);
+            match scene.resize_event(ctx, width, height) {
+                scene::SceneAction::None => (),
+                scene::SceneAction::Pop => self.pop_scene(),
+                scene::SceneAction::Push(scene) => self.push_scene(scene),
+                scene::SceneAction::PopAndPush(scene) => {
+                    self.pop_scene();
+                    self.push_scene(scene);
+                }
+            }
         }
     }
 }

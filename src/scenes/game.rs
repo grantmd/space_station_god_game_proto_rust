@@ -322,14 +322,10 @@ impl Scene for Game {
         keycode: KeyCode,
         _keymods: KeyMods,
         repeat: bool,
-    ) {
+    ) -> SceneAction {
         match keycode {
             // Toggle paused
-            KeyCode::Space => {
-                if repeat {
-                    return;
-                }
-
+            KeyCode::Space if !repeat => {
                 self.is_paused = !self.is_paused;
                 if self.is_paused {
                     println!("Pausing");
@@ -339,15 +335,7 @@ impl Scene for Game {
             }
 
             // Add a new inhabitant
-            KeyCode::N => {
-                if repeat {
-                    return;
-                }
-
-                if self.is_paused {
-                    return;
-                }
-
+            KeyCode::N if !repeat && !self.is_paused => {
                 let tile = self
                     .station
                     .get_random_tile(TileType::Floor, &mut self.rng)
@@ -376,22 +364,14 @@ impl Scene for Game {
             }
 
             // Save the game
-            KeyCode::S => {
-                if repeat {
-                    return;
-                }
-
+            KeyCode::S if !repeat => {
                 let now: DateTime<Local> = Local::now();
                 self.save(ctx, now.format("%Y-%m-%d %H-%M-%S.%f").to_string())
                     .unwrap();
             }
 
             // Load a save
-            KeyCode::L => {
-                if repeat {
-                    return;
-                }
-
+            KeyCode::L if !repeat => {
                 let saves = self.list_saves(ctx).unwrap();
                 if let Some(filename) = saves.last() {
                     self.load(ctx, &filename).unwrap();
@@ -401,16 +381,22 @@ impl Scene for Game {
             // Everything else does nothing
             _ => (),
         }
+
+        SceneAction::None
     }
 
-    fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, y: f32) {
+    fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, y: f32) -> SceneAction {
         self.camera.zoom += Point2::one() * y * 2.0; // TODO: Tweak this multiple
         if self.camera.zoom < Point2::one() {
             self.camera.zoom = Point2::one();
         }
+
+        SceneAction::None
     }
 
-    fn resize_event(&mut self, _ctx: &mut Context, _width: f32, _height: f32) {}
+    fn resize_event(&mut self, _ctx: &mut Context, _width: f32, _height: f32) -> SceneAction {
+        SceneAction::None
+    }
 }
 
 // Save game serialize/deserialize object

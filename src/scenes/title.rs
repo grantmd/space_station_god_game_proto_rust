@@ -1,3 +1,5 @@
+use super::game::*;
+use super::load::*;
 use super::scene::*;
 
 use ggez::event::{KeyCode, KeyMods};
@@ -77,26 +79,32 @@ impl Scene for Title {
 
     fn key_down_event(
         &mut self,
-        _ctx: &mut Context,
+        ctx: &mut Context,
         keycode: KeyCode,
         _keymods: KeyMods,
         _repeat: bool,
-    ) {
+    ) -> SceneAction {
         match keycode {
             // Create a new game
             KeyCode::N => {
                 println!("Creating new game");
+                SceneAction::PopAndPush(Box::new(Game::new(ctx)))
             }
 
             // Load a game
             KeyCode::L => {
                 println!("Loading new game");
+                SceneAction::Push(Box::new(Load {}))
             }
 
             // Everything else does nothing
-            _ => (),
+            _ => SceneAction::None,
         }
     }
-    fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, _y: f32) {}
-    fn resize_event(&mut self, _ctx: &mut Context, _width: f32, _height: f32) {}
+    fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, _y: f32) -> SceneAction {
+        SceneAction::None
+    }
+    fn resize_event(&mut self, _ctx: &mut Context, _width: f32, _height: f32) -> SceneAction {
+        SceneAction::None
+    }
 }

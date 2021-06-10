@@ -15,9 +15,9 @@ pub trait Scene {
         keycode: KeyCode,
         keymods: KeyMods,
         repeat: bool,
-    );
-    fn mouse_wheel_event(&mut self, ctx: &mut Context, x: f32, y: f32);
-    fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32);
+    ) -> SceneAction;
+    fn mouse_wheel_event(&mut self, ctx: &mut Context, x: f32, y: f32) -> SceneAction;
+    fn resize_event(&mut self, ctx: &mut Context, width: f32, height: f32) -> SceneAction;
 }
 
 // The list of unique, valid scene types
@@ -29,4 +29,11 @@ pub enum SceneType {
     Save,
     Quit,
     Settings,
+}
+
+pub enum SceneAction {
+    Pop,
+    Push(Box<dyn Scene>),
+    PopAndPush(Box<dyn Scene>),
+    None,
 }
