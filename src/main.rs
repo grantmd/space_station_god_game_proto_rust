@@ -67,11 +67,17 @@ impl GameState {
         match self.scenes.last_mut() {
             Some(current_scene) => {
                 if current_scene.get_type() != scene.get_type() {
+                    println!(
+                        "Pushing {:?} from {:?}",
+                        scene.get_type(),
+                        current_scene.get_type()
+                    );
                     current_scene.to_scene(scene.get_type());
                     self.scenes.push(scene);
                 }
             }
             None => {
+                println!("Pushing {:?}", scene.get_type());
                 self.scenes.push(scene);
             }
         }
@@ -81,7 +87,10 @@ impl GameState {
     pub fn pop_scene(&mut self) {
         if let Some(last) = self.scenes.pop() {
             if let Some(current) = self.get_current_scene() {
+                println!("Popping {:?} to {:?}", last.get_type(), current.get_type());
                 current.from_scene(last.get_type());
+            } else {
+                println!("Popping {:?}", last.get_type());
             }
         }
     }
