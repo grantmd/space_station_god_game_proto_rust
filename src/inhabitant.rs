@@ -244,7 +244,7 @@ impl Inhabitant {
         Ok(())
     }
 
-    pub fn draw(&mut self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
+    pub fn draw(&self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
         let color = match self.kind {
             InhabitantType::Ghost => Color::new(0.8, 0.8, 0.8, 0.8),
             _ => Color::WHITE,

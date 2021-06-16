@@ -9,18 +9,24 @@ type Point2 = glam::Vec2;
 pub struct Starfield {
     stars: Vec<Star>,
     mesh: Option<Mesh>,
+    rng: oorandom::Rand32,
 }
 
 impl Starfield {
-    pub fn new(ctx: &mut Context, rng: &mut Rand32) -> Starfield {
+    pub fn new(ctx: &mut Context) -> Starfield {
+        // Create a seeded random-number generator
+        let mut seed: [u8; 8] = [0; 8];
+        getrandom::getrandom(&mut seed[..]).expect("Could not create RNG seed");
+        let rng = Rand32::new(u64::from_ne_bytes(seed));
         let (screen_width, screen_height) = graphics::drawable_size(ctx);
 
         let mut s = Starfield {
+            rng,
             stars: Vec::with_capacity(1000),
             mesh: None,
         };
 
-        s.generate_stars(rng, screen_width, screen_height);
+        s.generate_stars(screen_width, screen_height);
         s.generate_mesh(ctx).unwrap();
 
         s
@@ -41,39 +47,33 @@ impl Starfield {
         Ok(())
     }
 
-    pub fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+    pub fn draw(&self, ctx: &mut Context) -> GameResult<()> {
         match &self.mesh {
             Some(mesh) => graphics::draw(ctx, mesh, DrawParam::default()),
             None => Ok(()),
         }
     }
 
-    pub fn resize_event(
-        &mut self,
-        ctx: &mut Context,
-        rng: &mut Rand32,
-        screen_width: f32,
-        screen_height: f32,
-    ) {
-        self.generate_stars(rng, screen_width, screen_height);
+    pub fn resize_event(&mut self, ctx: &mut Context, screen_width: f32, screen_height: f32) {
+        self.generate_stars(screen_width, screen_height);
         self.generate_mesh(ctx).unwrap();
     }
 
     // Create stars scaled to screen size
-    fn generate_stars(&mut self, rng: &mut Rand32, screen_width: f32, screen_height: f32) {
+    fn generate_stars(&mut self, screen_width: f32, screen_height: f32) {
         let num_stars = (screen_width * screen_height / 1000.0) as usize;
         self.stars.clear();
 
         for _ in 0..num_stars {
-            let x = rng.rand_range(0..screen_width as u32) as f32;
-            let y = rng.rand_range(0..screen_height as u32) as f32;
+            let x = self.rng.rand_range(0..screen_width as u32) as f32;
+            let y = self.rng.rand_range(0..screen_height as u32) as f32;
 
-            let size = num::pow(rng.rand_float() + 0.1, 4) * 2.0;
+            let size = num::pow(self.rng.rand_float() + 0.1, 4) * 2.0;
 
             self.stars.push(Star {
                 pos: Point2::new(x, y),
                 size,
-                color: random_color(rng),
+                color: random_color(&mut self.rng),
             })
         }
     }
