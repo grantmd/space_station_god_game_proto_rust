@@ -24,6 +24,8 @@ pub struct Game {
     camera: Camera,
     station: Station,
     inhabitants: Vec<Inhabitant>,
+
+    show_stats: bool,
 }
 
 impl Game {
@@ -57,6 +59,8 @@ impl Game {
             },
             station,
             inhabitants: Vec::with_capacity(1),
+
+            show_stats: true,
         };
 
         // Put some people in it
@@ -202,63 +206,65 @@ impl Scene for Game {
         mouse_pos.y -= mouse_display.height(ctx);
         graphics::queue_text(ctx, &mouse_display, mouse_pos, Some(Color::WHITE));
 
-        // Put our current FPS on top along with other info
-        let fps = timer::fps(ctx);
-        let mut height = 0.0;
-        let fps_display = Text::new(format!("FPS: {0:.1}", fps));
-        graphics::queue_text(
-            ctx,
-            &fps_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-        height += 5.0 + fps_display.height(ctx);
-        let uptime_display = Text::new(format!("Uptime: {:?}", timer::time_since_start(ctx)));
-        graphics::queue_text(
-            ctx,
-            &uptime_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-        height += 5.0 + uptime_display.height(ctx);
-        let station_display = Text::new(format!(
-            "Station Tiles: {} at {}, Selected: None",
-            self.station.num_tiles(),
-            self.station.pos
-        ));
-        graphics::queue_text(
-            ctx,
-            &station_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-        height += 5.0 + station_display.height(ctx);
-        let inhabitant_display = Text::new(format!("Inhabitants: {}", self.inhabitants.len()));
-        graphics::queue_text(
-            ctx,
-            &inhabitant_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-        height += 5.0 + inhabitant_display.height(ctx);
-        let camera_display = Text::new(format!(
-            "Camera: {} ({1:.1}x)",
-            self.camera.pos, self.camera.zoom.x
-        ));
-        graphics::queue_text(
-            ctx,
-            &camera_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );
-        /*height += 5.0 + camera_display.height(ctx);
-        let music_display = Text::new(format!("Music: {}", state.music));
-        graphics::queue_text(
-            ctx,
-            &music_display,
-            Point2::new(10.0, 0.0 + height),
-            Some(Color::WHITE),
-        );*/
+        if self.show_stats {
+            // Put our current FPS on top along with other info
+            let fps = timer::fps(ctx);
+            let mut height = 0.0;
+            let fps_display = Text::new(format!("FPS: {0:.1}", fps));
+            graphics::queue_text(
+                ctx,
+                &fps_display,
+                Point2::new(10.0, 0.0 + height),
+                Some(Color::WHITE),
+            );
+            height += 5.0 + fps_display.height(ctx);
+            let uptime_display = Text::new(format!("Uptime: {:?}", timer::time_since_start(ctx)));
+            graphics::queue_text(
+                ctx,
+                &uptime_display,
+                Point2::new(10.0, 0.0 + height),
+                Some(Color::WHITE),
+            );
+            height += 5.0 + uptime_display.height(ctx);
+            let station_display = Text::new(format!(
+                "Station Tiles: {} at {}, Selected: None",
+                self.station.num_tiles(),
+                self.station.pos
+            ));
+            graphics::queue_text(
+                ctx,
+                &station_display,
+                Point2::new(10.0, 0.0 + height),
+                Some(Color::WHITE),
+            );
+            height += 5.0 + station_display.height(ctx);
+            let inhabitant_display = Text::new(format!("Inhabitants: {}", self.inhabitants.len()));
+            graphics::queue_text(
+                ctx,
+                &inhabitant_display,
+                Point2::new(10.0, 0.0 + height),
+                Some(Color::WHITE),
+            );
+            height += 5.0 + inhabitant_display.height(ctx);
+            let camera_display = Text::new(format!(
+                "Camera: {} ({1:.1}x)",
+                self.camera.pos, self.camera.zoom.x
+            ));
+            graphics::queue_text(
+                ctx,
+                &camera_display,
+                Point2::new(10.0, 0.0 + height),
+                Some(Color::WHITE),
+            );
+            /*height += 5.0 + camera_display.height(ctx);
+            let music_display = Text::new(format!("Music: {}", state.music));
+            graphics::queue_text(
+                ctx,
+                &music_display,
+                Point2::new(10.0, 0.0 + height),
+                Some(Color::WHITE),
+            );*/
+        }
 
         // Render all queued text
         graphics::draw_queued_text(
@@ -346,6 +352,9 @@ impl Scene for Game {
                     self.load(ctx, &filename).unwrap();
                 }
             }
+
+            // Toggle stats
+            KeyCode::F1 if !repeat => self.show_stats = !self.show_stats,
 
             // Everything else does nothing
             _ => (),
