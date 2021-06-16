@@ -70,6 +70,7 @@ impl Scene for Title {
             None,
             graphics::FilterMode::Linear,
         )?;
+
         Ok(())
     }
 

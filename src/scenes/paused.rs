@@ -41,6 +41,14 @@ impl Scene for Paused {
             Some(Color::WHITE),
         );
 
+        // Render all queued text
+        graphics::draw_queued_text(
+            ctx,
+            DrawParam::default(),
+            None,
+            graphics::FilterMode::Linear,
+        )?;
+
         Ok(())
     }
 

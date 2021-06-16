@@ -56,6 +56,7 @@ impl Scene for Quit {
             None,
             graphics::FilterMode::Linear,
         )?;
+
         Ok(())
     }
 
