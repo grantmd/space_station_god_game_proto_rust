@@ -1,5 +1,6 @@
 use super::game::*;
 use super::load::*;
+use super::quit::*;
 use super::scene::*;
 
 use ggez::event::{KeyCode, KeyMods};
@@ -83,17 +84,22 @@ impl Scene for Title {
         ctx: &mut Context,
         keycode: KeyCode,
         _keymods: KeyMods,
-        _repeat: bool,
+        repeat: bool,
     ) -> SceneAction {
         match keycode {
+            // Quit
+            KeyCode::Escape | KeyCode::Q if !repeat => {
+                SceneAction::Push(Box::new(Quit {}))
+            }
+
             // Create a new game
-            KeyCode::N => {
+            KeyCode::N if !repeat => {
                 println!("Creating new game");
                 SceneAction::PopAndPush(Box::new(Game::new(ctx)))
             }
 
             // Load a game
-            KeyCode::L => {
+            KeyCode::L if !repeat => {
                 println!("Loading new game");
                 SceneAction::Push(Box::new(Load {}))
             }

@@ -76,6 +76,7 @@ impl Scene for Quit {
             // Quit?
             KeyCode::Y if !repeat => event::quit(ctx),
             KeyCode::N if !repeat => action = SceneAction::Pop,
+            KeyCode::Escape if !repeat => action = SceneAction::Pop,
             _ => (),
         }
 

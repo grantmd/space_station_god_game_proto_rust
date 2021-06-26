@@ -153,11 +153,6 @@ impl EventHandler for GameState {
     ) {
         // Global overrides/shortcuts
         match keycode {
-            // Quit
-            KeyCode::Escape | KeyCode::Q if !repeat => {
-                self.push_scene(Box::new(scenes::quit::Quit {}));
-            }
-
             // Toggle fullscreen
             KeyCode::F10 if !repeat => {
                 self.is_fullscreen = !self.is_fullscreen;

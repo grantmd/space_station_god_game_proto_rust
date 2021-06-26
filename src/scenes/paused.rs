@@ -1,4 +1,5 @@
 use super::scene::*;
+use super::quit::*;
 
 use ggez::event::{KeyCode, KeyMods};
 use ggez::graphics::{Color, DrawMode, DrawParam, Font, PxScale, Text, TextFragment};
@@ -64,10 +65,16 @@ impl Scene for Paused {
         repeat: bool,
     ) -> SceneAction {
         match keycode {
+            // Quit
+            KeyCode::Escape | KeyCode::Q if !repeat => {
+                SceneAction::Push(Box::new(Quit {}))
+            }
+
             KeyCode::Space if !repeat => {
                 println!("Unpausing");
                 SceneAction::Pop
             }
+            
             _ => SceneAction::None,
         }
     }
