@@ -16,6 +16,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Update package cache
+      run: sudo apt-get update
     - name: Install ggez packages
       run: sudo apt-get install libasound2-dev libudev-dev
     - name: Build
