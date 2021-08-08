@@ -61,7 +61,9 @@ impl Starfield {
 
     // Create stars scaled to screen size
     fn generate_stars(&mut self, screen_width: f32, screen_height: f32) {
-        let num_stars = (screen_width * screen_height / 1000.0) as usize;
+        //let num_stars = (screen_width * screen_height / 1000.0) as usize;
+        let num_stars = 500; // There's some regression in ggez's meshbuilder that makes this slow over around 500 stars in debug mode
+        println!("Building starfield with {:?} stars", num_stars);
         self.stars.clear();
 
         for _ in 0..num_stars {

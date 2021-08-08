@@ -97,7 +97,7 @@ impl GameState {
 }
 
 // Main event loop
-impl EventHandler for GameState {
+impl EventHandler<ggez::GameError> for GameState {
     // Update game state.
     // `self` is state, `ctx` provides access to hardware (input, graphics, sound, etc)
     // Returns GameResult so ggez can handle any errors
