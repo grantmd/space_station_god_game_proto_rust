@@ -97,7 +97,7 @@ impl GameState {
 }
 
 // Main event loop
-impl EventHandler for GameState {
+impl EventHandler<ggez::GameError> for GameState {
     // Update game state.
     // `self` is state, `ctx` provides access to hardware (input, graphics, sound, etc)
     // Returns GameResult so ggez can handle any errors
@@ -153,11 +153,6 @@ impl EventHandler for GameState {
     ) {
         // Global overrides/shortcuts
         match keycode {
-            // Quit
-            KeyCode::Escape | KeyCode::Q if !repeat => {
-                self.push_scene(Box::new(scenes::quit::Quit {}));
-            }
-
             // Toggle fullscreen
             KeyCode::F10 if !repeat => {
                 self.is_fullscreen = !self.is_fullscreen;

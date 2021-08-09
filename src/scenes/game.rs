@@ -1,5 +1,6 @@
 use super::paused::*;
 use super::scene::*;
+use super::quit::*;
 use crate::inhabitant::{Inhabitant, InhabitantType};
 use crate::station::station::*;
 use crate::station::tile::*;
@@ -303,6 +304,11 @@ impl Scene for Game {
         let mut action = SceneAction::None; // The action we will end up returning
 
         match keycode {
+            // Quit
+            KeyCode::Escape | KeyCode::Q if !repeat => {
+                action = SceneAction::Push(Box::new(Quit {}))
+            }
+
             // Toggle paused
             KeyCode::Space if !repeat => {
                 println!("Pausing");
