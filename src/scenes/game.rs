@@ -1,6 +1,6 @@
 use super::paused::*;
-use super::scene::*;
 use super::quit::*;
+use super::scene::*;
 use crate::inhabitant::{Inhabitant, InhabitantType};
 use crate::station::station::*;
 use crate::station::tile::*;
@@ -126,7 +126,7 @@ impl Game {
     }
 
     // Load the game state from a file
-    fn load(&mut self, ctx: &mut Context, filename: &path::PathBuf) -> GameResult<()> {
+    fn load(&mut self, ctx: &mut Context, filename: &path::Path) -> GameResult<()> {
         // Load the file
         let file = filesystem::open(ctx, path::Path::new(filename)).unwrap();
         let save: SavedGame = serde_cbor::from_reader(file).unwrap();
@@ -182,7 +182,7 @@ impl Scene for Game {
                 selected_tile.kind
             ));
 
-            if selected_tile.items.len() > 0 {
+            if !selected_tile.items.is_empty() {
                 mouse_display.add(format!("\n{:?}", selected_tile.items));
             }
 
@@ -349,7 +349,7 @@ impl Scene for Game {
             KeyCode::L if !repeat => {
                 let saves = self.list_saves(ctx).unwrap();
                 if let Some(filename) = saves.last() {
-                    self.load(ctx, &filename).unwrap();
+                    self.load(ctx, filename).unwrap();
                 }
             }
 

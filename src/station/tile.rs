@@ -76,7 +76,7 @@ impl Tile {
 
     // Do we have an item of this type on us?
     pub fn has_item(&self, item_types: Vec<ItemType>) -> bool {
-        if let Some(_) = self.get_item(item_types) {
+        if self.get_item(item_types).is_some() {
             return true;
         }
 
@@ -90,16 +90,13 @@ impl Tile {
             }
 
             // If this is a container, we need to iterate inside
-            match item.get_type() {
-                ItemType::Container(_) => {
-                    for subitem in item.get_items().iter() {
-                        // Is this what we're looking for?
-                        if item_types.contains(&subitem.get_type()) {
-                            return Some(item);
-                        }
+            if let ItemType::Container(_) = item.get_type() {
+                for subitem in item.get_items().iter() {
+                    // Is this what we're looking for?
+                    if item_types.contains(&subitem.get_type()) {
+                        return Some(item);
                     }
                 }
-                _ => (),
             }
         }
 

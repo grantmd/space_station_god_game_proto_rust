@@ -30,9 +30,8 @@ impl Scene for Title {
         let height = title.height(ctx);
 
         // Instructions
-        let instructions = Text::new(format!(
-            "Press N for a new game, L to load a previous save."
-        ));
+        let instructions =
+            Text::new("Press N for a new game, L to load a previous save.".to_string());
         graphics::queue_text(
             ctx,
             &instructions,
@@ -41,9 +40,9 @@ impl Scene for Title {
         );
 
         // Copyright
-        let copyright = Text::new(format!("Copyright 2021 Myles Grant"));
+        let copyright = Text::new("Copyright 2021 Myles Grant".to_string());
         let copyright_dims = copyright.dimensions(ctx);
-        let music = Text::new(format!("Music: www.bensound.com"));
+        let music = Text::new("Music: www.bensound.com".to_string());
         let music_dims = music.dimensions(ctx);
         graphics::queue_text(
             ctx,
@@ -88,9 +87,7 @@ impl Scene for Title {
     ) -> SceneAction {
         match keycode {
             // Quit
-            KeyCode::Escape | KeyCode::Q if !repeat => {
-                SceneAction::Push(Box::new(Quit {}))
-            }
+            KeyCode::Escape | KeyCode::Q if !repeat => SceneAction::Push(Box::new(Quit {})),
 
             // Create a new game
             KeyCode::N if !repeat => {
