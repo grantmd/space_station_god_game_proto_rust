@@ -54,10 +54,7 @@ impl Game {
         let mut game = Game {
             rng,
             is_paused: false,
-            camera: Camera {
-                pos: Point2::zero(),
-                zoom: Point2::one(),
-            },
+            camera: Camera::new(),
             station,
             inhabitants: Vec::with_capacity(1),
 
@@ -349,20 +346,19 @@ impl Scene for Game {
 
             // Camera movement from arrow keys
             KeyCode::Up => {
-                self.camera.pos -= Point2::unit_y() * 10.0;
+                self.camera.move_up();
             }
             KeyCode::Down => {
-                self.camera.pos += Point2::unit_y() * 10.0;
+                self.camera.move_down();
             }
             KeyCode::Left => {
-                self.camera.pos -= Point2::unit_x() * 10.0;
+                self.camera.move_left();
             }
             KeyCode::Right => {
-                self.camera.pos += Point2::unit_x() * 10.0;
+                self.camera.move_right();
             }
             KeyCode::C => {
-                self.camera.pos = Point2::zero();
-                self.camera.zoom = Point2::one();
+                self.camera.reset();
             }
 
             // Save the game
@@ -391,10 +387,7 @@ impl Scene for Game {
     }
 
     fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: f32, y: f32) -> SceneAction {
-        self.camera.zoom += Point2::one() * y * 2.0; // TODO: Tweak this multiple
-        if self.camera.zoom < Point2::one() {
-            self.camera.zoom = Point2::one();
-        }
+        self.camera.zoom(y);
 
         SceneAction::None
     }

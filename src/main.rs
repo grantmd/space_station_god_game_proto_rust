@@ -18,9 +18,6 @@ use starfield::Starfield;
 
 use std::{env, path};
 
-// Alias some types to making reading/writing code easier and also in case math libraries change again
-type Point2 = glam::Vec2;
-
 const TILE_WIDTH: f32 = 30.0;
 
 // Main game state object. Holds positions, scores, etc
