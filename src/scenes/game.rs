@@ -61,7 +61,7 @@ impl Game {
             station,
             inhabitants: Vec::with_capacity(1),
 
-            show_stats: true,
+            show_stats: false,
         };
 
         // Put some people in it
@@ -169,6 +169,34 @@ impl Scene for Game {
             inhabitant.draw(ctx, &self.camera)?;
         }
 
+        // Some status UI
+        let (screen_width, _screen_height) = graphics::drawable_size(ctx);
+        let ui_rect = graphics::Rect::new(0.0, 0.0, screen_width, 20.0);
+        let mesh = graphics::Mesh::new_rectangle(
+            ctx,
+            DrawMode::fill(),
+            ui_rect,
+            Color::new(0.0, 0.0, 0.0, 1.0),
+        )?;
+        graphics::draw(ctx, &mesh, DrawParam::default())?;
+        let ui_text = Text::new(format!(
+            "Inhabitants: {}, Food: {}, Drink: {}",
+            self.inhabitants.len(),
+            self.station.find_items(crate::item::get_food_types()).len(),
+            self.station
+                .find_items(crate::item::get_drink_types())
+                .len(),
+        ));
+        graphics::queue_text(
+            ctx,
+            &ui_text,
+            Point2::new(
+                screen_width - ui_text.width(ctx) - 10.0,
+                (20.0 - ui_text.height(ctx)) / 2.0,
+            ),
+            Some(Color::WHITE),
+        );
+
         // Draw where the mouse is
         let mut mouse_pos = mouse::position(ctx);
         let mut mouse_display = Text::new(format!("Mouse: ({}, {})", mouse_pos.x, mouse_pos.y));
@@ -207,10 +235,10 @@ impl Scene for Game {
         mouse_pos.y -= mouse_display.height(ctx);
         graphics::queue_text(ctx, &mouse_display, mouse_pos, Some(Color::WHITE));
 
+        // Put our current FPS on top along with other info
         if self.show_stats {
-            // Put our current FPS on top along with other info
             let fps = timer::fps(ctx);
-            let mut height = 0.0;
+            let mut height = 25.0;
             let fps_display = Text::new(format!("FPS: {0:.1}", fps));
             graphics::queue_text(
                 ctx,
@@ -239,14 +267,6 @@ impl Scene for Game {
                 Some(Color::WHITE),
             );
             height += 5.0 + station_display.height(ctx);
-            let inhabitant_display = Text::new(format!("Inhabitants: {}", self.inhabitants.len()));
-            graphics::queue_text(
-                ctx,
-                &inhabitant_display,
-                Point2::new(10.0, 0.0 + height),
-                Some(Color::WHITE),
-            );
-            height += 5.0 + inhabitant_display.height(ctx);
             let camera_display = Text::new(format!(
                 "Camera: {} ({1:.1}x)",
                 self.camera.pos, self.camera.zoom.x
