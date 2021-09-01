@@ -1,10 +1,10 @@
 use super::paused::*;
 use super::quit::*;
 use super::scene::*;
+use crate::camera::Camera;
 use crate::inhabitant::{Inhabitant, InhabitantType};
 use crate::station::station::*;
 use crate::station::tile::*;
-use crate::Camera;
 
 use ggez::event::{KeyCode, KeyMods};
 use ggez::graphics::{Color, DrawMode, DrawParam, Text};

@@ -1,6 +1,7 @@
 // https://github.com/ggez/ggez/blob/master/docs/FAQ.md#i-get-a-console-window-when-i-launch-my-executable-on-windows
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod camera;
 mod inhabitant;
 mod item;
 mod music;
@@ -10,13 +11,10 @@ mod station;
 
 use crate::scenes::*;
 use crate::station::gridposition::*;
-use music::Music;
-use starfield::Starfield;
-
-use serde::{Deserialize, Serialize};
-
 use ggez::event::{self, EventHandler, KeyCode, KeyMods};
 use ggez::{conf, graphics, timer, Context, ContextBuilder, GameResult};
+use music::Music;
+use starfield::Starfield;
 
 use std::{env, path};
 
@@ -24,12 +22,6 @@ use std::{env, path};
 type Point2 = glam::Vec2;
 
 const TILE_WIDTH: f32 = 30.0;
-
-#[derive(Serialize, Deserialize, Clone, Copy)]
-pub struct Camera {
-    pos: Point2,
-    zoom: Point2,
-}
 
 // Main game state object. Holds positions, scores, etc
 struct GameState {

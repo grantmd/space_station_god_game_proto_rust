@@ -1,6 +1,7 @@
 use super::gridposition::*;
 use super::pathfinding::*;
 use super::tile::*;
+use crate::camera::Camera;
 use crate::item::*;
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh, MeshBuilder};
@@ -204,7 +205,7 @@ impl Station {
 
     // Get a tile at a screen position, if any
     // TODO: position should be a Point2 once ggez updates it
-    pub fn get_tile_from_screen(&self, pos: Point2, camera: &crate::Camera) -> Option<&Tile> {
+    pub fn get_tile_from_screen(&self, pos: Point2, camera: &Camera) -> Option<&Tile> {
         // TODO: This is just world coordinates with camera translation
         self.get_tile_from_world(pos)
     }
@@ -382,7 +383,7 @@ impl Station {
     }
 
     // Draw callback
-    pub fn draw(&self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
+    pub fn draw(&self, ctx: &mut Context, camera: &Camera) -> GameResult<()> {
         // Draw the pre-calculated station mesh
         match &self.mesh {
             Some(mesh) => graphics::draw(

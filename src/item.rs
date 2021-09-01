@@ -1,3 +1,4 @@
+use crate::camera::Camera;
 use crate::station::gridposition::*;
 
 use ggez::graphics::{Color, DrawMode, DrawParam, Mesh};
@@ -198,12 +199,7 @@ impl Item {
         }
     }
 
-    pub fn draw(
-        &self,
-        ctx: &mut Context,
-        station_pos: Point2,
-        camera: &crate::Camera,
-    ) -> GameResult<()> {
+    pub fn draw(&self, ctx: &mut Context, station_pos: Point2, camera: &Camera) -> GameResult<()> {
         let pos = Point2::new(
             (crate::TILE_WIDTH * self.pos.x as f32) - (crate::TILE_WIDTH / 2.0),
             (crate::TILE_WIDTH * self.pos.y as f32) - (crate::TILE_WIDTH / 2.0),

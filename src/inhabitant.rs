@@ -1,3 +1,4 @@
+use crate::camera::Camera;
 use crate::item::*;
 use crate::station::gridposition::*;
 use crate::station::station::*;
@@ -244,7 +245,7 @@ impl Inhabitant {
         Ok(())
     }
 
-    pub fn draw(&self, ctx: &mut Context, camera: &crate::Camera) -> GameResult<()> {
+    pub fn draw(&self, ctx: &mut Context, camera: &Camera) -> GameResult<()> {
         let color = match self.kind {
             InhabitantType::Ghost => Color::new(0.8, 0.8, 0.8, 0.8),
             _ => Color::WHITE,
