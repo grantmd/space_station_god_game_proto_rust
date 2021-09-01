@@ -261,10 +261,10 @@ impl Inhabitant {
         graphics::draw(
             ctx,
             &mesh,
-            DrawParam::default().offset(camera.pos).scale(camera.zoom),
+            DrawParam::default().offset(camera.pos).scale(camera.zoom), // TODO: Zoom is wrong here
         )?;
 
-        // TODO: Highlight our destination and maybe path if we have one
+        // TODO: Highlight our path as well as destination
         if let Some(dest) = self.dest {
             let tile_rect = graphics::Rect::new(
                 dest.x - (crate::TILE_WIDTH / 2.0) + 1.0,
@@ -281,7 +281,7 @@ impl Inhabitant {
             graphics::draw(
                 ctx,
                 &mesh,
-                DrawParam::default().offset(camera.pos).scale(camera.zoom),
+                DrawParam::default().offset(camera.pos).scale(camera.zoom), // TODO: Zoom is wrong here
             )?;
         }
 

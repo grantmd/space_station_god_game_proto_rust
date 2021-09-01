@@ -198,6 +198,7 @@ impl Scene for Game {
         );
 
         // Draw where the mouse is
+        // TODO: This doesn't use the camera either to find the tile or to scale the drawing of the selection
         let mut mouse_pos = mouse::position(ctx);
         let mut mouse_display = Text::new(format!("Mouse: ({}, {})", mouse_pos.x, mouse_pos.y));
         if let Some(selected_tile) = self

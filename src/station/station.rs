@@ -318,7 +318,7 @@ impl Station {
     }
 
     // Given a start and an end, generate a path that doesn't include walls
-    // TODO: This needs to be able to path outside of the station somehow
+    // TODO: This needs to be able to path outside of the station somehow (for ghosts or future things like going to exterior ships or asteroids, etc)
     pub fn path_to(&self, start: GridPosition, target: GridPosition) -> Vec<GridPosition> {
         // Start at the end and work backwards
         let mut current = target;
