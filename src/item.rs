@@ -91,7 +91,7 @@ impl Item {
         // Create the item itself
         let mut i = Item {
             id: Uuid::new_v4(),
-            kind: kind,
+            kind,
             pos,
             items: Vec::with_capacity(capacity),
             capacity,

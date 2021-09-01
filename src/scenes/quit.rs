@@ -37,7 +37,7 @@ impl Scene for Quit {
         )?;
         graphics::draw(ctx, &mesh, DrawParam::default())?;
 
-        let instructions = Text::new(format!("Are you sure you want to quit? (Y/N)"));
+        let instructions = Text::new("Are you sure you want to quit? (Y/N)".to_string());
         let instructions_dims = instructions.dimensions(ctx);
         graphics::queue_text(
             ctx,

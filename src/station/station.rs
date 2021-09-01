@@ -355,16 +355,13 @@ impl Station {
                 }
 
                 // If this is a container, we need to iterate inside
-                match item.get_type() {
-                    ItemType::Container(_) => {
-                        for subitem in item.get_items().iter() {
-                            // Is this what we're looking for?
-                            if kinds.contains(&subitem.get_type()) {
-                                found.push(pos);
-                            }
+                if let ItemType::Container(_) = item.get_type() {
+                    for subitem in item.get_items().iter() {
+                        // Is this what we're looking for?
+                        if kinds.contains(&subitem.get_type()) {
+                            found.push(pos);
                         }
                     }
-                    _ => (),
                 }
             }
         }

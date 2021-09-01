@@ -100,7 +100,7 @@ impl Inhabitant {
             hunger: 0,
             thirst: 0,
             age: time::Duration::from_micros(0),
-            items: items,
+            items,
             behaviors: Vec::with_capacity(7),
         }
     }
@@ -152,7 +152,7 @@ impl Inhabitant {
 
                         if self.can_move_to(tile) {
                             let dest = tile.unwrap().to_world_position(station);
-                            self.set_destination(&station, dest);
+                            self.set_destination(station, dest);
                         }
                     }
                 }
@@ -422,16 +422,13 @@ impl Inhabitant {
             }
 
             // If this is a container, we need to iterate inside
-            match item.get_type() {
-                ItemType::Container(_) => {
-                    for subitem in item.get_items().iter() {
-                        // Is this what we're looking for?
-                        if item_types.contains(&subitem.get_type()) {
-                            return true;
-                        }
+            if let ItemType::Container(_) = item.get_type() {
+                for subitem in item.get_items().iter() {
+                    // Is this what we're looking for?
+                    if item_types.contains(&subitem.get_type()) {
+                        return true;
                     }
                 }
-                _ => (),
             }
         }
 
