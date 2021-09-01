@@ -349,16 +349,16 @@ impl Scene for Game {
 
             // Camera movement from arrow keys
             KeyCode::Up => {
-                self.camera.pos += Point2::unit_y() * 10.0;
-            }
-            KeyCode::Down => {
                 self.camera.pos -= Point2::unit_y() * 10.0;
             }
+            KeyCode::Down => {
+                self.camera.pos += Point2::unit_y() * 10.0;
+            }
             KeyCode::Left => {
-                self.camera.pos += Point2::unit_x() * 10.0;
+                self.camera.pos -= Point2::unit_x() * 10.0;
             }
             KeyCode::Right => {
-                self.camera.pos -= Point2::unit_x() * 10.0;
+                self.camera.pos += Point2::unit_x() * 10.0;
             }
             KeyCode::C => {
                 self.camera.pos = Point2::zero();
