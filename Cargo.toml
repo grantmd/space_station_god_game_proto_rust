@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 glam = { version = "0.12.0", features = ["mint", "serde"] }
-ggez = "0.6.0"
+ggez = "0.7.0"
 cgmath = { version = "0.18.0", features = ["mint"] }
 oorandom = "11.1.3"
 getrandom = "0.2"
