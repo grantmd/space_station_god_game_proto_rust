@@ -861,9 +861,9 @@ dependencies = [
 
 [[package]]
 name = "ggez"
-version = "0.6.1"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e11175a3fc1e377f57b14394a912c05970d8f679e3340e81663778a9a14b0b4"
+checksum = "c2481c5fcf83c5d51172850a3ee2ae36d86f9961d39851c6bec99108f87f085d"
 dependencies = [
  "approx 0.5.1",
  "bitflags",
@@ -873,7 +873,7 @@ dependencies = [
  "gfx_core",
  "gfx_device_gl",
  "gilrs",
- "glam 0.17.3",
+ "glam 0.20.5",
  "glutin",
  "glyph_brush",
  "image",
@@ -957,9 +957,9 @@ dependencies = [
 
 [[package]]
 name = "glam"
-version = "0.17.3"
+version = "0.20.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e01732b97afd8508eee3333a541b9f7610f454bb818669e66e90f5f57c93a776"
+checksum = "f43e957e744be03f5801a55472f593d43fabdebf25a4585db250f04d86b1675f"
 dependencies = [
  "mint",
 ]
@@ -2055,9 +2055,9 @@ dependencies = [
 
 [[package]]
 name = "redox_syscall"
-version = "0.2.13"
+version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62f25bc4c7e55e0b0b7a1d43fb893f4fa1361d0abe38b9ce4f323c2adfe6ef42"
+checksum = "534cfe58d6a18cc17120fbf4635d53d14691c1fe4d951064df9bd326178d7d5a"
 dependencies = [
  "bitflags",
 ]
