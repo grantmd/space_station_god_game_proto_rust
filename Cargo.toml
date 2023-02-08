@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-glam = { version = "0.12.0", features = ["mint", "serde"] }
+glam = { version = "0.12", features = ["mint", "serde"] }
 ggez = "0.7.0"
 cgmath = { version = "0.18", features = ["mint"] }
 oorandom = "11.1"
